@@ -1,58 +1,34 @@
 /**
  * 進能服維運事業單位｜8D分析管理平台
- * 麥肯錫顧問風格簡報引擎 (Slide Deck Engine + ECharts Interactive Visualizations)
+ * 100% 綁定世堃塑膠麻豆廠 (PV-2026-SKP01) 26,496 筆 5 分鐘級遙測數據、92 天對帳表與 13 個月月報
+ * 麥肯錫顧問風格簡報引擎 (McKinsey Pyramid Principle + Interactive ECharts + Leaflet Map)
  */
 
 (function () {
   "use strict";
 
-  const STORAGE_KEY = "JNF_PV_8D_CASES_V2";
   const MCK_COLORS = {
     navyDark: "#082644",
     navy: "#0C3A63",
     navyMid: "#164E80",
-    slate: "#475569",
-    muted: "#94A3B8",
+    slate: "#334155",
+    muted: "#64748B",
+    lightGray: "#94A3B8",
     line: "#CBD5E1",
     accent: "#D97706",
     accentDark: "#B45309"
   };
 
-  let allCases = [];
   let currentCase = null;
   let currentSlideIdx = 0;
   let isDeckMode = true;
+  let isOwnerMode = false;
   const chartInstances = {};
+  let leafletMapInstance = null;
 
-  function loadCases() {
-    const baseCases = Array.isArray(window.PV_8D_CASES_DATA) ? window.PV_8D_CASES_DATA : [];
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const customCases = JSON.parse(saved);
-        if (Array.isArray(customCases) && customCases.length > 0) {
-          allCases = [...baseCases, ...customCases];
-          return;
-        }
-      }
-    } catch (e) {
-      console.warn("LocalStorage read skipped:", e);
-    }
-    allCases = [...baseCases];
-  }
-
-  function initCaseSelector() {
-    const sel = document.getElementById("case-selector");
-    if (!sel) return;
-    sel.innerHTML = allCases
-      .map(
-        (c) =>
-          `<option value="${c.id}">${c.code}｜${c.siteName} (${c.capacityKwp} kWp) — ${c.statusLabel}</option>`
-      )
-      .join("");
-    if (currentCase) {
-      sel.value = currentCase.id;
-    }
+  function setText(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val || "";
   }
 
   function renderSkillsTables() {
@@ -132,10 +108,6 @@
     // --- Slide 1: Executive Summary ---
     setText("sum-tag", c.summary.tag);
     setText("sum-conclusion-title", c.summary.conclusionTitle);
-    setText(
-      "sum-payback-badge",
-      `維修回收期：${c.paybackDays} 天 ｜ 20年 DCF 淨現值：NT$ ${(c.dcf20YrNpvNtd / 10000).toFixed(1)} 萬`
-    );
 
     const sumKpiEl = document.getElementById("sum-kpi-grid");
     if (sumKpiEl) {
@@ -155,10 +127,10 @@
     if (sumMatrixEl) {
       sumMatrixEl.innerHTML = c.summary.matrixRows
         .map(
-          (r) => `
+          (r, idx) => `
         <tr>
-          <td class="cell-key">${r[0]}</td>
-          <td class="cell-mono">${r[1]}</td>
+          <td class="${idx < 2 ? "cell-accent" : "cell-mono"}">${r[0]}</td>
+          <td class="cell-key">${r[1]}</td>
           <td>${r[2]}</td>
         </tr>`
         )
@@ -174,12 +146,12 @@
       symCardsEl.innerHTML = c.d0d1.symptomCards
         .map(
           (sc, idx) => `
-        <div class="panel-soft" style="border-left: 4px solid ${idx === 0 ? MCK_COLORS.accent : MCK_COLORS.navy};">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <strong style="font-size:15px; color:var(--ink);">${sc.title}</strong>
+        <div class="panel-soft" style="border-left: 4px solid ${idx === 0 ? MCK_COLORS.navy : MCK_COLORS.accent};">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap:8px;">
+            <strong style="font-size:14.5px; color:var(--ink);">${sc.title}</strong>
             <span class="accent-badge">${sc.metric}</span>
           </div>
-          <p style="margin:0; font-size:13.5px; color:var(--slate);">${sc.desc}</p>
+          <p style="margin:0; font-size:13px; color:var(--slate); line-height:1.6;">${sc.desc}</p>
         </div>`
         )
         .join("");
@@ -243,7 +215,7 @@
       d3BatchEl.innerHTML = c.d3.batchStats
         .map(
           (b, idx) => `
-        <div class="kpi-box ${idx >= 1 ? "is-accent" : ""}">
+        <div class="kpi-box ${idx === 1 ? "is-accent" : ""}">
           <div class="kpi-label">${b.label}</div>
           <div class="kpi-val">${b.value}</div>
           <div class="kpi-note">${b.note}</div>
@@ -275,25 +247,11 @@
     if (whyOccEl) {
       whyOccEl.innerHTML = c.d4a.fiveWhyOccurrence
         .map(
-          (r, idx, arr) => `
+          (r, idx) => `
         <tr>
-          <td class="${idx === arr.length - 1 ? "cell-accent" : "cell-key"}">${r[0]}</td>
-          <td>${r[1]}</td>
-          <td>${idx === arr.length - 1 ? `<strong>${r[2]}</strong>` : r[2]}</td>
-        </tr>`
-        )
-        .join("");
-    }
-
-    const whyEscEl = document.getElementById("d4a-why-esc-body");
-    if (whyEscEl) {
-      whyEscEl.innerHTML = c.d4a.fiveWhyEscape
-        .map(
-          (r, idx, arr) => `
-        <tr>
-          <td class="${idx === arr.length - 1 ? "cell-accent" : "cell-key"}">${r[0]}</td>
-          <td>${r[1]}</td>
-          <td>${idx === arr.length - 1 ? `<strong>${r[2]}</strong>` : r[2]}</td>
+          <td class="${idx === 1 || idx === 3 ? "cell-accent" : "cell-key"}">${r[0]}</td>
+          <td class="cell-mono">${r[1]}</td>
+          <td>${r[2]}</td>
         </tr>`
         )
         .join("");
@@ -307,12 +265,12 @@
     if (hypoEl) {
       hypoEl.innerHTML = c.d4b.hypotheses
         .map((r) => {
-          const isConfirmed = r[3].includes("確立") || r[3].includes("✅");
+          const isConfirmed = r[3].includes("確診") || r[3].includes("✅");
           return `
         <tr>
           <td class="cell-key">${r[0]}</td>
           <td>${r[1]}</td>
-          <td>${r[2]}</td>
+          <td>${ isConfirmed ? `<strong>${r[2]}</strong>` : r[2] }</td>
           <td class="${isConfirmed ? "cell-accent" : "cell-mono"}">${r[3]}</td>
         </tr>`;
         })
@@ -341,12 +299,12 @@
     if (pcaEl) {
       pcaEl.innerHTML = c.d5.pcaTable
         .map(
-          (r) => `
+          (r, idx) => `
         <tr>
           <td class="cell-key">${r[0]}</td>
           <td>${r[1]}</td>
-          <td class="cell-accent">${r[2]}</td>
-          <td>${r[3]}</td>
+          <td class="${idx < 2 ? "cell-accent" : "cell-mono"}">${r[2]}</td>
+          <td class="cell-key">${r[3]}</td>
         </tr>`
         )
         .join("");
@@ -361,13 +319,13 @@
     if (d6MetricsEl) {
       d6MetricsEl.innerHTML = c.d6.validationMetrics
         .map(
-          (r) => `
+          (r, idx) => `
         <tr>
           <td class="cell-key">${r[0]}</td>
           <td class="cell-mono" style="color:var(--muted);">${r[1]}</td>
-          <td class="cell-accent">${r[2]}</td>
-          <td class="cell-mono">${r[3]}</td>
-          <td class="cell-key">${r[4]}</td>
+          <td>${r[2]}</td>
+          <td class="cell-accent">${r[3]}</td>
+          <td class="${idx === 3 ? "cell-accent" : "cell-mono"}">${r[4]}</td>
         </tr>`
         )
         .join("");
@@ -418,7 +376,7 @@
           (r, idx) => `
         <tr>
           <td class="cell-key">${r[0]}</td>
-          <td class="${idx >= 2 ? "cell-accent" : "cell-mono"}">${r[1]}</td>
+          <td class="${idx >= 1 ? "cell-accent" : "cell-mono"}">${r[1]}</td>
           <td>${r[2]}</td>
         </tr>`
         )
@@ -439,15 +397,10 @@
         .join("");
     }
 
-    renderAllCharts(c);
+    initAllVisualizations();
   }
 
-  function setText(id, val) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = val || "";
-  }
-
-  // ==================== ECHARTS RENDERING (McKinsey 3-Color Palette) ====================
+  // ==================== ECHARTS & LEAFLET INITIALIZATION ====================
   function getOrCreateChart(domId) {
     const dom = document.getElementById(domId);
     if (!dom || typeof echarts === "undefined") return null;
@@ -459,350 +412,342 @@
     return chart;
   }
 
-  function renderAllCharts(c) {
-    if (!c || !c.charts) return;
+  function initAllVisualizations() {
+    const monthlyData = window.SKP01_MONTHLY_DATA || [];
 
-    // 1. Slide 1: Executive Waterfall / Bar + PR Line
-    const ch1 = getOrCreateChart("chart-exec-waterfall");
-    if (ch1) {
-      const wf = c.charts.execWaterfall;
-      ch1.setOption({
-        tooltip: { trigger: "axis" },
+    // 1. Slide 3: 13-Month History Chart (Actual vs 80%PR Expected vs Lost kWh vs PR%)
+    const chMonthly = getOrCreateChart("chart-d2-monthly");
+    if (chMonthly && monthlyData.length > 0) {
+      const months = monthlyData.map((m) => m.month);
+      const actual = monthlyData.map((m) => m.actual_kwh);
+      const expected = monthlyData.map((m) => m.expected_kwh);
+      const lost = monthlyData.map((m) => m.lost_kwh);
+      const prs = monthlyData.map((m) => m.pr);
+
+      chMonthly.setOption({
+        tooltip: { trigger: "axis", axisPointer: { type: "cross" } },
         legend: {
-          data: ["電量分析 (kWh)", "PR 性能比 (%)"],
-          bottom: 0,
-          textStyle: { color: MCK_COLORS.slate, fontSize: 11 }
+          data: ["實際發電 (kWh)", "80%PR應發 (kWh)", "防逆流棄光損失 (kWh)", "實測 PR值 (%)"],
+          top: 0,
+          textStyle: { color: MCK_COLORS.slate, fontSize: 11.5 }
         },
-        grid: { top: 28, left: 54, right: 48, bottom: 42 },
+        grid: { top: 34, left: 56, right: 52, bottom: 32 },
         xAxis: {
           type: "category",
-          data: wf.categories,
-          axisLabel: { color: MCK_COLORS.slate, fontSize: 11, interval: 0, rotate: 10 },
+          data: months,
+          axisLabel: { color: MCK_COLORS.slate, fontSize: 11 },
           axisLine: { lineStyle: { color: MCK_COLORS.line } }
         },
         yAxis: [
           {
             type: "value",
-            name: "kWh",
+            name: "度數 (kWh)",
             axisLabel: { color: MCK_COLORS.slate, fontSize: 11 },
             splitLine: { lineStyle: { color: "#E2E8F0", type: "dashed" } }
           },
           {
             type: "value",
             name: "PR (%)",
-            min: 50,
-            max: 90,
+            min: 0,
+            max: 100,
             axisLabel: { color: MCK_COLORS.slate, fontSize: 11, formatter: "{value}%" },
             splitLine: { show: false }
           }
         ],
         series: [
           {
-            name: "電量分析 (kWh)",
+            name: "實際發電 (kWh)",
             type: "bar",
-            barWidth: "42%",
-            data: wf.values.map((v) => ({
-              value: Math.abs(v),
-              itemStyle: {
-                color: v < 0 ? MCK_COLORS.accent : MCK_COLORS.navy
-              }
-            })),
-            label: {
-              show: true,
-              position: "top",
-              fontSize: 11,
-              fontFamily: "JetBrains Mono",
-              color: MCK_COLORS.ink,
-              formatter: (p) => {
-                const orig = wf.values[p.dataIndex];
-                return (orig < 0 ? "" : "") + orig.toLocaleString();
-              }
-            }
+            data: actual,
+            itemStyle: { color: MCK_COLORS.navy }
           },
           {
-            name: "PR 性能比 (%)",
+            name: "防逆流棄光損失 (kWh)",
+            type: "bar",
+            data: lost,
+            itemStyle: { color: MCK_COLORS.accent }
+          },
+          {
+            name: "80%PR應發 (kWh)",
+            type: "line",
+            data: expected,
+            itemStyle: { color: MCK_COLORS.muted },
+            lineStyle: { type: "dashed", width: 2 }
+          },
+          {
+            name: "實測 PR值 (%)",
             type: "line",
             yAxisIndex: 1,
-            data: wf.prLine,
+            data: prs,
             symbol: "circle",
-            symbolSize: 8,
-            lineStyle: { color: MCK_COLORS.accentDark, width: 2.5 },
-            itemStyle: { color: MCK_COLORS.accentDark }
+            symbolSize: 6,
+            itemStyle: { color: MCK_COLORS.accentDark },
+            lineStyle: { width: 2.5, color: MCK_COLORS.accentDark }
           }
         ]
       });
     }
 
-    // 2. Slide 3: D2 P2P Step Degradation & Irradiance Decoupling
-    const ch2 = getOrCreateChart("chart-d2-loss");
-    if (ch2) {
-      const d2 = c.charts.d2Timeline;
-      ch2.setOption({
+    // 2. Slide 3: 92-Day Daily Status Distribution Doughnut Chart
+    const chPie = getOrCreateChart("chart-d2-daily-pie");
+    if (chPie) {
+      chPie.setOption({
+        tooltip: { trigger: "item", formatter: "{b}: {c} 天 ({d}%)" },
+        legend: {
+          orient: "vertical",
+          left: 0,
+          top: "middle",
+          textStyle: { color: MCK_COLORS.slate, fontSize: 11.5 }
+        },
+        series: [
+          {
+            name: "92天運轉狀態",
+            type: "pie",
+            radius: ["45%", "76%"],
+            center: ["66%", "50%"],
+            itemStyle: { borderColor: "#FFFFFF", borderWidth: 2 },
+            label: {
+              show: true,
+              position: "inside",
+              formatter: "{c}天",
+              fontFamily: "JetBrains Mono",
+              fontSize: 11,
+              fontWeight: 700,
+              color: "#FFFFFF"
+            },
+            data: [
+              { value: 29, name: "正常全載 (≥90%)", itemStyle: { color: MCK_COLORS.navy } },
+              { value: 24, name: "部分降載 (50-90%)", itemStyle: { color: "#64748B" } },
+              { value: 30, name: "嚴重限電 (15-50%)", itemStyle: { color: MCK_COLORS.accent } },
+              { value: 9, name: "週末/停工歸零 (<15%)", itemStyle: { color: MCK_COLORS.accentDark } }
+            ]
+          }
+        ]
+      });
+    }
+
+    // 3. Slide 5: 5-Minute High-Frequency Intraday Profile Viewer
+    window.updateProfileChart();
+
+    // 4. Slide 8: D6 Phased Roadmap Chart
+    const chRoadmap = getOrCreateChart("chart-d6-roadmap");
+    if (chRoadmap) {
+      chRoadmap.setOption({
         tooltip: { trigger: "axis" },
         legend: {
-          data: ["同儕發電比 (P2P Ratio)", "晴空日射量 (kWh/m²)"],
+          data: ["全場有效 PR (%)", "防逆流棄光損失率 (%)"],
           bottom: 0,
           textStyle: { color: MCK_COLORS.slate, fontSize: 11 }
         },
         grid: { top: 28, left: 48, right: 48, bottom: 42 },
         xAxis: {
           type: "category",
-          data: d2.dates,
-          axisLabel: { color: MCK_COLORS.slate, fontSize: 11 },
+          data: ["現況基線", "Phase 1 (M1 死區微調)", "Phase 2 (M2-3 製程移峰)", "Phase 3 (M4-6 儲能併網)", "Phase 4 (M7+ 動態驗收)"],
+          axisLabel: { color: MCK_COLORS.slate, fontSize: 10.5, interval: 0, rotate: 10 },
           axisLine: { lineStyle: { color: MCK_COLORS.line } }
-        },
-        yAxis: [
-          {
-            type: "value",
-            name: "P2P Ratio",
-            min: 0.5,
-            max: 1.1,
-            axisLabel: { color: MCK_COLORS.slate, fontSize: 11 },
-            splitLine: { lineStyle: { color: "#E2E8F0", type: "dashed" } }
-          },
-          {
-            type: "value",
-            name: "kWh/m²",
-            min: 0,
-            max: 8,
-            axisLabel: { color: MCK_COLORS.muted, fontSize: 11 },
-            splitLine: { show: false }
-          }
-        ],
-        series: [
-          {
-            name: "同儕發電比 (P2P Ratio)",
-            type: "line",
-            step: "middle",
-            data: d2.peerRatio,
-            symbol: "circle",
-            symbolSize: 7,
-            lineStyle: { color: MCK_COLORS.accent, width: 3 },
-            itemStyle: { color: MCK_COLORS.accent },
-            markLine: {
-              silent: true,
-              data: [{ yAxis: 1.0, name: "同儕基準 1.00" }],
-              lineStyle: { color: MCK_COLORS.navy, type: "dashed", width: 1.5 }
-            }
-          },
-          {
-            name: "晴空日射量 (kWh/m²)",
-            type: "bar",
-            yAxisIndex: 1,
-            barWidth: "35%",
-            data: d2.irradiance,
-            itemStyle: { color: "rgba(12, 58, 99, 0.18)" }
-          }
-        ]
-      });
-    }
-
-    // 3. Slide 4: D3 ISA-18.2 Alarm Rationalization Horizontal Bar
-    const ch3 = getOrCreateChart("chart-d3-alarm");
-    if (ch3) {
-      const af = c.charts.d3AlarmFunnel;
-      ch3.setOption({
-        tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
-        grid: { top: 18, left: 165, right: 48, bottom: 24 },
-        xAxis: {
-          type: "value",
-          axisLabel: { color: MCK_COLORS.slate, fontSize: 11 },
-          splitLine: { lineStyle: { color: "#E2E8F0", type: "dashed" } }
         },
         yAxis: {
-          type: "category",
-          inverse: true,
-          data: af.labels,
-          axisLabel: { color: MCK_COLORS.ink, fontSize: 11.5, fontWeight: 600 },
-          axisLine: { lineStyle: { color: MCK_COLORS.line } }
+          type: "value",
+          min: 0,
+          max: 100,
+          axisLabel: { color: MCK_COLORS.slate, fontSize: 11, formatter: "{value}%" },
+          splitLine: { lineStyle: { color: "#E2E8F0", type: "dashed" } }
         },
         series: [
           {
+            name: "全場有效 PR (%)",
             type: "bar",
-            barWidth: "48%",
-            data: af.counts.map((v, idx) => ({
-              value: v,
-              itemStyle: {
-                color:
-                  idx === af.counts.length - 1
-                    ? MCK_COLORS.accent
-                    : idx === 0
-                    ? MCK_COLORS.muted
-                    : MCK_COLORS.navy
-              }
-            })),
+            barWidth: "38%",
+            data: [48.6, 53.5, 64.0, 78.5, 81.5],
+            itemStyle: { color: MCK_COLORS.navy },
             label: {
               show: true,
-              position: "right",
+              position: "top",
               fontFamily: "JetBrains Mono",
-              fontWeight: 700,
-              color: MCK_COLORS.ink,
-              formatter: "{c} 件"
+              fontSize: 11,
+              color: MCK_COLORS.navy,
+              formatter: "{c}%"
             }
-          }
-        ]
-      });
-    }
-
-    // 4. Slide 5: D4a UNSW High-Frequency Intraday Electrical Penetration
-    const ch4 = getOrCreateChart("chart-d4-mppt");
-    if (ch4) {
-      const m = c.charts.d4Mppt;
-      ch4.setOption({
-        tooltip: { trigger: "axis" },
-        legend: {
-          data: ["正常同儕迴路出力", "Stage 1 接觸劣化期", "Stage 2 故障鎖死/斷路期", "系統端電壓 (V/kV)"],
-          bottom: 0,
-          textStyle: { color: MCK_COLORS.slate, fontSize: 11 }
-        },
-        grid: { top: 28, left: 48, right: 52, bottom: 42 },
-        xAxis: {
-          type: "category",
-          data: m.hours,
-          axisLabel: { color: MCK_COLORS.slate, fontSize: 11 },
-          axisLine: { lineStyle: { color: MCK_COLORS.line } }
-        },
-        yAxis: [
-          {
-            type: "value",
-            name: "電流(A) / 功率(MW)",
-            axisLabel: { color: MCK_COLORS.slate, fontSize: 11 },
-            splitLine: { lineStyle: { color: "#E2E8F0", type: "dashed" } }
           },
           {
-            type: "value",
-            name: "電壓",
-            axisLabel: { color: MCK_COLORS.muted, fontSize: 11 },
-            splitLine: { show: false }
-          }
-        ],
-        series: [
-          {
-            name: "正常同儕迴路出力",
+            name: "防逆流棄光損失率 (%)",
             type: "line",
-            smooth: true,
-            data: m.normalMpptCurrent,
-            lineStyle: { color: MCK_COLORS.navy, width: 2.5 },
-            itemStyle: { color: MCK_COLORS.navy }
-          },
-          {
-            name: "Stage 1 接觸劣化期",
-            type: "line",
-            smooth: true,
-            data: m.stage1Mppt1Current,
-            lineStyle: { color: MCK_COLORS.muted, width: 2, type: "dashed" },
-            itemStyle: { color: MCK_COLORS.muted }
-          },
-          {
-            name: "Stage 2 故障鎖死/斷路期",
-            type: "line",
-            smooth: false,
-            data: m.faultMppt1Current,
-            lineStyle: { color: MCK_COLORS.accent, width: 3 },
-            itemStyle: { color: MCK_COLORS.accent },
-            areaStyle: { color: "rgba(217, 119, 6, 0.10)" }
-          },
-          {
-            name: "系統端電壓 (V/kV)",
-            type: "line",
-            yAxisIndex: 1,
-            smooth: true,
-            data: m.normalVoltage,
-            lineStyle: { color: "#94A3B8", width: 1.5, type: "dotted" },
-            itemStyle: { color: "#94A3B8" }
-          }
-        ]
-      });
-    }
-
-    // 5. Slide 8: D6 P2P + HP Filter Long-Term Convergence
-    const ch5 = getOrCreateChart("chart-d6-p2p");
-    if (ch5) {
-      const d6 = c.charts.d6Convergence;
-      ch5.setOption({
-        tooltip: { trigger: "axis" },
-        legend: {
-          data: ["日同儕發電比 (Raw P2P)", "HP 濾波長週期趨勢項 (HP Trend)"],
-          bottom: 0,
-          textStyle: { color: MCK_COLORS.slate, fontSize: 11 }
-        },
-        grid: { top: 28, left: 48, right: 24, bottom: 42 },
-        xAxis: {
-          type: "category",
-          data: d6.days,
-          axisLabel: { color: MCK_COLORS.slate, fontSize: 11 },
-          axisLine: { lineStyle: { color: MCK_COLORS.line } }
-        },
-        yAxis: {
-          type: "value",
-          min: 0.6,
-          max: 1.06,
-          axisLabel: { color: MCK_COLORS.slate, fontSize: 11 },
-          splitLine: { lineStyle: { color: "#E2E8F0", type: "dashed" } }
-        },
-        series: [
-          {
-            name: "日同儕發電比 (Raw P2P)",
-            type: "scatter",
+            data: [55.7, 50.2, 36.5, 8.0, 4.2],
+            symbol: "circle",
             symbolSize: 8,
-            data: d6.rawP2P,
-            itemStyle: { color: MCK_COLORS.muted }
-          },
-          {
-            name: "HP 濾波長週期趨勢項 (HP Trend)",
-            type: "line",
-            smooth: true,
-            data: d6.hpTrend,
-            lineStyle: { color: MCK_COLORS.navy, width: 3 },
+            lineStyle: { color: MCK_COLORS.accent, width: 3 },
             itemStyle: { color: MCK_COLORS.accent }
           }
         ]
       });
     }
 
-    // 6. Slide 10: D8 20-Year DCF Cumulative Avoided Loss NPV
-    const ch6 = getOrCreateChart("chart-d8-dcf");
-    if (ch6) {
-      const dcf = c.charts.d8Dcf;
-      ch6.setOption({
-        tooltip: { trigger: "axis", valueFormatter: (v) => `NT$ ${v} 萬` },
-        grid: { top: 28, left: 52, right: 24, bottom: 32 },
+    // 5. Slide 10: D8 20-Year DCF Cumulative Net Cash Flow Chart (200kW/500kWh BESS)
+    const chDcf = getOrCreateChart("chart-d8-dcf");
+    if (chDcf) {
+      const years = Array.from({ length: 20 }, (_, i) => `Y${i + 1}`);
+      const baseline = Array(20).fill(0);
+      let cumBess = -6.5;
+      const bessCum = [];
+      for (let y = 1; y <= 20; y++) {
+        const net = 1.35 * Math.pow(0.992, y - 1) - 0.15;
+        cumBess += net;
+        bessCum.push(Math.round(cumBess * 100) / 100);
+      }
+
+      chDcf.setOption({
+        tooltip: { trigger: "axis", valueFormatter: (v) => `NT$ ${v} 百萬元` },
+        legend: {
+          data: ["現況維持棄光 (NT$ 0)", "導入 200kW/500kWh 儲能累計淨收益 (百萬NT$)"],
+          top: 0,
+          textStyle: { color: MCK_COLORS.slate, fontSize: 11 }
+        },
+        grid: { top: 34, left: 52, right: 28, bottom: 32 },
         xAxis: {
           type: "category",
-          data: dcf.years,
+          data: years,
           axisLabel: { color: MCK_COLORS.slate, fontSize: 11 },
           axisLine: { lineStyle: { color: MCK_COLORS.line } }
         },
         yAxis: {
           type: "value",
-          name: "NT$ 萬元",
+          name: "百萬 NT$",
           axisLabel: { color: MCK_COLORS.slate, fontSize: 11 },
           splitLine: { lineStyle: { color: "#E2E8F0", type: "dashed" } }
         },
         series: [
           {
-            name: "20年累積防損淨現值 (NPV)",
-            type: "bar",
-            barWidth: "52%",
-            data: dcf.cumNpvWan.map((v, idx) => ({
-              value: v,
-              itemStyle: {
-                color: idx === dcf.cumNpvWan.length - 1 ? MCK_COLORS.accent : MCK_COLORS.navy
-              }
-            })),
-            label: {
-              show: true,
-              position: "top",
-              fontSize: 10,
-              fontFamily: "JetBrains Mono",
-              color: MCK_COLORS.ink,
-              formatter: (p) => (p.dataIndex % 3 === 0 || p.dataIndex === dcf.cumNpvWan.length - 1 ? p.value : "")
+            name: "現況維持棄光 (NT$ 0)",
+            type: "line",
+            data: baseline,
+            lineStyle: { type: "dashed", color: MCK_COLORS.lightGray, width: 2 },
+            itemStyle: { color: MCK_COLORS.lightGray }
+          },
+          {
+            name: "導入 200kW/500kWh 儲能累計淨收益 (百萬NT$)",
+            type: "line",
+            data: bessCum,
+            lineStyle: { color: MCK_COLORS.navy, width: 3 },
+            itemStyle: { color: MCK_COLORS.navy },
+            areaStyle: { color: "rgba(12, 58, 99, 0.10)" },
+            markPoint: {
+              data: [
+                {
+                  name: "回本點 (4.8年)",
+                  coord: ["Y5", bessCum[4]],
+                  value: "4.8年回本",
+                  itemStyle: { color: MCK_COLORS.accent }
+                },
+                {
+                  name: "20年累計淨收益",
+                  coord: ["Y20", bessCum[19]],
+                  value: "+1,580萬",
+                  itemStyle: { color: MCK_COLORS.navy }
+                }
+              ]
             }
           }
         ]
       });
     }
+
+    // 6. Slide 4: Leaflet Map
+    const mapEl = document.getElementById("plantMap");
+    if (mapEl && typeof L !== "undefined" && !leafletMapInstance) {
+      leafletMapInstance = L.map("plantMap").setView([23.1812, 120.252], 14);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 18,
+        attribution: "© OpenStreetMap"
+      }).addTo(leafletMapInstance);
+      const marker = L.marker([23.1812, 120.252]).addTo(leafletMapInstance);
+      marker
+        .bindPopup(
+          "<b>世堃塑膠麻豆廠 582.06 kWp</b><br>自發自用屋頂型光伏電站<br>坐標：23.1812°N, 120.2520°E"
+        )
+        .openPopup();
+    }
   }
+
+  window.updateProfileChart = function () {
+    const profilesData = window.SKP01_PROFILES_DATA || {};
+    const select = document.getElementById("profileDateSelect");
+    const dateKey = select ? select.value : "2026-07-29";
+    const prof = profilesData[dateKey];
+    if (!prof) return;
+
+    const chProf = getOrCreateChart("chart-d4-profile");
+    if (!chProf) return;
+
+    chProf.setOption(
+      {
+        tooltip: { trigger: "axis", axisPointer: { type: "cross" } },
+        legend: {
+          data: ["日射量 (W/m²)", "AC 發電功率 (kW)", "DC 工作電壓 (V)", "電力控制比率 (%)"],
+          top: 0,
+          textStyle: { color: MCK_COLORS.slate, fontSize: 11.5 }
+        },
+        grid: { top: 34, left: 56, right: 64, bottom: 32 },
+        xAxis: {
+          type: "category",
+          data: prof.times,
+          axisLabel: { color: MCK_COLORS.slate, fontSize: 11, interval: 11 },
+          axisLine: { lineStyle: { color: MCK_COLORS.line } }
+        },
+        yAxis: [
+          {
+            type: "value",
+            name: "功率 (kW) / 日射 (W/m²)",
+            position: "left",
+            axisLabel: { color: MCK_COLORS.slate, fontSize: 11 },
+            splitLine: { lineStyle: { color: "#E2E8F0", type: "dashed" } }
+          },
+          {
+            type: "value",
+            name: "DC電壓 (V) / 控制比率 (%)",
+            min: 0,
+            max: 1000,
+            position: "right",
+            axisLabel: { color: MCK_COLORS.slate, fontSize: 11 },
+            splitLine: { show: false }
+          }
+        ],
+        series: [
+          {
+            name: "AC 發電功率 (kW)",
+            type: "line",
+            data: prof.ac_power,
+            itemStyle: { color: MCK_COLORS.navy },
+            lineStyle: { width: 2.8, color: MCK_COLORS.navy },
+            areaStyle: { color: "rgba(12, 58, 99, 0.14)" }
+          },
+          {
+            name: "DC 工作電壓 (V)",
+            yAxisIndex: 1,
+            type: "line",
+            data: prof.dc_voltage,
+            itemStyle: { color: MCK_COLORS.accent },
+            lineStyle: { width: 2.4, color: MCK_COLORS.accent }
+          },
+          {
+            name: "日射量 (W/m²)",
+            type: "line",
+            data: prof.irradiance,
+            itemStyle: { color: MCK_COLORS.lightGray },
+            lineStyle: { width: 1.8, type: "dashed", color: MCK_COLORS.lightGray }
+          },
+          {
+            name: "電力控制比率 (%)",
+            yAxisIndex: 1,
+            type: "line",
+            data: prof.ctrl_ratio,
+            itemStyle: { color: "#334155" },
+            lineStyle: { width: 2, type: "dotted", color: "#334155" }
+          }
+        ]
+      },
+      true
+    );
+  };
 
   function resizeVisibleCharts() {
     setTimeout(() => {
@@ -811,8 +756,83 @@
           ch.resize();
         }
       });
-    }, 60);
+      if (leafletMapInstance) {
+        leafletMapInstance.invalidateSize();
+      }
+    }, 80);
   }
+
+  // ==================== 92-DAY RAW DATA MODAL FUNCTIONS ====================
+  function renderRawTable() {
+    const dailyData = window.SKP01_DAILY_DATA || [];
+    const tbody = document.getElementById("rawDataTableBody");
+    if (!tbody || !dailyData.length) return;
+
+    tbody.innerHTML = dailyData
+      .map((r) => {
+        const isSevere = r.status.includes("嚴重") || r.status.includes("歸零");
+        return `
+      <tr>
+        <td class="cell-mono">${r.date}</td>
+        <td>${r.weekday}</td>
+        <td class="cell-mono">${r.actual_kwh.toLocaleString()}</td>
+        <td class="cell-mono">${r.expected_kwh.toLocaleString()}</td>
+        <td class="${isSevere ? "cell-accent" : "cell-mono"}">${r.lost_kwh.toLocaleString()}</td>
+        <td class="cell-mono">${r.irr_sum}</td>
+        <td class="cell-mono">${r.ey}</td>
+        <td class="cell-mono">${r.pr}%</td>
+        <td class="cell-mono">${r.ctrl_mean}%</td>
+        <td class="cell-mono">${r.ac_max}</td>
+        <td class="cell-mono">${r.v_max}</td>
+        <td class="${isSevere ? "cell-accent" : "cell-key"}">${r.status}</td>
+      </tr>`;
+      })
+      .join("");
+  }
+
+  window.filterRawTable = function () {
+    const q = (document.getElementById("rawSearchInput").value || "").toLowerCase();
+    const statusFilter = document.getElementById("rawStatusFilter").value;
+    const rows = document.querySelectorAll("#rawDataTableBody tr");
+    rows.forEach((tr) => {
+      const text = tr.innerText.toLowerCase();
+      const matchesQ = text.includes(q);
+      const matchesStatus = statusFilter === "ALL" || text.includes(statusFilter.toLowerCase());
+      tr.style.display = matchesQ && matchesStatus ? "" : "none";
+    });
+  };
+
+  window.exportRawCsv = function () {
+    const dailyData = window.SKP01_DAILY_DATA || [];
+    let csv =
+      "\uFEFF日期,星期,實際發電(kWh),80%PR應發(kWh),棄光損失度數(kWh),日射量(kWh/m2),等價時數Ey,實測PR(%),平均控制比率(%),AC峰值(kW),DC峰值電壓(V),運轉判定\n";
+    dailyData.forEach((r) => {
+      csv += `${r.date},${r.weekday},${r.actual_kwh},${r.expected_kwh},${r.lost_kwh},${r.irr_sum},${r.ey},${r.pr},${r.ctrl_mean},${r.ac_max},${r.v_max},${r.status}\n`;
+    });
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "世堃塑膠麻豆廠_SKP01_92天發電對帳數據.csv";
+    link.click();
+  };
+
+  window.copyRawTable = function () {
+    const dailyData = window.SKP01_DAILY_DATA || [];
+    let txt =
+      "日期\t星期\t實際發電(kWh)\t80%PR應發(kWh)\t棄光損失(kWh)\t日射量\tEy\tPR%\t控制比率\tAC峰值\tDC峰值V\t判定\n";
+    dailyData.forEach((r) => {
+      txt += `${r.date}\t${r.weekday}\t${r.actual_kwh}\t${r.expected_kwh}\t${r.lost_kwh}\t${r.irr_sum}\t${r.ey}\t${r.pr}%\t${r.ctrl_mean}%\t${r.ac_max}\t${r.v_max}\t${r.status}\n`;
+    });
+    navigator.clipboard.writeText(txt).then(() => alert("✅ 92 天對帳表格數據已複製至剪貼簿！"));
+  };
+
+  window.copyDataRequirementsText = function () {
+    const el = document.getElementById("reqTextContent");
+    if (!el) return;
+    navigator.clipboard
+      .writeText(el.innerText)
+      .then(() => alert("✅ 下一步深層分析 5 大資料索取清單已複製至剪貼簿，可直接發送給業主與廠務！"));
+  };
 
   // ==================== SLIDE DECK NAVIGATION ====================
   window.goToSlide = function (idx) {
@@ -868,18 +888,25 @@
     resizeVisibleCharts();
   };
 
-  window.switchCase = function (caseId) {
-    const found = allCases.find((c) => c.id === caseId);
-    if (!found) return;
-    currentCase = found;
-    renderCaseSlides(currentCase);
-    resizeVisibleCharts();
+  window.toggleReportMode = function () {
+    isOwnerMode = !isOwnerMode;
+    const btn = document.getElementById("btn-report-mode");
+    const heroLabel = document.getElementById("heroModeLabel");
+    if (isOwnerMode) {
+      if (btn) btn.textContent = "💼 模式：投資決策版";
+      if (heroLabel) heroLabel.textContent = "PV-2026-SKP01・世堃塑膠麻豆廠 582.06kWp（投資決策版・儲能資產賦能）";
+    } else {
+      if (btn) btn.textContent = "🔄 切換投資決策版";
+      if (heroLabel) heroLabel.textContent = "PV-2026-SKP01・世堃塑膠麻豆廠 582.06kWp（內部維運版・對策分析中）";
+    }
   };
 
-  // ==================== MODALS & NEW CASE CREATION ====================
   window.openModal = function (id) {
     const el = document.getElementById(id);
     if (el) el.classList.add("open");
+    if (id === "modal-raw-data") {
+      renderRawTable();
+    }
   };
 
   window.closeModal = function (id) {
@@ -887,66 +914,6 @@
     if (el) el.classList.remove("open");
   };
 
-  window.createNewCase = function (ev) {
-    ev.preventDefault();
-    const code = document.getElementById("nc-code").value.trim();
-    const siteName = document.getElementById("nc-site").value.trim();
-    const kwp = parseFloat(document.getElementById("nc-kwp").value) || 1000;
-    const equip = document.getElementById("nc-equip").value.trim();
-    const lostKwh = parseFloat(document.getElementById("nc-lost-kwh").value) || 3000;
-    const fit = parseFloat(document.getElementById("nc-fit").value) || 4.1835;
-    const conclusion = document.getElementById("nc-conclusion").value.trim();
-    const occRc = document.getElementById("nc-occ-rc").value.trim();
-    const escRc = document.getElementById("nc-esc-rc").value.trim();
-
-    const lostRev = Math.round(lostKwh * fit);
-    const annualKwh = Math.round(lostKwh * 7.3);
-    const annualNtd = Math.round(annualKwh * fit);
-    const dcf20Yr = Math.round(annualNtd * 13.8);
-
-    const template = JSON.parse(JSON.stringify(allCases[0]));
-    template.id = code;
-    template.code = code;
-    template.siteName = siteName;
-    template.capacityKwp = kwp;
-    template.targetEquip = equip;
-    template.statusLabel = "D4 根因驗證中";
-    template.lostKwh = lostKwh;
-    template.lostRevenueNtd = lostRev;
-    template.annualLossKwh = annualKwh;
-    template.annualLossNtd = annualNtd;
-    template.dcf20YrNpvNtd = dcf20Yr;
-
-    template.cover.tag = `8D PROBLEM SOLVING & UNSW SOLAR DIAGNOSTIC REPORT · ${code}`;
-    template.cover.conclusionTitle = conclusion;
-    template.cover.kpis[0].value = `${lostKwh.toLocaleString()} kWh`;
-    template.cover.kpis[1].value = `NT$ ${annualNtd.toLocaleString()} /年`;
-    template.cover.kpis[2].value = `NT$ ${(dcf20Yr / 10000).toFixed(1)} 萬`;
-    template.cover.metaLeft[0][1] = `${siteName}（${kwp} kWp）`;
-    template.cover.metaLeft[1][1] = equip;
-    template.cover.metaRight[1][1] = occRc;
-    template.cover.metaRight[2][1] = escRc;
-
-    template.summary.conclusionTitle = conclusion;
-    template.d4a.conclusionTitle = `雙軌根因實證：【發生根因】${occRc}；【流出根因】${escRc}`;
-    template.d4a.fiveWhyOccurrence[4][2] = `【發生根因 Occurrence RC】${occRc}`;
-    template.d4a.fiveWhyEscape[2][2] = `【流出根因 Escape RC】${escRc}`;
-
-    allCases.push(template);
-    try {
-      const customOnly = allCases.slice(window.PV_8D_CASES_DATA.length);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(customOnly));
-    } catch (e) {
-      console.warn(e);
-    }
-
-    initCaseSelector();
-    window.closeModal("modal-new-case");
-    window.switchCase(template.id);
-    window.goToSlide(0);
-  };
-
-  // ==================== KEYBOARD NAVIGATION & INIT ====================
   document.addEventListener("keydown", (e) => {
     if (!isDeckMode) return;
     const tag = (e.target && e.target.tagName) || "";
@@ -969,11 +936,11 @@
   window.addEventListener("resize", resizeVisibleCharts);
 
   document.addEventListener("DOMContentLoaded", () => {
-    loadCases();
-    currentCase = allCases[0];
-    initCaseSelector();
+    const cases = window.PV_8D_CASES_DATA || [];
+    currentCase = cases[0];
     renderSkillsTables();
     renderCaseSlides(currentCase);
+    renderRawTable();
     window.goToSlide(0);
   });
 })();
