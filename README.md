@@ -1,50 +1,33 @@
-# 進金生能源 6692 ｜ 光伏運維 8D 智慧管理與三層式 AI Agent 閉環工程平台
+# 進能服維運事業單位｜8D分析管理平台
 
-🌐 **GitHub Pages 線上瀏覽入口**：[https://davidyeh51.github.io/pv-8d-management-platform/](https://davidyeh51.github.io/pv-8d-management-platform/)
-
-> **依據《光伏運維中高嚴重度故障之 8D 問題解決體系、學術理論架構與開源知識庫實踐深度研究報告》之「工程結論」打造**  
-> **核心主體架構**：「**SCADA 物理特徵驅動（底層 Layer 1）＋ 雙模態混合知識圖譜 RAG 檢索（中層 Layer 2）＋ 強制驗證閘門 Validation-Gated AI Agent（頂層 Layer 3）**」的三層式自動化閉環工程系統。
+**線上發佈網址 (GitHub Pages)**：[https://davidyeh51.github.io/pv-8d-management-platform/](https://davidyeh51.github.io/pv-8d-management-platform/)
 
 ---
 
-## 🎯 平台設計核心（以研究報告「結論」為主體）
+## 1. 平台定位與麥肯錫顧問視覺規範
 
-綜合光伏產業故障實證數據（全美每年 25 億美元非計畫停機損失、60% 失效源於逆變器、平均 1.5~2.2 年首次出險、45% 逆變器原廠在建成 4 年後退出市場）、國際頂尖學術前沿與 GitHub 開源資產，本平台將 8D 從「事後填寫的行政表單」升級為**三層式自動化閉環工程系統**：
+本平台以《光伏運維 8D 報告與知識庫》與《光伏維運 AI Agent 應用與研究》之**核心結論**為主體，採用與 [`madou-shinkun-diagnostic`](https://davidyeh51.github.io/madou-shinkun-diagnostic/) 一致的 **12 頁互動式簡報翻頁引擎 (Slide Deck Mode / 完整報告雙模式)**，並嚴格遵循 **麥肯錫顧問風格 (McKinsey Consulting Visual Standard)**：
 
-### 1. 【底層 Layer 1】邊緣與 SCADA 數據預處理層（賦能 D0、D1 與 D2）
-- **數據審計與單位校正**：常駐 `ALZ-11` 與 `UNSW-Solar` Notebook 清洗管線，自動修正氣象站溫標（$^\circ\text{F} / ^\circ\text{C}$）與逆變器計量單位錯置（$\text{W} / \text{kW}$）、過濾負值發電與夜間時鐘偏移。
-- **氣象干擾解耦與告警降噪**：
-  - 採用 `sprince0031` 之 $I\text{-}V\text{-}G$ 非線性分類模型（Random Forest / SVM）解耦「組件內部線間短路（LL Fault）」與「外部短暫雲層遮擋（Passing Cloud Shading）」，防止假性 8D 立項。
-  - 結合 `aws-samples/sample-intelligent-alarms-agent` 之 **ISA-18.2 / IEC 62682 / EEMUA 191 告警降噪機制**，自動剔除 **60%–80%** 的連鎖附屬誤報（告警風暴 Alarm Flooding）。
-- **光伏 FMEA 嚴重度閾值 ($S_{\text{PV}} \ge 3$) 自動觸發立項**：
-  - 當 $S_{\text{PV}} = 5$（直流電弧 DC Arc Fault、IGBT 熱失控、絕緣崩潰漏電流超標）時強制啟動現場 **LOTO 上鎖掛牌安全隔離**。
-  - 自動截取異常時間窗口之 SCADA 波形、同儕比對（P2P）PR 損失量與單線圖（SLD）拓撲位置，並透過**多目標 AI 團隊演算法**匹配 2–10 名跨部門專家（Champion、Leader、現場電氣、SCADA 數據、OEM FAE、資產索賠專員），生成結構化且量化的 **D1 與 D2 初稿（含 5W2H 與 `Is / Is Not` 邊界分析矩陣）**。
-
-### 2. 【中層 Layer 2】雙模態 8D 知識庫與圖譜推論層（賦能 D3、D4 與 D5）
-- **破解 45% 逆變器原廠 4 年退場之文檔斷鏈危機**：採用 `searlion/rag-strategies` 的邏輯章節切塊技術（Gemini 2.5 Pro `section_map.json` + FAISS），將原廠維修手冊、IEC 併網規範、場站 PFMEA/控制計畫及過往結案 8D 報告切分為完整語義塊，同步存入**向量資料庫（Milvus/FAISS）與知識圖譜（Neo4j）**（仿照 `NVIDIA-AI-Blueprints` 與 `didilili/deepsearch-agents` 時間窗口感知 CA-RAG 架構）。
-- **FCA-B-FSA 故障特徵映射與 CIRCA / RCInvestigator 拓撲推論**：
-  - 建立「**電氣故障特徵（FS）$\rightarrow$ 單線圖設備節點（SLD Node）$\rightarrow$ 物理發生根因（Occurrence RC）$\rightarrow$ 監控流出根因（Escape RC）$\rightarrow$ 歷史永久對策（PCA）**」五階實體關聯邊。
-  - 支援向上泛化算子（$\Uparrow$ Upward Expansion，自動鎖定 D3 同批次設備 100% IR 熱像普查範圍）、水平同儕類比算子（$\Leftarrow$ Leftward Expansion）與 **TWVNS 啟發式路徑推論**（解決「異常在逆變器端被捕獲，真實根因卻在上游直流配電側 MC4 接頭或感測器」之跨系統故障傳播盲區）。
-  - 歷史對策檢索時間由 **300 分鐘壓縮至 1 分鐘內（提速 300 倍）**。
-- **零幻覺引文核驗閘門（`uptrain-ai` `RAG_WITH_CITATION`）**：強制 AI 僅能在**專家驗證知識庫（Expert-Validated Knowledge Base）**邊界內生成附帶精確出處的根因假設，徹底杜絕 D4 階段「看似合理卻未經證實」的 AI 幻覺。
-
-### 3. 【頂層 Layer 3】Agent Skill 合規審查與文件閉環層（賦能 D4 審查與 D6–D8）
-- 整合 `RBraga01/Quality-Engineering-Skills`（`/8d-coach`、`/rca-facilitator`、`supplier-scar`、`/control-plan-builder`）與 `duding-engicool/skill-8d-report-analyzer`（TRACE 47/50 分，百分制加權評分：D1 10%、D2 15%、D3 15%、**D4 30% 核心權重**、D5 15%、D6 10%、D7/D8 5%）。
-- **強制執行三大治理鐵律（Three Governance Iron Laws）**：
-  1. **治理鐵律一（兩階段人工確認閘門）**：解析現場報告與數據後，必須經過**工程師人工核對確認**結構化內容無誤，方可進入第二階段 AI 深度分析與評分。
-  2. **治理鐵律二（D4 雙根因與 $\ge 5$ 層雙向可逆 5-Why 證據鏈檢核）**：對佔據 **30% 核心評分權重**的 D4 階段執行雙根因（發生因＋流出因）與至少 5 層 5-Why 的雙向可逆證據鏈檢核；**嚴格攔截並退回歸咎於「人員疏忽（Human Error）」或「單純零件自然老化」的敷衍結論**。
-  3. **治理鐵律三（D6 P2P+HP 濾波長期驗證與 D7 四大工程文件強制升版閉環）**：在 D6 透過 `UNSW-Solar` 的 HP 濾波與同儕 PR 演算法完成 3–6 個月零復發驗證後，於 D7 強制觸發 `/control-plan-builder` 更新**四大核心工程文件版次**（① PFMEA/DFMEA、② 控制計畫 Control Plan、③ SOP/SIP 與檢驗標準、④ SCADA 預警規則與 AI 故障特徵庫），確保每次電站故障皆實質轉化為全場站可靠度的永久升級。
+- **三色極簡權威配色**：主色深藍（Deep Navy `#0C3A63` / `#082644`）＋中性灰階（Neutral Grayscale），搭配單一強調色（琥珀金 Amber Gold `#D97706`）僅標示最關鍵的損失金額、核心缺口或根因結論。
+- **金字塔原理排版 (Pyramid Principle)**：每一頁簡報標題 (`<h2>`) 直接撰寫「**本頁結論**」（一句完整的行動結論句，而非單純章節名稱），下方以結構化矩陣、流程圖或 ECharts 互動圖表支撐該結論。
+- **圖表優先與留白節制**：內建 6 座 ECharts 工程與財務圖表（發電損失瀑布圖、P2P 階梯劣化與日射解耦圖、ISA-18.2 告警降噪漏斗、UNSW 高頻時序穿透圖、D6 HP 濾波收斂圖、20 年 DCF 淨現值防損曲線），每頁嚴格限制 $\le 3$ 個視覺群組。
 
 ---
 
-## 📁 檔案結構
+## 2. 已安裝之 11 大光伏維運與 8D 品質工程 AI Skills
 
-```
-pv-8d-management-platform/
-├── index.html            # 三層式閉環工程平台主介面 (5 大工作台分頁 + 3 個互動模態框)
-├── app.js                # Layer 1 預處理模擬器、Layer 2 圖譜算子與零幻覺閘門、Layer 3 三大治理鐵律審查引擎
-├── seed-data.js          # 權威實證案例庫、邏輯章節切塊庫與報告四大對照表完整種子資料
-├── supabase-client.js    # Supabase BaaS 雲端客戶端與 LocalStorage 離線同步模組 (遵循零私鑰規範)
-├── supabase-schema.sql   # PostgreSQL 資料表 (pv_8d_cases, pv_8d_knowledge_chunks, pv_8d_fmea_updates) 與 RLS 腳本
-└── README.md             # 平台架構與操作說明文件
-```
+所有技能已完整安裝於 `C:\Users\davidyeh\.gemini\config\skills\`：
+
+| 層級 | Skill 代號 | 對應開源專案 (GitHub) | 8D 階段映射 |
+| :--- | :--- | :--- | :---: |
+| **Layer 1 數據感知與時序物理診斷層** | `pv-performance-diagnosis` | `UNSW-Solar/performance_diagnosis` | D0, D2, D4, D6 |
+| **Layer 1 數據感知與時序物理診斷層** | `pv-ll-cloud-decoupling` | `sprince0031/Solar-Fault-Detection-Classification-Project` | D0, D4 |
+| **Layer 1 & 2 邊緣感測與對話代理** | `pv-soma-iot-agent` | `Azza-chr/SOMA` | D0, D3, D5 |
+| **Layer 1 數據感知與髒數據清洗層** | `pv-scada-audit-reporting` | `ALZ-11/campus-energy-optimization` | D0, D2, D8 |
+| **Layer 1 罕見故障過採樣預警層** | `pv-smartgrid-smote-fault` | `milin-rao-deshmukh/Smart-Grid-Fault-Detection-and-Performance-Prediction-Supervised-ML-Project` | D0, D2, D4 |
+| **Layer 2 多代理告警合理化層** | `pv-isa182-intelligent-alarms` | `aws-samples/sample-intelligent-alarms-agent` | D0, D1, D3 |
+| **Layer 2 微電網告警與電壓控制層** | `pv-microgrid-alarm-mpc` | `oihika/Degradation-Aware-MPC-for-a-Freiburg-Renewable-District-Microgrid` | D2, D3, D5 |
+| **Layer 2 光學與紅外線視覺對照層** | `pv-vision-defect-suite` | `hackingmaterials/pv-vision` (+ PVEL-AD / YOLOv9) | D3, D4, D6 |
+| **Layer 3 數位品質工程與防呆層** | `quality-8d-engineering-skills` | `RBraga01/Quality-Engineering-Skills` | D1, D2, D4, D5, D7 |
+| **Layer 3 合規評分與防幻覺審查層** | `skill-8d-report-analyzer` | `duding-engicool/skill-8d-report-analyzer` | D4, D7, D8 |
+| **Layer 3 決策簡報與 DCF 估值層** | `solar-8d-diagnostic` | `davidyeh51/pv-8d-management-platform` | D0 ~ D8 全程 |

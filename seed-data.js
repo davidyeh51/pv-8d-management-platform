@@ -1,470 +1,833 @@
-// =============================================================================
-// 進金生能源 6692 ｜ 光伏運維 8D 智慧管理與三層式 AI Agent 閉環平台
-// 權威知識庫種子資料 (完全對齊《光伏運維 8D 報告與知識庫》研究報告與結論架構)
-// =============================================================================
+/**
+ * 進能服維運事業單位 — 8D分析管理平台
+ * 麥肯錫金字塔原理 (Pyramid Principle) 案例資料庫與 11 大已安裝 AI Agent Skills 清單
+ */
 
-window.PV_8D_SEED_DATA = {
-  // 1. 結論主體：三層式自動化閉環工程系統架構定義
-  architectureLayers: [
-    {
-      layerId: 1,
-      code: "Layer 1 (底層)",
-      name: "邊緣與 SCADA 數據預處理層",
-      empoweredDisciplines: ["D0 緊急響應與初篩", "D1 成立跨職能團隊", "D2 問題精確描述"],
-      tagline: "SCADA 物理特徵驅動 ✕ 氣象干擾解耦 ✕ ISA-18.2 告警降噪 ✕ 多目標團隊匹配",
-      corePipelines: [
-        "ALZ-11 & UNSW-Solar Notebook 常駐管線：自動修正氣象站溫標 (°F/°C) 與逆變器計量單位錯置 (W/kW)、過濾負值發電與夜間時鐘偏移",
-        "sprince0031 I-V-G 非線性分類模型 (Random Forest / SVM)：解耦「組件內部線間短路 (LL Fault)」與「外部短暫雲層遮擋 (Passing Cloud Shading)」",
-        "aws-samples/sample-intelligent-alarms-agent (ISA-18.2 / IEC 62682 / EEMUA 191)：自動剔除 60%–80% 連鎖附屬誤報（告警風暴 Alarm Flooding）",
-        "光伏 FMEA 嚴重度閾值 (S_PV >= 3) 觸發器：S_PV=5 強制啟動 LOTO 上鎖掛牌隔離；自動截取異常窗口波形、P2P PR 損失與 SLD 單線圖位置，匹配 2–10 人跨職能團隊生成 D1/D2 初稿"
+window.PV_8D_SKILLS_REGISTRY = [
+  {
+    id: "pv-performance-diagnosis",
+    name: "UNSW-Solar 光伏性能診斷與同儕比對引擎",
+    repo: "UNSW-Solar/performance_diagnosis",
+    localPath: "C:\\Users\\davidyeh\\.gemini\\config\\skills\\pv-performance-diagnosis",
+    layer: "Layer 1 數據感知與時序物理診斷層",
+    stages: ["D0", "D2", "D4", "D6"],
+    category: "電氣與微氣象時序類",
+    conclusion: "透過 P2P 同儕比對與 HP 濾波分解，無需額外硬體即可定位 AC/DC 遮蔽、截割、斷路與長週期衰減。",
+    metrics: "定位精度達 MPPT 迴路級；D6 支援 3–6 個月長週期收斂驗證",
+    files: "pv_Diagnostic_Functions.py / PV plant performance diagnosis.ipynb"
+  },
+  {
+    id: "pv-ll-cloud-decoupling",
+    name: "線間短路故障與動態浮雲遮蔽解耦模型",
+    repo: "sprince0031/Solar-Fault-Detection-Classification-Project",
+    localPath: "C:\\Users\\davidyeh\\.gemini\\config\\skills\\pv-ll-cloud-decoupling",
+    layer: "Layer 1 數據感知與時序物理診斷層",
+    stages: ["D0", "D4"],
+    category: "電氣與微氣象時序類",
+    conclusion: "利用 I-V-G 非線性耦合特徵區分「內部線間短路 (LL Fault)」與「外部浮雲遮蔽」，消除 65% 以上天氣假陽性派工。",
+    metrics: "Random Forest / SVM 分類準確率 > 98.2%；支援 D0 自動氣象解耦閘門",
+    files: "Solar_Project.ipynb / All_Solar_Data.csv"
+  },
+  {
+    id: "pv-soma-iot-agent",
+    name: "SOMA 10秒級 IoT 監測、RUL 預測與對話式維運代理",
+    repo: "Azza-chr/SOMA",
+    localPath: "C:\\Users\\davidyeh\\.gemini\\config\\skills\\pv-soma-iot-agent",
+    layer: "Layer 1 & Layer 2 邊緣感測與對話協同層",
+    stages: ["D0", "D3", "D5"],
+    category: "電氣與微氣象時序類",
+    conclusion: "以 MQTT 10 秒級高頻採樣結合 XGBoost 預測組件剩餘壽命 (RUL)，並由 LLM 轉譯為現場可執行之排修指令。",
+    metrics: "10s 邊緣感測頻率；支援積灰、過熱、高接觸阻抗分類與 RUL 天數估算",
+    files: "SOMA IoT Telemetry + DeepSeek Conversational Agent"
+  },
+  {
+    id: "pv-scada-audit-reporting",
+    name: "SCADA 髒數據審計清洗與 pvlib+XGBoost 動態基線引擎",
+    repo: "ALZ-11/campus-energy-optimization",
+    localPath: "C:\\Users\\davidyeh\\.gemini\\config\\skills\\pv-scada-audit-reporting",
+    layer: "Layer 1 數據感知與時序物理診斷層",
+    stages: ["D0", "D2", "D8"],
+    category: "SCADA 審計與自動報告類",
+    conclusion: "自動攔截 °F/°C 溫度錯置、W/kW 量綱溢位與逆變器離線恆定 96.99% 假效率，確保 D2 損失核算零失真。",
+    metrics: "四大髒數據自動清洗規則；pvlib 物理模型 + XGBoost 殘差動態基線",
+    files: "notebooks/campus-energy-optimization.ipynb / report.pdf"
+  },
+  {
+    id: "pv-smartgrid-smote-fault",
+    name: "SMOTE 極端不平衡罕見故障偵測與效率迴歸模型",
+    repo: "milin-rao-deshmukh/Smart-Grid-Fault-Detection-and-Performance-Prediction-Supervised-ML-Project",
+    localPath: "C:\\Users\\davidyeh\\.gemini\\config\\skills\\pv-smartgrid-smote-fault",
+    layer: "Layer 1 數據感知與時序物理診斷層",
+    stages: ["D0", "D2", "D4"],
+    category: "電氣與微氣象時序類",
+    conclusion: "針對僅佔 3% 的罕見電氣故障進行 SMOTE 特徵合成過採樣，解決傳統模型漏報（高假陰性）並同步預測應有轉換效率。",
+    metrics: "50,000 筆電網與環境樣本訓練；雙任務（故障分類 + 效率缺口迴歸）",
+    files: "SMOTE + Gradient Boosting Classifier & Regressor"
+  },
+  {
+    id: "pv-isa182-intelligent-alarms",
+    name: "ISA-18.2 / IEC 62682 智慧告警合理化多代理協同系統",
+    repo: "aws-samples/sample-intelligent-alarms-agent",
+    localPath: "C:\\Users\\davidyeh\\.gemini\\config\\skills\\pv-isa182-intelligent-alarms",
+    layer: "Layer 2 多代理協同決策與告警合理化層",
+    stages: ["D0", "D1", "D3"],
+    category: "SCADA 告警降噪與多代理類",
+    conclusion: "透過 Supervisor / Historian / Ticket / Document 四大 Agent 協同，折疊連鎖衍生告警並消除 60%–80% 無效告警洪水。",
+    metrics: "遵循 ANSI/ISA-18.2 與 EEMUA 191 標準；自動生成帶 LOTO 規範之派工單",
+    files: "Supervisor + PI Historian + Maximo + Document Agents"
+  },
+  {
+    id: "pv-microgrid-alarm-mpc",
+    name: "光儲微電網劣化感知 MPC 與 SCADA 告警控制台",
+    repo: "oihika/Degradation-Aware-MPC-for-a-Freiburg-Renewable-District-Microgrid",
+    localPath: "C:\\Users\\davidyeh\\.gemini\\config\\skills\\pv-microgrid-alarm-mpc",
+    layer: "Layer 2 多代理協同決策與告警合理化層",
+    stages: ["D2", "D3", "D5"],
+    category: "SCADA 告警降噪與多代理類",
+    conclusion: "整合母線過壓告警 (Voltage Alarms)、饋線熱壅塞 (Congestion) 與電池低 SOC 保護，防止午間併網過壓跳機截割。",
+    metrics: "支援 PCC 電壓越限預警與儲能 SOH 劣化成本最佳化調度",
+    files: "code with output.ipynb (SCADA Alarm Console)"
+  },
+  {
+    id: "pv-vision-defect-suite",
+    name: "太陽能 IR 熱像 / EL 隱裂視覺缺陷定位與電氣雙軌對照套件",
+    repo: "hackingmaterials/pv-vision",
+    localPath: "C:\\Users\\davidyeh\\.gemini\\config\\skills\\pv-vision-defect-suite",
+    layer: "Layer 2 多代理協同決策與視覺驗證層",
+    stages: ["D3", "D4", "D6"],
+    category: "光學與紅外線視覺對照類",
+    conclusion: "採「電氣時序初篩鎖定異常迴路 ＋ CV 電腦視覺像素級定位熱斑/隱裂」雙軌策略，節省 90% 無人機全場盲拍算力。",
+    metrics: "整合 pv-vision / PVEL-AD / YOLOv9；精確量化接頭 ΔT > 45°C 熱斑與二極體短路",
+    files: "pv-vision module segmentation + IR/EL defect classifier"
+  },
+  {
+    id: "quality-8d-engineering-skills",
+    name: "品質工程 8D 專家技能包 (/8d-coach, 5-Why, SCAR, PFMEA)",
+    repo: "RBraga01/Quality-Engineering-Skills",
+    localPath: "C:\\Users\\davidyeh\\.gemini\\config\\skills\\quality-8d-engineering-skills",
+    layer: "Layer 3 數位品質工程與知識沉澱層",
+    stages: ["D1", "D2", "D4", "D5", "D7"],
+    category: "8D 品質工程與合規稽核類",
+    conclusion: "強制執行 Is/Is Not 邊界矩陣、雙向 5-Why（發生鏈 vs 流出鏈）與 D7 PFMEA/管制計畫連動升版，杜絕人為疏失假根因。",
+    metrics: "內建 6 大子技能：/8d-coach, is-is-not, 5why, supplier-scar, pfmea, control-plan",
+    files: "skills/8d-coach, rca-facilitator, supplier-scar, control-plan-builder"
+  },
+  {
+    id: "skill-8d-report-analyzer",
+    name: "8D 報告百分制加權合規評分與兩階段防幻覺審查引擎",
+    repo: "duding-engicool/skill-8d-report-analyzer",
+    localPath: "C:\\Users\\davidyeh\\.gemini\\config\\skills\\skill-8d-report-analyzer",
+    layer: "Layer 3 數位品質工程與知識沉澱層",
+    stages: ["D4", "D7", "D8"],
+    category: "8D 品質工程與合規稽核類",
+    conclusion: "以 D4 佔比 30% 之百分制加權評分表與兩階段人工確認機制，攔截缺乏實證之 AI 幻覺並確保 TRACE ≥ 45/50 方可結案。",
+    metrics: "100 分制加權審計（D4 權重 30%）+ TRACE 50 分制認證；未達 85 分自動退件",
+    files: "SKILL.md + Weighted 8D Rubric & Two-Stage Confirmation"
+  },
+  {
+    id: "solar-8d-diagnostic",
+    name: "進能服光電 8D 決策簡報與 DCF 財務防損估值核心技能",
+    repo: "davidyeh51/pv-8d-management-platform",
+    localPath: "C:\\Users\\davidyeh\\.gemini\\config\\skills\\solar-8d-diagnostic",
+    layer: "Layer 3 數位品質工程與知識沉澱層",
+    stages: ["D0", "D2", "D4", "D8"],
+    category: "8D 品質工程與合規稽核類",
+    conclusion: "將 UNSW 物理診斷直接轉化為麥肯錫金字塔結構之 8D 決策簡報，並量化 20 年生命周期 DCF 淨現值防損效益。",
+    metrics: "整合 12 頁顧問級簡報視圖、零幻覺引文閘門與 TWVNS 知識圖譜溯源",
+    files: "SKILL.md + McKinsey 8D Slide Deck Generator"
+  }
+];
+
+window.PV_8D_CASES_DATA = [
+  {
+    id: "PV-2026-SKP01",
+    code: "PV-2026-SKP01",
+    siteName: "台南麻豆・世堃塑膠廠房屋頂電站",
+    capacityKwp: 582.12,
+    inverterSpec: "Huawei SUN2000-60KTL-M0 × 9 台（共 54 路 MPPT / 108 串）",
+    targetEquip: "INV #10（63.24 kWp，6 路 MPPT / 12 串，單串 17 片 × 310W）",
+    occurDate: "2026-01-23（緩慢劣化）→ 2026-02-11（完全斷路）",
+    reportDate: "2026-03-23",
+    stage: "D8",
+    statusLabel: "D8 已結案認證",
+    traceScore: 47,
+    weightedScore: 94,
+    fitRate: 4.1835,
+    lostKwh: 3251.5,
+    lostRevenueNtd: 13603,
+    annualLossKwh: 26397,
+    annualLossNtd: 110432,
+    dcf20YrNpvNtd: 1584000,
+    repairCostNtd: 6500,
+    paybackDays: 21.5,
+    prBefore: 61.9,
+    prPeer: 81.2,
+    prAfter: 81.0,
+    irrPct: 9.82,
+    // Slide 0 Cover
+    cover: {
+      tag: "8D PROBLEM SOLVING & UNSW SOLAR DIAGNOSTIC REPORT · PV-2026-SKP01",
+      conclusionTitle: "世堃塑膠案場 INV #10 發電短少 22.84% 係由 MPPT1/MPPT3 兩路組串正極 MC4 接頭壓接不良熱熔斷路所致，更換原廠端子後可全額挽回年化 NT$ 11.04 萬損失",
+      subtitle: "結合 UNSW-Solar P2P 同儕比對、ISA-18.2 告警降噪與雙向 5-Why 根因實證之三層式 AI 閉環決策報告",
+      kpis: [
+        { label: "50 天累計短少度數 (D2)", value: "3,251.5 kWh", note: "較同儕基準短少 -22.84%", isAccent: true },
+        { label: "年化預期挽回營收 (D8)", value: "NT$ 110,432 /年", note: "年化防損 26,397 kWh (FIT 4.1835)", isAccent: true },
+        { label: "20 年 DCF 累積防損淨現值", value: "NT$ 158.4 萬", note: "維修投入僅 NT$ 6,500（21.5 天回本）", isAccent: false },
+        { label: "8D 合規審查 / TRACE 評分", value: "94 分 / 47/50", note: "通過零幻覺引文閘門與雙根因驗證", isAccent: false }
       ],
-      kpiHighlight: "剔除 60%–80% 附屬誤報 ｜ 攔截假性雲遮派工 ｜ D1/D2 初稿 < 1 分鐘生成"
+      metaLeft: [
+        ["案場名稱與容量", "台南麻豆・世堃塑膠廠房屋頂電站（582.12 kWp）"],
+        ["異常標的設備", "INV #10（額定 60kW / 實裝 63.24 kWp，轄 6 路 MPPT、12 串組串）"],
+        ["異常演進時間軸", "2026/01/23 接觸電阻劣化 (-14.7%) → 2026/02/11 熱熔開路 (-32.4%)"]
+      ],
+      metaRight: [
+        ["核心調用 AI Skills", "pv-performance-diagnosis · pv-ll-cloud-decoupling · quality-8d-engineering-skills"],
+        ["物理根因結論 (D4)", "MPPT1 (PV1/PV2) 與 MPPT3 (PV5/PV6) 屋頂穿線盒前 MC4 接頭退針碳化開路"],
+        ["系統流出根因 (D4)", "SCADA 僅設整機離線告警，缺乏 MPPT 級別同儕電流偏差 (P2P < 0.85) 預警"]
+      ]
     },
-    {
-      layerId: 2,
-      code: "Layer 2 (中層)",
-      name: "雙模態 8D 知識庫與圖譜推論層",
-      empoweredDisciplines: ["D3 臨時遏制措施", "D4 根本原因分析 (RCA)", "D5 永久糾正措施 (PCA)"],
-      tagline: "邏輯章節切塊 ✕ Milvus 向量 + Neo4j 圖譜 ✕ FCA-B-FSA & TWVNS 拓撲溯源 ✕ 零幻覺引文閘門",
-      corePipelines: [
-        "破解 45% 逆變器 OEM 4 年後退場之文檔斷鏈危機：採用 searlion/rag-strategies (Gemini 2.5 Pro section_map.json) 將原廠手冊、IEC 規範、PFMEA 與歷史 8D 切分為 171 個完整邏輯語義塊",
-        "雙模態儲存架構 (NVIDIA-AI-Blueprints & didilili/deepsearch-agents)：同步寫入 Milvus/FAISS 向量庫與 Neo4j 知識圖譜，支援時間窗口感知檢索 (CA-RAG)",
-        "FCA-B-FSA 故障特徵映射 & CIRCA / RCInvestigator 拓撲推論：建立「電氣故障特徵 (FS) → 單線圖節點 (SLD Node) → 物理發生根因 (Occurrence RC) → 監控流出根因 (Escape RC) → 歷史永久對策 (PCA)」五階實體邊，支援向上泛化 (⇑)、水平同儕類比 (⇐) 與 TWVNS 路徑推論",
-        "uptrain-ai rag_with_citation.ipynb 零幻覺引文閘門：強制 AI 僅能在專家驗證知識庫 (Expert-Validated KB) 邊界內生成附精確出處之根因假設"
+    // Slide 1 Executive Summary
+    summary: {
+      tag: "EXECUTIVE SUMMARY · 麥肯錫金字塔決策摘要與三層閉環架構",
+      conclusionTitle: "透過「時序物理診斷 → 多代理告警協同 → 8D 知識圖譜」三層閉環，本案在 21.5 天回收期內消除 32.4% 功率缺口並完成全場 108 串防再發加固",
+      kpis: [
+        { label: "Stage 2 穩態功率缺口", value: "-32.4%", sub: "恰等於 2/6 路 MPPT 完全斷路 (33.3%)", isAccent: true },
+        { label: "SCADA 無效告警抑制率", value: "74.2%", sub: "ISA-18.2 濾除浮雲與黃昏抖動誤報", isAccent: false },
+        { label: "同批次 MC4 橫向普查", value: "108 串 (100%)", sub: "D3 紅外線熱像攔截另外 3 顆高溫接頭", isAccent: false }
       ],
-      kpiHighlight: "歷史對策檢索提速 300 倍 (300m → <1m) ｜ 100% 批次識別 ｜ 零幻覺強制引文"
+      matrixRows: [
+        ["D0~D1 立案與安全", "pv-ll-cloud-decoupling", "排除浮雲動態遮蔽干擾，確認非氣象電氣故障確信度 99.4%，啟動 1000V DC LOTO 隔離與跨職能 RACI 小組。"],
+        ["D2 量化問題描述", "pv-scada-audit-reporting", "清洗逆變器夜間靜態雜訊後，精算 50 天累計損失 3,251.5 kWh（NT$ 13,603），並以 Is/Is Not 矩陣鎖定單機直流側。"],
+        ["D3 暫時圍堵對策", "pv-vision-defect-suite", "隔離 INV #10 故障迴路防止直流電弧延燒，並對全場同施工批次 108 串 MC4 執行 100% IR 熱像普查（ΔT > 15°C 立即更換）。"],
+        ["D4 雙軌根因實證", "pv-performance-diagnosis", "發生根因：副廠公母端子公差不匹配致接觸電阻過高熱熔斷路；流出根因：SCADA 缺乏 MPPT 級 P2P 殘差告警。"],
+        ["D5~D6 永久對策驗證", "quality-8d-engineering-skills", "全面換裝 Stäubli 原廠 MC4-Evo2 端子並以壓接鉗扭力認證；修復後連續晴空日 P2P 恢復至 0.996（PR 達 81.0%）。"],
+        ["D7~D8 防再發與估值", "skill-8d-report-analyzer", "強制升版 PFMEA (S=8,O=2,D=2) 與管制計畫，部署 MPPT 零電流 15 分鐘自動派工規則，保全 20 年 DCF 淨現值 NT$ 158.4 萬。"]
+      ]
     },
-    {
-      layerId: 3,
-      code: "Layer 3 (頂層)",
-      name: "Agent Skill 合規審查與文件閉環層",
-      empoweredDisciplines: ["D4 根因邏輯審查 (權重 30%)", "D6 實施與長期效果驗證", "D7 預防再發與四大文件更新", "D8 團隊認可與知識庫歸檔"],
-      tagline: "RBraga01 /8d-coach ✕ duding-engicool 兩階段百分制審查 ✕ 三大治理鐵律強制閉環",
-      corePipelines: [
-        "治理鐵律一（兩階段人工確認閘門）：解析現場報告與 SCADA 數據後，必須經工程師人工核對確認結構化內容無誤，方可啟動第二階段 AI 深度分析（防跨頁表格/OCR 失真）",
-        "治理鐵律二（D4 雙根因與 >=5 層雙向可逆 5-Why 證據鏈檢核）：佔 30% 核心權重，強制要求「發生根因 + 流出根因」雙軌分析與 >=5 層符合 MECE 之可逆 5-Why；嚴格攔截歸咎於「人員疏忽」或「單純零件老化」之敷衍結論",
-        "治理鐵律三（D6 P2P+HP 濾波長期驗證與 D7 四大工程文件強制更新閉環）：D6 透過 UNSW-Solar HP 濾波與同儕 PR 完成 3–6 個月零復發驗證後，於 D7 強制觸發 /control-plan-builder 更新 PFMEA/DFMEA、控制計畫 (CP)、SOP/SIP 與 SCADA 預警規則庫"
+    // Slide 2 D0~D1
+    d0d1: {
+      tag: "D0 SYMPTOM & D1 TEAM · 徵兆捕捉、氣象解耦、LOTO 安全與 RACI 團隊",
+      conclusionTitle: "AI 氣象解耦模型證實 INV #10 效率驟降與日射波動無關（內部電氣故障確信度 99.4%），立即啟動 1000V DC LOTO 強制隔離與跨職能 8D 專案小組",
+      symptomCards: [
+        { title: "1. 氣象解耦與髒數據清洗 (D0 Gate)", metric: "99.4% 電氣故障確信度", desc: "調用 pv-scada-audit-reporting 剔除夜間恆定效率雜訊，並以 pv-ll-cloud-decoupling 比對全場 9 台逆變器：當日射 G = 780 W/m² 時，INV #1~#9 正規化出力皆達 0.81 kW/kWp，唯獨 INV #10 跌至 0.54 kW/kWp，徹底排除浮雲遮蔽。" },
+        { title: "2. 1000V DC 高壓直流 LOTO 緊急安全防護", metric: "零電弧事故 (Zero Arc)", desc: "屋頂組串開路電壓 Voc 高達 745V DC。嚴禁於日照負載下直接插拔燒蝕之 MC4 接頭！強制規定：先斷開 INV #10 AC 斷路器 → 旋轉 DC 隔離開關至 OFF → 掛鎖掛牌 (LOTO) → 勾表確認 I_dc = 0.0A 後始得拆檢。" }
       ],
-      kpiHighlight: "TRACE 47/50 高分規範 ｜ 故障復發率降至 0% ｜ D7 四大工程文件 100% 實質升版"
+      raciTable: [
+        ["D1 專案負責人 (Champion)", "維運事業部 副總 / 處長", "核准 D3 全場批次普查預算、簽署 SCAR 供應商索賠與 D8 結案認證", "Accountable (A)"],
+        ["AI 數據診斷工程師", "運維數據中心 (調用 UNSW Skill)", "執行 P2P 同儕比對、MPPT 時序電氣穿透分析與 D6 HP 濾波收斂驗證", "Responsible (R)"],
+        ["現場機電主任工程師", "南區駐點維運工班", "執行 1000V LOTO 掛鎖、三用電表 Voc/Isc 量測、IR 熱像儀掃描與 Stäubli 端子壓接", "Responsible (R)"],
+        ["品質與安環工程師 (QE/EHS)", "品保室 (/8d-coach 稽核)", "審核 D4 雙向 5-Why 邏輯閉環、強制更新 PFMEA / Control Plan 與 TRACE 評分", "Consulted (C)"]
+      ]
+    },
+    // Slide 3 D2
+    d2: {
+      tag: "D2 PROBLEM DESCRIPTION · 5W2H 定量損失核算與 Is / Is Not 邊界收斂矩陣",
+      conclusionTitle: "INV #10 經歷「高阻抗劣化 (-14.7%) → 雙路完全斷路 (-32.4%)」兩階段階梯式衰減，50 天累計損失 3,251.5 kWh，且異常嚴格侷限於單機直流側",
+      stageComparison: [
+        ["Baseline 正常基準期", "2026/01/01 – 01/22 (22天)", "1.002 (+0.2%)", "0 kWh", "6 路 MPPT 電壓與電流完全對稱，與同儕 #1~#9 無統計差異"],
+        ["Stage 1 接觸劣化期", "2026/01/23 – 02/10 (19天)", "0.853 (-14.7%)", "782.4 kWh", "MPPT1 接頭接觸電阻升高發熱，午間大電流時出現非線性壓降"],
+        ["Stage 2 完全斷路期", "2026/02/11 – 03/13 (31天)", "0.676 (-32.4%)", "2,469.1 kWh", "MPPT1 與 MPPT3 接頭熱熔斷路，電流歸零，損失恰佔 6 路中之 2 路 (33.3%)"]
+      ],
+      isIsNot: [
+        ["What (異常現象)", "直流側 MPPT1、MPPT3 輸入電流歸零，整機發電量恆定短少 32.4%", "AC 併網電壓、頻率、IGBT 散熱片溫度或絕緣阻抗 (R_iso) 跳脫故障"],
+        ["Where (空間位置)", "僅發生於 C 棟屋頂 INV #10 之第 1、3 路直流穿線盒前 MC4 接頭", "INV #1 ~ #9 其餘 8 台逆變器，以及 INV #10 之 MPPT2、4、5、6 迴路"],
+        ["When (發生時機)", "01/23 午間高電流時段開始劣化，02/11 12:15 峰值日照下徹底斷開", "夜間、陰雨弱光期或隨太陽方位角變化的早晚特定時段（排除固定物遮蔽）"],
+        ["Extent (影響範圍)", "單機損失約 33.3% 容量（21.08 kWp 失效），50 天累計短少 3,251.5 kWh", "全場系統性衰減或台電饋線限電截割 (Grid Clipping)"]
+      ]
+    },
+    // Slide 4 D3
+    d3: {
+      tag: "D3 INTERIM CONTAINMENT (ICA) · 現場安全圍堵、批次橫向普查與告警合理化",
+      conclusionTitle: "完成 INV #10 燒蝕迴路物理隔離後，針對同施工批次 108 串執行 100% 紅外線熱像普查，成功攔截另外 3 顆溫升超標 (ΔT > 22°C) 之潛伏瑕疵接頭",
+      containmentActions: [
+        ["ICA-1 故障迴路安全隔離", "立即斷開 INV #10 MPPT1 (PV1/PV2) 與 MPPT3 (PV5/PV6) 直流熔絲與接頭，以防水絕緣封套包覆裸露電纜，其餘正常 4 路 MPPT 維持安全併網發電。", "100% 消除屋頂直流電弧火災風險", "已完成 (24h內)"],
+        ["ICA-2 同批次 100% IR 普查", "調用 pv-vision-defect-suite 規範，於晴空午間 (G > 700 W/m²) 對全場 9 台逆變器共 108 串穿線盒前 MC4 接頭進行熱像儀全檢。", "發現 INV #04、#08 共 3 顆接頭溫升達 68°C~79°C，立即預防性更換", "已完成 (100% 普查)"],
+        ["ICA-3 ISA-18.2 告警降噪", "透過 pv-isa182-intelligent-alarms 設定「日射 G > 300 W/m² 且持續 15 分鐘 I_dc < 0.5A」複合觸發條件，抑制清晨/黃昏弱光假告警。", "無效告警通知減少 74.2%，派工準確率達 100%", "已上線運行"]
+      ],
+      batchStats: [
+        { label: "全場普查總串數", value: "108 串 (216 對 MC4)", note: "涵蓋 2023 年同批次安裝之所有屋頂組串" },
+        { label: "已斷路故障點 (INV #10)", value: "2 處 (MPPT1 / MPPT3)", note: "接頭外殼碳化變形，內部插針退針開路" },
+        { label: "熱像儀攔截潛伏熱斑", value: "3 處 (ΔT = 22.4°C~34.1°C)", note: "尚未斷路但接觸電阻已達 48 mΩ（正常 < 0.5 mΩ）" }
+      ]
+    },
+    // Slide 5 D4a (Root Cause Verification)
+    d4a: {
+      tag: "D4 ROOT CAUSE VERIFICATION · UNSW 高頻時序電氣穿透與雙向 5-Why 實證",
+      conclusionTitle: "電氣時序穿透與拆解實證確認：副廠端子公差不匹配且未用專用壓接鉗導致接觸電阻熱熔斷路（發生根因），而 SCADA 缺乏 MPPT 級同儕比對導致延誤 50 天（流出根因）",
+      fiveWhyOccurrence: [
+        ["Why 1 (表面現象)", "為何 INV #10 發電量恆定短少 32.4%？", "因為轄下 6 路 MPPT 中，MPPT1 與 MPPT3 兩路直流輸入電流在日照充足時完全為 0 A。"],
+        ["Why 2 (物理機制)", "為何 MPPT1 與 MPPT3 電流歸零但屋頂模組無破損？", "因為穿線盒前方的正極 MC4 接頭內部金屬插針熱熔碳化、彈片失去夾持力導致物理開路。"],
+        ["Why 3 (熱力學成因)", "為何該處 MC4 接頭會產生超過 105°C 之局部焦耳高溫？", "因為接觸電阻高達 85 mΩ（正常應 < 0.5 mΩ），午間 18A 電流通過時產生 I²R = 27.5W 集中熱功率。"],
+        ["Why 4 (施工/材料成因)", "為何該處接觸電阻異常偏高？", "現場外包工班混用不同廠牌之副廠 MC4 端子與原廠公頭對插，且以一般尖嘴鉗取代棘輪式專用壓接鉗。"],
+        ["Why 5 (制度發生根因)", "為何外包工班得以混用副廠端子且未被驗收攔截？", "【發生根因 Occurrence RC】工程採購規範未強制指定「同廠牌認證互配 (Stäubli MC4-Evo2)」，且竣工驗收缺乏壓接拉力抽檢與滿載 IR 熱像初驗。"]
+      ],
+      fiveWhyEscape: [
+        ["Why 1 (監控漏報)", "為何 01/23 開始劣化、02/11 完全斷路，卻直到 03/13 才立案派工？", "因為期間 INV #10 整機仍維持併網運轉（67.6% 出力），SCADA 並未發出任何「設備離線」告警。"],
+        ["Why 2 (規則缺陷)", "為何損失高達 1/3 容量卻未觸發性能低效告警？", "因為舊版 SCADA 僅設定「整機日 PR < 55%」單一靜態閾值，而冬季晴天 INV #10 殘餘 4 路 MPPT 仍可維持整機 PR 約 61.9%。"],
+        ["Why 3 (系統流出根因)", "為何監控系統無法識別單一逆變器與鄰近同儕之顯著落差？", "【流出根因 Escape RC】SCADA 告警邏輯未部署「UNSW P2P 同儕發電比值 (< 0.88)」與「單一 MPPT 電流偏差 (> 15%)」之動態比對演算法。"]
+      ]
+    },
+    // Slide 6 D4b (Hypothesis Elimination & Zero-Hallucination Gate)
+    d4b: {
+      tag: "D4 HYPOTHESIS ELIMINATION & GRAPH TRACE · 六大假說排除矩陣與知識圖譜零幻覺驗證",
+      conclusionTitle: "透過時間序列特徵與現場三用電表/熱像儀實測，嚴格排除「模組 PID 衰減、遮蔽、逆變器 IGBT 限載」等 5 項假說，唯獨「MC4 接頭熱熔開路」100% 吻合所有觀測證據",
+      hypotheses: [
+        ["H1：外部屋頂女兒牆或管線陰影遮蔽", "若為固定物遮蔽，功率缺口必隨太陽高度角與方位角呈早晚大、正午小之 U 型曲線。", "實測 09:00–15:00 全時段缺口恆為 -32.4%，與太陽仰角完全無關。", "❌ 已排除 (Rejected)"],
+        ["H2：浮雲短暫掠過或微氣候日射不均", "同棟廠房屋頂長寬僅 85m × 40m，浮雲掠過會使 INV #1~#10 在數分鐘內先後出現波動。", "pv-ll-cloud-decoupling 證實連續 31 天晴空日僅 INV #10 單獨低落。", "❌ 已排除 (Rejected)"],
+        ["H3：逆變器過溫降載或台電過壓截割 (Clipping)", "逆變器限載會使功率曲線在正午呈現「平頂截割 (Flat-top)」，且三相交流電壓或機箱溫度偏高。", "INV #10 正午波形仍呈平滑鐘型（僅峰值等比例縮減 1/3），內部溫度僅 44.2°C。", "❌ 已排除 (Rejected)"],
+        ["H4：太陽能模組 PID 電位誘發衰減或大面積隱裂", "PID 或隱裂屬漸進式電化學/機械退化，會使開路電壓 Voc 與填充因子緩慢下滑，不會瞬間歸零。", "屋頂量測模組本體串列 Voc = 698V 正常，但穿線盒後端至逆變器側 Voc = 0V。", "❌ 已排除 (Rejected)"],
+        ["H5：逆變器內部直流保險絲 (DC Fuse) 熔斷或 MPPT 基板燒毀", "若為逆變器內部基板損壞，在端子台輸入側仍可量得屋頂傳來之 698V 開路電壓。", "於逆變器 DC 端子台量測 MPPT1/MPPT3 輸入電壓為 0V，證明斷路點位於屋頂外部線纜。", "❌ 已排除 (Rejected)"],
+        ["H6：屋頂穿線盒前 MC4 接頭壓接不良熱熔斷路", "先因高接觸電阻產生 -14.7% 壓降（Stage 1），後因正午大電流熱熔斷開致 2/6 路歸零（-32.4%，Stage 2）。", "現場拆解發現 MPPT1/MPPT3 正極 MC4 接頭嚴重碳化熔穿，換新後電流立即恢復 17.8A。", "✅ 實證確立 (Verified Root Cause)"]
+      ],
+      graphPath: [
+        { code: "T (Task 任務)", name: "500kWp+ 廠房屋頂型光電季度維運巡檢", detail: "高溫高濕工業區屋頂環境" },
+        { code: "W (Work Step 步驟)", name: "直流組串穿線盒轉接段 MC4 壓接與插接作業", detail: "暴露於屋外紫外線與熱循環之轉接點" },
+        { code: "V (Failure 失效模式)", name: "異質端子混用與未規範壓接導致接觸電阻激增 (>80 mΩ)", detail: "初期壓降 -14.7%，終期熱熔開路 -32.4%" },
+        { code: "N (Norm 法規與標準)", name: "IEC 62852 (連接器標準) / IEC 62446-1 (系統測試與熱像驗收)", detail: "強制同廠牌認證互配與滿載 ΔT < 10°C" },
+        { code: "S (Safeguard 防護控制)", name: "Stäubli 原廠端子防呆 + 棘輪壓接鉗編號列管 + MPPT P2P 自動告警", detail: "物理消除發生率 (O) 並將難檢度 (D) 降至最低" }
+      ]
+    },
+    // Slide 7 D5
+    d5: {
+      tag: "D5 PERMANENT CORRECTIVE ACTIONS (PCA) · 永久矯正對策比選矩陣與二次副作用評估",
+      conclusionTitle: "選定「全數換裝 Stäubli 原廠 MC4-Evo2 端子＋棘輪壓接扭力認證＋SCADA 部署 MPPT 級 P2P 演算法」組合方案，根除熱熔風險且零二次副作用",
+      pcaTable: [
+        ["PCA-1 物理根因消除（硬體面）", "針對 INV #10 故障點及 D3 熱像普查發現之潛伏異常點，全面剪除舊接頭，換裝原廠 Stäubli MC4-Evo2 1500V 認證端子，並強制使用原廠專用棘輪壓接鉗 (PV-CZM) 完成壓接與防水螺帽扭力鎖固 (3.0 N·m)，外加雙壁含膠熱縮套管密封。", "接觸電阻降至 ≤ 0.35 mΩ（降幅 > 99%），承受 30A 連續電流溫升 ΔT < 4°C", "零副作用；停機更換安排於傍晚低日照時段，發電損失 = 0 kWh"],
+        ["PCA-2 流出根因消除（軟體監控面）", "於進能服中央監控平台植入 UNSW P2P 同儕比對與 MPPT 電流平衡規則：當日射 G > 300 W/m² 且任一 MPPT 電流低於同機其他 MPPT 均值達 20% 持續 15 分鐘，立即推送 L2 級別工單至駐點工程師。", "異常偵測延遲由原本 50 天縮短至 ≤ 15 分鐘（提升 4,800 倍）", "結合 ISA-18.2 延遲死區設計，不會在多雲天氣產生假陽性轟炸"],
+        ["PCA-3 供應商與外包商追償（管理面）", "調用 supplier-scar 技能向原施工外包商發出 SCAR 矯正要求書，扣減保固保留款抵充本次檢修費用，並將「禁止混用非原廠相容連接器」列入承攬商黑名單紅線條款。", "本次維修直接成本 NT$ 6,500 全額由保固條款涵蓋", "強化外包施工紀律，提升全場資產長期可靠度"]
+      ]
+    },
+    // Slide 8 D6
+    d6: {
+      tag: "D6 VALIDATION OF EFFECTIVENESS · 短期晴空日實測與長週期 UNSW P2P + HP 濾波收斂驗證",
+      conclusionTitle: "對策執行後 INV #10 之 6 路 MPPT 電流恢復 100% 對稱，同儕發電比值由 0.676 躍升至 0.996，且經 HP 濾波分解確認無殘餘長週期衰減趨勢",
+      validationMetrics: [
+        ["同儕發電比 (P2P Ratio)", "0.676 (-32.4%)", "0.996 (-0.4%)", "≥ 0.980", "✅ 通過（完全消除雙路斷路缺口）"],
+        ["整機晴空日 PR 值", "61.9%", "81.0%", "≥ 80.0%", "✅ 通過（與同儕均值 81.2% 齊平）"],
+        ["MPPT1 / MPPT3 正午電流", "0.0 A / 0.0 A", "17.6 A / 17.7 A", "與 MPPT2/4/5/6 偏差 < 3%", "✅ 通過（全機 6 路電流極差僅 1.1%）"],
+        ["MC4 接頭滿載紅外線溫差 (ΔT)", "105.4°C (熱熔碳化)", "38.2°C (ΔT = +2.8°C)", "ΔT < 10.0°C (IEC 62446)", "✅ 通過（接觸電阻實測 0.31 mΩ）"]
+      ],
+      longTermNote: "依據《光伏運維 8D 報告與知識庫》D6 嚴格規範：光電系統受季節性太陽仰角與環境溫度影響極大，不可僅憑單日晴空數據結案。系統已自動掛載 UNSW-Solar Hodrick-Prescott (HP) 濾波器進行 90 天滾動追蹤，確保長期趨勢項 (Trend Component) 斜率 ≥ 0。"
+    },
+    // Slide 9 D7
+    d7: {
+      tag: "D7 PREVENT RECURRENCE · 四大工程文件強制升版與跨案場橫向展開 (Yokoten)",
+      conclusionTitle: "為杜絕「僅口頭要求加強巡檢」之無效對策，本案強制完成 PFMEA、管制計畫、SOP 與 SCADA 規則庫四大文件升版，並橫向展開至集團 14 座廠房屋頂案場",
+      docRevisions: [
+        ["PFMEA 製程失效模式分析", "PFMEA-PV-DC-004", "v2.1 → v3.0", "新增「異質 MC4 混用與壓接不良」失效模式：嚴重度 S=8，透過原廠防呆與專用工具將發生度 O 由 6 降至 2；透過 MPPT P2P 自動告警將難檢度 D 由 7 降至 2（RPN 由 336 降至 32）。"],
+        ["Control Plan 施工與驗收管制計畫", "CP-PV-INST-012", "v1.4 → v2.0", "增列「直流連接器 100% 同廠牌型號核對」、「每 50 顆端子抽檢 1 顆拉力測試 (≥ 300N)」及「併網滿載 72 小時內 100% IR 熱像初驗 (ΔT < 10°C)」為竣工放行強制檢核點。"],
+        ["維運標準作業程序書 (SOP)", "SOP-OM-safe-008", "v3.0 → v3.2", "強化「1000V DC 燒蝕接頭安全拆檢 LOTO 程序」與「Stäubli MC4-Evo2 專用剝線/壓接/插拔治具標準圖解」，嚴禁攜帶非認證散裝端子進場。"],
+        ["SCADA 智慧告警規則庫", "ALM-RULE-MPPT-01", "v1.0 → v2.1", "正式將 UNSW P2P (< 0.88) 與單機 MPPT 電流離散度 (> 15% 持續 15 分鐘) 寫入全集團雲端監控引擎，並綁定自動派工 API。"]
+      ],
+      yokotenSites: [
+        { site: "台南麻豆・世堃塑膠 (本案)", capacity: "582.12 kWp", status: "100% 完成整改與驗證", finding: "修復 2 處斷路 + 預防性更換 3 處高溫接頭" },
+        { site: "台南永康・精密機械廠房案場", capacity: "845.00 kWp", status: "100% 完成橫向普查", finding: "攔截 2 處穿線盒前副廠 MC4 溫升異常 (ΔT=18°C)" },
+        { site: "高雄路竹・遠東鋼鐵廠房案場", capacity: "1,240.00 kWp", status: "100% 完成橫向普查", finding: "全面完成 MPPT 級別 P2P 告警規則掛載" }
+      ]
+    },
+    // Slide 10 D8
+    d8: {
+      tag: "D8 CLOSURE & FINANCIAL VALUATION · 20 年 DCF 生命周期防損估值、TRACE 審查與知識歸檔",
+      conclusionTitle: "本案以 NT$ 6,500 維修投入挽回年化 NT$ 11.04 萬發電收入（回收期僅 21.5 天），20 年生命周期 DCF 累積防損淨現值達 NT$ 158.4 萬，獲 94 分核准結案",
+      financialSummary: [
+        ["直接維修與料件投入成本 (CapEx/OpEx)", "NT$ 6,500", "含 Stäubli MC4-Evo2 原廠端子、防水熱縮套管與駐點工班 4 工時（保固內由承攬商吸收）"],
+        ["50 天歷史已發生損失 (Historical Loss)", "3,251.5 kWh (NT$ 13,603)", "依台電躉購費率 FIT = NT$ 4.1835 / kWh 精算之實際短少電費"],
+        ["年化避免發電損失 (Annual Avoided Loss)", "26,397 kWh / 年 (NT$ 110,432 / 年)", "若未透過 UNSW P2P 發現並修復，INV #10 將持續以 67.6% 殘餘容量運轉"],
+        ["20 年殘餘合約期 DCF 防損淨現值 (NPV)", "NT$ 1,584,000 (約 158.4 萬)", "折現率 WACC = 5.2%、模組年衰減率 0.55% 計算之 20 年累積保護現金流"],
+        ["投資回收期 (Simple Payback Period)", "21.5 天 (0.06 年)", "極高槓桿之數據驅動精準維運投資"]
+      ],
+      rubricScores: [
+        ["D0/D1 氣象解耦與 LOTO 團隊 (權重 10%)", "10 / 10", "完成 I-V-G 浮雲解耦與 1000V DC LOTO 標準程序"],
+        ["D2 5W2H 與 Is/Is Not 矩陣 (權重 15%)", "14 / 15", "精確切分兩階段劣化損失並建立完整四維邊界"],
+        ["D3 暫時圍堵與同批次普查 (權重 10%)", "10 / 10", "完成 108 串 100% IR 熱像橫向掃描並攔截 3 處潛伏熱斑"],
+        ["D4 雙軌根因實證與假說排除 (權重 30%)", "29 / 30", "具備 MPPT 時序穿透圖、6 大假說排除表與雙向 5-Why 閉環"],
+        ["D5/D6 永久對策與長週期驗證 (權重 20%)", "18 / 20", "P2P 恢復至 0.996，並啟動 90 天 HP 濾波長週期監測"],
+        ["D7/D8 四大文件升版與 DCF 估值 (權重 15%)", "13 / 15", "PFMEA/CP/SOP/SCADA 版次更新完畢並寫入 TWVNS 知識圖譜"]
+      ]
+    },
+    // Charts Data for this case
+    charts: {
+      execWaterfall: {
+        categories: ["同儕基準應發電", "Stage 1 接觸劣化(-14.7%)", "Stage 2 熱熔斷路(-32.4%)", "異常期實發電量", "D6 修復後恢復發電"],
+        values: [14236, -782.4, -2469.1, 10984.5, 14180],
+        prLine: [81.2, 71.5, 61.9, 61.9, 81.0]
+      },
+      d2Timeline: {
+        dates: ["01/05", "01/12", "01/19", "01/23(劣化)", "01/28", "02/04", "02/10", "02/11(斷路)", "02/18", "02/25", "03/04", "03/13(檢修)", "03/16(復歸)", "03/22"],
+        peerRatio: [1.01, 0.99, 1.00, 0.86, 0.85, 0.84, 0.85, 0.68, 0.67, 0.68, 0.67, 0.68, 0.99, 1.00],
+        irradiance: [4.8, 5.1, 4.9, 5.3, 5.0, 4.7, 5.2, 5.6, 5.4, 4.9, 5.5, 5.7, 5.8, 5.6]
+      },
+      d3AlarmFunnel: {
+        labels: ["原始 SCADA 告警總數", "剔除夜間/離線靜態假訊號", "ISA-18.2 延遲死區濾除抖動", "浮雲動態遮蔽解耦排除", "進入 8D 立案之真實電氣故障"],
+        counts: [420, 265, 142, 38, 12]
+      },
+      d4Mppt: {
+        hours: ["06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"],
+        normalMpptCurrent: [0.4, 2.8, 7.5, 12.4, 15.8, 17.5, 18.1, 17.8, 15.2, 11.0, 5.4, 1.1],
+        faultMppt1Current: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        stage1Mppt1Current: [0.3, 2.2, 5.8, 9.1, 11.2, 12.0, 12.1, 11.9, 10.4, 7.8, 4.1, 0.8],
+        normalVoltage: [590, 625, 640, 648, 652, 650, 645, 647, 651, 646, 630, 595]
+      },
+      d6Convergence: {
+        days: ["D-30", "D-25", "D-20", "D-15", "D-10", "D-5", "D0(修復)", "D+5", "D+10", "D+15", "D+30", "D+60", "D+90"],
+        rawP2P: [0.67, 0.68, 0.66, 0.69, 0.67, 0.68, 0.99, 1.00, 0.99, 1.01, 0.99, 1.00, 1.00],
+        hpTrend: [0.675, 0.676, 0.676, 0.676, 0.676, 0.677, 0.985, 0.994, 0.996, 0.997, 0.997, 0.998, 0.998]
+      },
+      d8Dcf: {
+        years: ["Y1", "Y2", "Y3", "Y4", "Y5", "Y6", "Y7", "Y8", "Y9", "Y10", "Y12", "Y14", "Y16", "Y18", "Y20"],
+        cumNpvWan: [9.8, 19.9, 29.5, 38.6, 47.2, 55.3, 63.0, 70.3, 77.2, 83.7, 95.8, 106.6, 116.3, 125.0, 158.4]
+      }
     }
-  ],
-
-  // 2. 光伏 8D 實證案例庫 (涵蓋 D0-D8 完整結構、雙根因、5-Why、引文與驗證數據)
-  cases: [
-    {
-      id: "case-001",
-      case_no: "8D-2026-DA01",
-      site_name: "台中大安龜殼段 POCS 水上型光電廠",
-      capacity_kwp: 1999.8,
-      current_discipline: "D8",
-      active_layer: 3,
-      severity_spv: 5,
-      ap_level: "H",
-      loto_isolated: true,
-      weather_decoupled: true,
-      alarm_suppressed_pct: 76.4,
-      sld_node: "Sub-Array B → INV-13 → MPPT-02 → String-05 MC4 匯流端",
-      fault_signature: "FS-DC-01: 晴空高輻照下 V_mp 正常 (685V)，但 I_mp 驟降 33.4% (3併變2併)，伴隨絕緣阻抗 R_iso 低於 1MΩ 間歇告警與 680V DC 局部拉弧熱斑 (ΔT = +38.2°C)",
-      energy_loss_mwh: 42.8,
-      pr_drop_pct: 18.6,
-      financial_claim_ntd: 218000,
-      stage1_human_confirmed: true,
-      audit_score: 96,
-      d8_closed: true,
-      external_report_url: "https://davidyeh51.github.io/solar-8d-portal/大安龜殼段POCS_診斷報告.html",
-      d1_team: {
-        champion: "葉大衛 (維運管理部協理 / Sponsor)",
-        leader: "姜興中 (資深電氣可靠度工程師)",
-        members: [
-          "洪稜凱 (SCADA 數據分析師 — UNSW P2P & pvlib)",
-          "黃昱超 (現場高壓與紅外線熱像工程師)",
-          "陳志豪 (逆變器/連接器 OEM 駐場 FAE)",
-          "林雅婷 (資產管理與保固索賠專員)"
-        ]
-      },
-      d2_5w2h_is_not: {
-        what_is: "INV-13 MPPT-02 第 5 串 MC4 正極接頭接觸電阻過高引發熱熔斷路與間歇接地漏電",
-        what_is_not: "非逆變器內部 IGBT 功率模組損壞、非電網過壓跳脫、非雲層遮蔽",
-        where_is: "水上浮台 B 區 INV-13 直流箱第 5 迴路跨橋轉接處（受波浪微振與鹽霧耦合區）",
-        where_is_not: "非陸域變電站 AC 側，亦非固定支架區組串",
-        when_is: "2026-08-14 11:20 晴空高輻照尖峰 (G = 965 W/m²) 連續觸發",
-        when_is_not: "非清晨低日照啟動階段或夜間時段",
-        how_many: "影響 1 台逆變器 (INV-13) 共 22 片模組組串，累計短少 42.8 MWh，同儕比值降至 0.76 (低於 0.80 P1 紅線)，年化損失風險 NT$ 21.8 萬",
-        evidence: "FLIR 熱像圖 (EV-01: MC4 接頭達 86.4°C，溫差 ΔT=+38.2°C)、UNSW MPPT 電流相位對比圖 (EV-02)"
-      },
-      d3_containment: {
-        loto_action: "48 小時內完成 INV-13 DC Switch LOTO 斷電掛牌，切離故障第 5 組串防止 1000V DC 電弧起火",
-        batch_scan: "透過倉儲批次追溯系統定位同批號 (Batch #MC4-2024Q3-TW) 共 180 組水上跨接頭，執行 100% 無人機 + 手持 FLIR 紅外線普查，額外攔截 4 處早期溫升點 (ΔT > 15°C)",
-        alarm_governance: "依據 ISA-18.2 規範抑制 INV-13 因 R_iso 波動引發之每 10 分鐘 14 條附屬連帶告警（降噪率 76.4%）"
-      },
-      d4_occurrence_rc: "水上浮體受風浪週期性微幅撓曲，跨浮筒連接處未預留足夠應力釋放弧度（配線張力超標），且現場混用非原廠相容型公母端 MC4 接頭並以手工鉗壓接，導致金屬插針微動磨損（Fretting Corrosion）與鹽霧侵入，接觸電阻由 <0.5mΩ 飆升至 42mΩ，高電流下焦耳熱熔毀絕緣外殼並造成開路（異常在逆變器端捕獲，根因位於上游直流配電側）。",
-      d4_escape_rc: "既有 SCADA 告警僅設定整機 AC 功率為零（Zero Generation）才觸發 P1 推播，未針對多路 MPPT 支路電流失衡（3 併少 1 串僅損失 ~11% 整機出力）設定同儕比值（P2P Ratio < 0.85）自動派工規則；且季度巡檢 SOP 僅規定抽檢 10% 陸域接頭，未將水上高撓曲跨接區列為 100% 必檢控制點。",
-      d4_five_why: [
-        { level: 1, why: "為何 INV-13 發電量較同儕標竿機台 (INV-10) 持續落後 18.6% 且觸發絕緣告警？", answer: "因為 MPPT-02 迴路中第 5 串組串呈現開路狀態（電流由 28.5A 降至 19.0A），且正極 MC4 接頭絕緣護套炭化破裂引發對浮台支架間歇漏電。", evidence: "SCADA MPPT 5分鐘電流序列 & 現場絕緣阻值實測 0.42 MΩ (<1 MΩ 標準)" },
-        { level: 2, why: "為何該 MC4 接頭會發生絕緣護套炭化破裂與熔斷開路？", answer: "因為正極金屬插針接觸面積嚴重不足，在正午 9.5A 電流下接觸電阻高達 42mΩ，產生持續局部高溫（FLIR 實測 86.4°C）引發熱退化。", evidence: "FLIR 熱像儀實拍圖 EV-01 & 拆解後毫米歐姆計四線式量測報告" },
-        { level: 3, why: "為何正極金屬插針會出現接觸面積不足與接觸電阻激增？", answer: "因為公母端分別採用不同廠牌之「號稱相容（Cross-mated）」連接器，公差不匹配，加上浮台隨水位波浪晃動產生持續軸向拉扯，引起插針微動腐蝕（Fretting Corrosion）。", evidence: "組件BOM批次比對紀錄 & 金相顯微鏡插針表面氧化電弧坑洞照片" },
-        { level: 4, why: "為何施工與維修階段會出現跨廠牌混插且線纜無應力釋放餘裕？", answer: "因為原逆變器/組件附帶接頭在 2 年前局部搶修時無原廠備料，外包商自行購買市售通用接頭替換，且維運 SOP 未強制規範水上浮體跨橋處之最小彎曲半徑與防拉脫固定夾。", evidence: "2024年維修工單領料紀錄 #WO-2024-089 & 現場線槽走線查核表" },
-        { level: 5, why: "為何外包商混用接頭與高達 3 個月的單串斷路未能被品質檢驗與監控系統及時攔截（系統與流程根因）？", answer: "【發生制度根因】IQC/OBA 備品領用制度未強制鎖定 Staubli 原廠同型號認證與專用壓接扭力治具檢定；【流出系統根因】SCADA 缺乏 UNSW P2P 同儕支路電流差異演算法，僅靠人工月結對帳才發現度數短少。", evidence: "現行採購規範 v2.1 與 SCADA 告警規則庫快照核對" }
+  },
+  {
+    id: "8D-2026-DA01",
+    code: "8D-2026-DA01",
+    siteName: "台中大安・龜殼段水上光電案場",
+    capacityKwp: 1999.8,
+    inverterSpec: "SMA Sunny Highpower PEAK3 150kW × 13 台",
+    targetEquip: "INV #03 & INV #07（浮筒陣列 B 區匯流箱與絕緣監測迴路）",
+    occurDate: "2026-02-02（間歇跳脫）→ 2026-02-18（晨間絕緣阻抗 R_iso 鎖死）",
+    reportDate: "2026-03-20",
+    stage: "D8",
+    statusLabel: "D8 已結案認證",
+    traceScore: 48,
+    weightedScore: 96,
+    fitRate: 4.3280,
+    lostKwh: 8420.0,
+    lostRevenueNtd: 36442,
+    annualLossKwh: 54800,
+    annualLossNtd: 237174,
+    dcf20YrNpvNtd: 3120000,
+    repairCostNtd: 28000,
+    paybackDays: 43.1,
+    prBefore: 68.4,
+    prPeer: 82.5,
+    prAfter: 82.1,
+    irrPct: 10.45,
+    cover: {
+      tag: "8D PROBLEM SOLVING & FLOATING PV DIAGNOSTIC REPORT · 8D-2026-DA01",
+      conclusionTitle: "大安水上光電 INV #03/#07 晨間頻繁跳機係因浮筒鉸接處波浪撓曲磨損直流線纜護套致 R_iso < 50kΩ，加裝波紋保護管與絕緣趨勢預警後挽回年化 NT$ 23.7 萬",
+      subtitle: "結合 SMOTE 罕見絕緣故障預警、UNSW 時序殘差分析與雙向 5-Why 根因實證之三層式 AI 閉環決策報告",
+      kpis: [
+        { label: "異常期間累計短少度數 (D2)", value: "8,420.0 kWh", note: "晨間 06:30–09:30 濕氣凝結跳脫損失", isAccent: true },
+        { label: "年化預期挽回營收 (D8)", value: "NT$ 237,174 /年", note: "年化防損 54,800 kWh (FIT 4.3280)", isAccent: true },
+        { label: "20 年 DCF 累積防損淨現值", value: "NT$ 312.0 萬", note: "浮筒跨接防護改造投入 NT$ 28,000", isAccent: false },
+        { label: "8D 合規審查 / TRACE 評分", value: "96 分 / 48/50", note: "SMOTE 罕見故障模型提前捕捉 R_iso 衰減", isAccent: false }
       ],
-      d4_citations: [
-        { refId: "CIT-NREL-2024-P14", source: "NREL/SETO 2024 PV Inverter Reliability Report & kWh Analytics (11 GW Study)", quote: "絕大多數異常雖在逆變器端被捕捉，但真實物理故障常源於前端直流組串接地或 MC4 接頭接觸電阻過高（跨系統故障傳播）。", similarity: 0.96 },
-        { refId: "CIT-UNSW-DC50", source: "UNSW-Solar/performance_diagnosis (50-FIMER_Shading_Clipping_0Gen.ipynb)", quote: "當 MPPT 電壓 V_mp 維持正常而電流 I_mp 呈現整數比例階梯下降（如 2/3）時，確診為單串熔絲熔斷或 MC4 開路故障。", similarity: 0.94 },
-        { refId: "CIT-IEC-62852", source: "IEC 62852 / 光伏連接器安全與 PFMEA 知識庫 SEC-DC-019", quote: "嚴禁混用不同製造商之直流連接器（Cross-mating）；水上浮體跨接處須配置應力釋放環並控制在溫差 ΔT < 10°C。", similarity: 0.95 }
+      metaLeft: [
+        ["案場名稱與容量", "台中大安・龜殼段水上光電案場（1,999.8 kWp 水面浮力式）"],
+        ["異常標的設備", "INV #03 & INV #07（浮筒陣列 B 區跨接主幹直流線纜）"],
+        ["異常演進時間軸", "2026/02/02 東北季風波浪加劇 → 02/18 晨間 R_iso 跌破 50 kΩ 保護閾值"]
       ],
-      d5_pca: [
-        { action: "全數更換 Batch #MC4-2024Q3-TW 共 180 組跨接頭為原廠 Stäubli MC4-Evo 2（IP68 防鹽霧認證），並使用經校正之專用棘輪壓接鉗與扭力扳手（扭力值 2.5 N·m）施工。", owner: "黃昱超 (現場電氣)", due: "2026-09-05", risk_check: "通過熱應力與鹽霧循環測試，無二次壓降副作用" },
-        { action: "於浮台跨橋處加裝 Ω 型不鏽鋼應力釋放緩衝彎（預留 15cm 撓曲裕度）與雙重抗 UV 束帶固定。", owner: "陳志豪 (OEM FAE)", due: "2026-09-10", risk_check: "通過 17 級陣風波浪模擬位移拉拔測試" },
-        { action: "於 SCADA 邊緣網關部署 UNSW-Solar P2P 同儕支路比對與 MPPT 電流失衡預警模型（當單路 MPPT I_mp 偏離同儕中位數 >12% 連續 3 個晴空時段即自動觸發 P2 檢修工單）。", owner: "洪稜凱 (數據工程)", due: "2026-09-12", risk_check: "結合 pvlib 晴空過濾，誤報率 < 1.5%" }
-      ],
-      d6_validation: {
-        short_term: "修復後首個晴空日 (G = 950 W/m²) 實測 INV-13 MPPT-02 電流恢復至 28.4A，熱像儀複測接頭最高溫 39.2°C (ΔT = +1.8°C < 10°C 標準)。",
-        long_term_p2p: "持續追蹤 90 天 (3 個月)，透過 UNSW P2P 演算法與 Hodrick-Prescott (HP) 時序濾波驗證，INV-13 相對標竿機台 INV-10 之等價時數比值 (Ey Ratio) 由 0.76 穩定收斂至 0.968 (高於 0.92 結案門檻)，故障復發率 0%。",
-        before_ratio: 0.76,
-        after_ratio: 0.968,
-        recurrence_rate: 0
-      },
-      d7_docs_updated: {
-        pfmea_dfmea: { updated: true, oldVer: "v3.2", newVer: "v3.3", summary: "新增「水上浮體跨接段 MC4 微動磨損與混插熱失控」失效模式；嚴重度 S=5，發生度 O 由 6 降至 2，難檢度 D 由 7 降至 2，AIAG-VDA AP 由 H 降至 L。" },
-        control_plan: { updated: true, oldVer: "CP-PV-2025.1", newVer: "CP-PV-2026.2", summary: "納入 MC4 壓接拉拔力 (>300N)、鎖緊扭力 (2.5 N·m ±0.2) 及水上跨接區季度 100% IR 熱像溫差上限 (ΔT <= 10°C) 強制管控與 Reaction Plan。" },
-        sop_sip: { updated: true, oldVer: "SOP-OM-014 v2.0", newVer: "SOP-OM-014 v3.0", summary: "修訂《水面型光電直流配電檢修與備品防呆作業標準書》，明訂嚴禁跨牌混插，完成全體 18 名駐場工程師實作考核簽核。" },
-        scada_rule: { updated: true, oldVer: "RULE-2025-08", newVer: "RULE-2026-09", summary: "將 FS-DC-01 (MPPT 分支電流相對於同儕中位數偏移 >12% 且 V_mp 正常) 寫入全場站 SCADA 與邊緣網關 AI 診斷庫，橫向展開 (Yokoten) 至全台 6 座水面型光電案場。" }
-      }
+      metaRight: [
+        ["核心調用 AI Skills", "pv-smartgrid-smote-fault · pv-performance-diagnosis · quality-8d-engineering-skills"],
+        ["物理根因結論 (D4)", "浮筒步道金屬邊緣未設導角護套，季風波浪往復撓曲磨穿 PV 線纜外皮致晨露接地"],
+        ["系統流出根因 (D4)", "SCADA 僅於 R_iso < 50kΩ 硬跳機時報警，未對 R_iso 連續 14 天下滑斜率設預警"]
+      ]
     },
-    {
-      id: "case-002",
-      case_no: "8D-2026-GS02",
-      site_name: "高雄岡山五甲尾滯洪池 4,999.2kWp 水面型光電",
-      capacity_kwp: 4999.2,
-      current_discipline: "D8",
-      active_layer: 3,
-      severity_spv: 4,
-      ap_level: "H",
-      loto_isolated: false,
-      weather_decoupled: true,
-      alarm_suppressed_pct: 81.2,
-      sld_node: "Weather Station POA-01 & Sub-Array C (INV-21 ~ INV-28)",
-      fault_signature: "FS-MET-02: 日照計數值凍結/倍率失真導致表觀 PR 虛高 112%，解耦晴空模型後揭露汛期泥漿水霧沉積致真實 Ey 下挫 14.8%",
-      energy_loss_mwh: 118.5,
-      pr_drop_pct: 14.8,
-      financial_claim_ntd: 568800,
-      stage1_human_confirmed: true,
-      audit_score: 94,
-      d8_closed: true,
-      external_report_url: "https://davidyeh51.github.io/gangshan-wujiawei-diagnostic/",
-      d1_team: {
-        champion: "葉大衛 (維運管理部協理 / Sponsor)",
-        leader: "洪稜凱 (首席運維數據科學家)",
-        members: [
-          "姜興中 (電氣與感測器校準工程師)",
-          "黃昱超 (無人機光學熱像與清洗評估師)",
-          "張家銘 (SCADA 通訊與 Modbus 韌體工程師)"
-        ]
-      },
-      d2_5w2h_is_not: {
-        what_is: "POA 日照計感測器破產失真掩蓋汛期後滯洪池泥霧光學遮蔽衰退（雙重複合失效）",
-        what_is_not: "非逆變器硬體故障、非電網限電截割 (Clipping)",
-        where_is: "五甲尾滯洪池南側迎風面浮台陣列與氣象箱 #1 RS485 通道",
-        where_is_not: "非北側岸上變電站",
-        when_is: "2026年颱風汛期過後連續 45 天",
-        when_is_not: "非汛期前乾燥季節",
-        how_many: "全場 4,999.2 kWp 受影響，真實短少 118.5 MWh，年化營收流失約 NT$ 56.88 萬",
-        evidence: "pvlib 晴空包絡線對比圖、HP 濾波長期趨勢分解圖、現場泥膜沉積顯微照片"
-      },
-      d3_containment: {
-        loto_action: "切換 SCADA PR 計算基準至鄰近健康基準站與衛星晴空輻照模型 (pvlib Ineichen)",
-        batch_scan: "全場 38 台逆變器執行 UNSW P2P 同儕矩陣掃描，鎖定南側迎風重度泥膜區優先派工高壓水霧清洗",
-        alarm_governance: "隔離因氣象站負值/溢位引發之 312 條假性 PR 異常告警（降噪率 81.2%）"
-      },
-      d4_occurrence_rc: "滯洪池於颱風高水位期間富含高黏度黏土微粒，隨強風水霧噴濺於低傾角（10°）水上模組表面形成疏水性膠結泥膜，自然降雨無法沖刷；同時日照計透鏡受泥膜覆蓋與內部乾燥劑飽和結露，導致輸出 mV 訊號衰減 24%。",
-      d4_escape_rc: "SCADA 系統直接使用未經審計的單一故障日照計分母計算 PR（分母變小導致 PR 虛高至 108%~112%），缺乏 ALZ-11 數據審計管線與 pvlib 晴空理論輻照度交叉校核機制，致使嚴重積垢損失在月報中被完全掩蓋。",
-      d4_five_why: [
-        { level: 1, why: "為何五甲尾案場汛期後實際發電度數較去年同期銳減 14.8%，但系統日報表 PR 卻顯示 109%「超標正常」？", answer: "因為計算 PR 分母所用的現場 POA 日照計讀數嚴重偏低（正午僅顯示 680 W/m²，而實際晴空達 940 W/m²），分母失真掩蓋了分子（發電量）的實質衰退。", evidence: "SCADA 原始日照序列 vs 中央氣象署岡山站 & pvlib 晴空模型對比" },
-        { level: 2, why: "為何現場 POA 日照計讀數會持續偏低 27% 且未被發現？", answer: "因為日照計玻璃罩受滯洪池泥霧覆蓋且內部防潮矽膠失效結露，同時 SCADA 無日照計與晴空模型偏差超限（>15%）之感測器健康度自檢告警。", evidence: "現場日照計球罩結露照片 & Modbus 暫存器原始電流紀錄" },
-        { level: 3, why: "為何還原真實日照後，全場等價時數 Ey 仍呈現平滑且高達 14.8% 的系統性低效？", answer: "因為颱風期間滯洪池混濁泥水受強風拍擊形成氣溶膠泥霧，乾涸後在模組玻璃表面形成鈣化黏土薄膜，造成寬光譜透光率下降 15.2%。", evidence: "UNSW HP 時序濾波趨勢項分解 & 清洗前後同日對照組 I-V 實測" },
-        { level: 4, why: "為何例行降雨與既有年度清洗計畫未能消除該泥膜？", answer: "因為水上浮體模組傾角僅 10° 自潔能力差，且黏土微粒經高溫烘烤後具強附著力，一般清水沖洗無效，需搭配旋轉軟毛刷與中性環保界面活性劑於汛期後 14 天黃金期內清洗。", evidence: "振達光伏刷清洗測試報告 & 表面接觸角量測數據" },
-        { level: 5, why: "為何感測器失真與汛期泥膜兩大問題會同時逃逸既有運維體系（系統與管理根因）？", answer: "【發生制度根因】水面型電廠運維 SOP 未建立「颱風/極端高水位事件後 72 小時光學與氣象感測器專案點檢」觸發機制；【流出系統根因】數據中台未部署 ALZ-11 氣象數據審計與 UNSW HP 濾波趨勢分解演算法。", evidence: "現行水面型案場年度維護計畫表 v1.4 審查紀錄" }
+    summary: {
+      tag: "EXECUTIVE SUMMARY · 水上光電絕緣接地故障三層閉環決策摘要",
+      conclusionTitle: "透過 SMOTE 罕見故障分類器與 UNSW 晨間時段分解，精準鎖定「東北季風波浪撓曲磨損」物理根因，全面加裝撓性波紋管保護並消弭水上漏電風險",
+      kpis: [
+        { label: "晨間併網延遲損失", value: "-14.1% PR", sub: "每日 06:30–09:30 待日照烘乾後才併網", isAccent: true },
+        { label: "R_iso 絕緣阻抗恢復", value: "> 15.2 MΩ", sub: "由故障期 38 kΩ 提升逾 400 倍", isAccent: false },
+        { label: "浮筒跨接段橫向加固", value: "48 處 (100%)", sub: "全場浮筒陣列鉸接處全面加裝雙層防護", isAccent: false }
       ],
-      d4_citations: [
-        { refId: "CIT-ALZ11-AUDIT", source: "ALZ-11/campus-energy-optimization (campus-energy-optimization.ipynb)", quote: "必須針對氣象站與逆變器數據建立自動化數據審計管線，利用 pvlib 幾何模型攔截感測器漂移與單位錯置噪聲。", similarity: 0.95 },
-        { refId: "CIT-UNSW-HP40", source: "UNSW-Solar/performance_diagnosis (40-AC_Recurring_Underperformance.ipynb)", quote: "引入 Hodrick-Prescott (HP) 濾波器分解時序趨勢項與高頻雜訊，可精確量化週期性積灰泥膜造成的漸進式性能衰減。", similarity: 0.97 }
-      ],
-      d5_pca: [
-        { action: "更換 IP67 二級標準日照計（含自動加熱除霜除露模組），並於每季巡檢強制執行日照計清潔與乾燥劑更換。", owner: "姜興中", due: "2026-09-20", risk_check: "已完成與標準傳遞錶比對校正，誤差 < ±1.8%" },
-        { action: "於數據中台常駐部署 pvlib 晴空輻照交叉校核管線：當現場日照計於晴空時段偏離理論值 >12% 連續 2 天，自動切換為虛擬氣象站基準並派發感測器檢修單。", owner: "洪稜凱", due: "2026-09-25", risk_check: "零侵入式軟體防護，徹底消除 PR 虛高盲區" },
-        { action: "導入旋轉軟毛刷機械清洗工藝，建立「汛期/颱風警報解除後 10 日內啟動 ROI 動態清洗評估」制度。", owner: "黃昱超", due: "2026-10-01", risk_check: "EL 檢測確認清洗過程無新增隱裂" }
-      ],
-      d6_validation: {
-        short_term: "完成全場機械刷洗與日照計更換後，晴空日實測 PR 由清洗前真實值 71.4% 立即躍升至 85.9%（淨增 +14.5%）。",
-        long_term_p2p: "經 HP 濾波趨勢追蹤 120 天，長期趨勢項斜率恢復水平穩定，同儕比值維持 0.954，挽回年化發電收益逾 NT$ 56.8 萬。",
-        before_ratio: 0.782,
-        after_ratio: 0.954,
-        recurrence_rate: 0
-      },
-      d7_docs_updated: {
-        pfmea_dfmea: { updated: true, oldVer: "v2.0", newVer: "v2.1", summary: "新增「POA 日照計結露失真致 PR 監控失效 (Escape Mode)」與「滯洪池汛期泥霧鈣化遮蔽」，RPN 由 280 降至 48。" },
-        control_plan: { updated: true, oldVer: "CP-WJW-01", newVer: "CP-WJW-02", summary: "將「現場 POA vs pvlib 晴空偏差率 <= 10%」與「HP 濾波週衰減率 <= 0.3%/週」列入中央控制計畫每日自動監控指標。" },
-        sop_sip: { updated: true, oldVer: "SOP-CLEAN-02", newVer: "SOP-CLEAN-03", summary: "增訂《滯洪池與水面光電汛期後光學恢復暨氣象箱三點校準標準作業程序》。" },
-        scada_rule: { updated: true, oldVer: "RULE-MET-01", newVer: "RULE-MET-02", summary: "部署 FS-MET-02 感測器破產自動切換備援模型，水平展開至全台所有配置氣象站之地面與水面案場。" }
-      }
+      matrixRows: [
+        ["D0~D1 立案與安全", "pv-smartgrid-smote-fault", "識別晨間高濕度與風速耦合下之絕緣阻抗突降特徵，啟動水面作業救生衣與 1500V DC LOTO 雙重安全管制。"],
+        ["D2 量化問題描述", "pv-scada-audit-reporting", "核算 26 天晨間跳脫累計損失 8,420 kWh（NT$ 36,442），Is/Is Not 矩陣鎖定迎風面 B 區浮筒跨接段。"],
+        ["D3 暫時圍堵對策", "pv-isa182-intelligent-alarms", "以 1000V 高阻計 (Megger) 逐串分段搖測，隔離受損之 String B3-04 與 B7-02，並對全場 48 處浮筒鉸接跨接點進行目視與絕緣普查。"],
+        ["D4 雙軌根因實證", "quality-8d-engineering-skills", "發生根因：浮筒跨接處線纜束帶綁紮過緊無伸縮裕度，受波浪剪切磨破 XLPE 絕緣層；流出根因：缺乏 R_iso 趨勢斜率預警。"],
+        ["D5~D6 永久對策驗證", "pv-performance-diagnosis", "換新受損線纜、預留 Ω 型撓曲裕度並套入抗 UV 尼龍波紋管；修復後連續 60 天晨間 06:05 準時併網，P2P 達 0.995。"],
+        ["D7~D8 防再發與估值", "skill-8d-report-analyzer", "升版水上光電佈線 PFMEA 與管制計畫，保全 20 年 DCF 淨現值 NT$ 312.0 萬，TRACE 獲評 48/50。"]
+      ]
     },
-    {
-      id: "case-003",
-      case_no: "8D-2026-MD03",
-      site_name: "台南麻豆世堃塑膠 582kWp 屋頂型光電 (防逆流系統)",
-      capacity_kwp: 582.0,
-      current_discipline: "D6",
-      active_layer: 3,
-      severity_spv: 4,
-      ap_level: "H",
-      loto_isolated: false,
-      weather_decoupled: true,
-      alarm_suppressed_pct: 68.5,
-      sld_node: "Smart Logger 3000 → Zero-Export Meter (CT 比流器) → INV-01~INV-06",
-      fault_signature: "FS-AC-03: 晴空正午全場逆變器同步呈現鋸齒狀功率飽和截割 (Active Power Derating / Clipping)，cosφ 與頻率正常但輸出被壓制於 35% 額定容量",
-      energy_loss_mwh: 64.2,
-      pr_drop_pct: 26.4,
-      financial_claim_ntd: 308000,
-      stage1_human_confirmed: true,
-      audit_score: 91,
-      d8_closed: false,
-      external_report_url: "https://davidyeh51.github.io/madou-shinkun-diagnostic/",
-      d1_team: {
-        champion: "葉大衛 (維運管理部協理)",
-        leader: "洪稜凱 (運維數據與儲能微電網工程師)",
-        members: [
-          "姜興中 (電力保護與防逆流控制工程師)",
-          "王建民 (業主廠務機電課長)",
-          "林雅婷 (光儲商務開發與資產專員)"
-        ]
-      },
-      d2_5w2h_is_not: {
-        what_is: "廠區假日與午休負載驟降引發防逆流控制器 (Zero-Export) 頻繁動態壓載，加上 CT 相序倍率設定保守裕度過大造成過度棄光",
-        what_is_not: "非逆變器內部 IGBT 過溫降額，亦非台電饋線過電壓 (Grid Overvoltage)",
-        where_is: "世堃塑膠廠區主變電站 Smart Logger 防逆流閉環控制迴路與全場 6 台逆變器",
-        where_is_not: "非單一組串或單一 MPPT 直流側問題",
-        when_is: "每逢週六日、國定假日及每日 12:00–13:00 廠內射出機停機時段",
-        when_is_not: "非平日全載生產且低日照時段",
-        how_many: "全場 582kWp 年化棄光損失達 64.2 MWh (佔總潛在發電量 26.4%)，年化收益減損 NT$ 30.8 萬",
-        evidence: "UNSW 50-FIMER Clipping 偵測圖、廠內負載與光電出力 1 分鐘疊合曲線"
-      },
-      d3_containment: {
-        loto_action: "現場核對高壓盤 CT 比流器變比與相序，修正 Smart Logger 最低逆功率保護死區設定（由 15% 調優至 3% 安全動態追蹤）",
-        batch_scan: "盤點全公司轄下 14 座「自發自用零輸出（Zero-Export）」工廠屋頂案場之正午截割率",
-        alarm_governance: "將防逆流主動降載狀態碼與設備故障碼解耦，消除每日正午 40+ 條假性『逆變器出力異常』告警"
-      },
-      d4_occurrence_rc: "工廠射出成型產線由原本三班制改為週休二日與午休停機，廠內基本負載（Base Load）於正午降至 160kW，遠低於光電正午出力（480kW）；且防逆流控制器採階梯式慢速 PID 調節，當負載突降時為防逆送電網遭台電罰款，直接將逆變器出力壓制於安全底線。",
-      d4_escape_rc: "SCADA 監控平台未將「防逆流指令降額量（Curtailment kWh）」獨立計量，導致運維週報將棄光損失誤認為氣候不佳或模組老化，錯失早期調整契約與導入表後儲能（BESS）削峰填谷之時機。",
-      d4_five_why: [
-        { level: 1, why: "為何麻豆世堃 6 台逆變器在晴空正午同時出現出力腰斬至 35% 的平頭/鋸齒截割？", answer: "因為全場逆變器同時收到上游 Smart Logger 3000 下達之有功功率上限指令（Active Power Limit = 35%）。", evidence: "Modbus 指令日誌 Reg #40420 歷史曲線" },
-        { level: 2, why: "為何 Smart Logger 3000 會在正午主動下達 35% 壓載指令？", answer: "因為併網點數位電錶偵測到工廠總負載降至 165kW，觸發「零逆流（Zero-Export）」保護邏輯。", evidence: "併網點雙向電錶 P_grid 1分鐘時序數據" },
-        { level: 3, why: "為何在工廠負載尚有 165kW 時，光電出力卻被過度壓制到僅剩 110kW（多損失了 55kW 緩衝空間）？", answer: "因為初期併網試車時，工程師將防逆流安全裕度（Safety Margin）設為過於保守的 55kW，且閉環控制響應週期設為 10 秒。", evidence: "Smart Logger 參數配置備份檔截圖" },
-        { level: 4, why: "為何即便調優 PID 與安全裕度後，假日仍有高達 320kW 的光電出力無法消納？", answer: "因為自發自用案場受限於廠區假日無生產負載，且缺乏表後電池儲能系統（BESS）儲存正午多餘綠電供夜間尖峰放電。", evidence: "8760 小時光儲負載差額模擬報告" },
-        { level: 5, why: "為何該案場長達半年的 26.4% 棄光損失未能在設計審查與日常監控中被主動識別（系統與管理根因）？", answer: "【發生制度根因】初期設計 DFMEA 未納入「客戶產線班表變動之負載敏感度分析」；【流出系統根因】SCADA 缺乏 UNSW Clipping 自動面積積分量化模組，未能區分「硬體故障損失」與「防逆流棄光損失」。", evidence: "專案可行性評估報告與 SCADA 月報模板審查" }
+    d0d1: {
+      tag: "D0 SYMPTOM & D1 TEAM · 水上光電絕緣接地捕捉、水面 LOTO 安全與團隊分工",
+      conclusionTitle: "SMOTE 罕見故障模型捕捉到晨間相對濕度 > 85% 時 R_iso 呈指數型崩跌，立即啟動「水上救生防護 ＋ 1500V DC 接地隔離」最高等級 LOTO 作業",
+      symptomCards: [
+        { title: "1. 罕見間歇性絕緣故障捕捉 (SMOTE + Historian)", metric: "R_iso 跌至 38 kΩ", desc: "一般絕緣故障在正午高溫乾燥時會自行恢復至 > 2 MΩ，導致傳統巡檢查無異常。本平台透過 pv-smartgrid-smote-fault 對清晨 05:30–08:30 之 R_iso 與風速/濕度進行耦合分析，精確鎖定迎風面浮筒鉸接處之微滲水接地。" },
+        { title: "2. 水面浮筒作業與直流接地雙重 LOTO 規範", metric: "雙人救生衣 + 絕緣靴", desc: "水上光電發生接地異常時，金屬支架與水面可能存在洩漏電位。強制執行：先於岸上箱變切斷 AC 與 DC 總開關 → 驗電確認對地電壓 = 0V → 穿戴 1000V 絕緣手套與救生衣登浮筒。" }
       ],
-      d4_citations: [
-        { refId: "CIT-UNSW-CLIP50", source: "UNSW-Solar/performance_diagnosis (50-FIMER_Shading_Clipping_0Gen.ipynb)", quote: "針對晴空包絡線下的功率平頭截割 (Clipping) 進行面積積分，可精確分離逆變器限載/防逆流棄光與組串硬體故障。", similarity: 0.96 },
-        { refId: "CIT-OIHIKA-MPC", source: "oihika/Degradation-Aware-MPC-for-a-Freiburg-Renewable-District-Microgrid", quote: "透過微電網告警主控台與儲能 SOC 動態調度（MPC），可吸收正午防逆流棄光並消除母線壅塞。", similarity: 0.91 }
-      ],
-      d5_pca: [
-        { action: "重構 Smart Logger 防逆流閉環控制參數：將控制週期由 10s 縮短至 1s，安全緩衝裕度由 55kW 精準下調至 8kW，立即挽回平日午休 38% 過度壓載損失。", owner: "姜興中", due: "2026-09-18", risk_check: "連續 14 天零逆送電網紀錄，符合台電防逆流規範" },
-        { action: "完成「500kW / 1,000kWh 表後儲能 (BESS) 削峰填谷增設方案」財務與工程規畫，將假日棄光全數轉為高電價尖峰放電收益。", owner: "洪稜凱 / 林雅婷", due: "2026-10-30", risk_check: "IRR 提升 4.2%，預計回本期 4.6 年" }
-      ],
-      d6_validation: {
-        short_term: "控制參數調優後，平日正午有效發電利用率立即提升 11.4%，無任何逆送電網違規告警。",
-        long_term_p2p: "目前處於 D6 長期驗證第 45 天（目標 90 天），UNSW Clipping 損失面積已由 26.4% 降至 14.9%（待 BESS 併網後可降至 <1%）。",
-        before_ratio: 0.736,
-        after_ratio: 0.851,
-        recurrence_rate: 0
-      },
-      d7_docs_updated: {
-        pfmea_dfmea: { updated: true, oldVer: "v1.8", newVer: "v1.9", summary: "於自發自用案場 DFMEA 新增「負載結構變動與防逆流 PID 過阻尼棄光」失效模式。" },
-        control_plan: { updated: true, oldVer: "CP-ZE-01", newVer: "CP-ZE-02", summary: "規定防逆流安全死區設定不得超過額定容量 2%，且須開啟 1 秒級快速動態追蹤。" },
-        sop_sip: { updated: true, oldVer: "SOP-ZE-01", newVer: "SOP-ZE-02", summary: "更新《零輸出防逆流案場試車與參數調校標準作業書》。" },
-        scada_rule: { updated: false, oldVer: "RULE-CLIP-01", newVer: "待 D6 滿 90 天驗證後正式升版", summary: "正在測試全場站「防逆流棄光度數獨立計量標籤」規則。" }
-      }
+      raciTable: [
+        ["D1 專案負責人 (Champion)", "中區維運處長", "核准全場 48 處浮筒鉸接波紋管改造預算與 D8 結案", "Accountable (A)"],
+        ["AI 數據診斷工程師", "運維數據中心", "執行清晨 R_iso 衰減斜率迴歸與 UNSW 晨間時段發電損失拆解", "Responsible (R)"],
+        ["水上機電工程班長", "台中駐點維運團隊", "執行 Megger 1000V 絕緣搖測、破損電纜換新與 Ω 型撓性護管安裝", "Responsible (R)"],
+        ["安環與品質工程師", "品保室", "稽核水面作業安全與修訂《水面型光電線纜敷設管制計畫》", "Consulted (C)"]
+      ]
     },
-    {
-      id: "case-004",
-      case_no: "8D-2026-YD04",
-      site_name: "高雄遠東鋼鐵 1,240kWp 鋼構廠房光電廠",
-      capacity_kwp: 1240.0,
-      current_discipline: "D4",
-      active_layer: 2,
-      severity_spv: 4,
-      ap_level: "H",
-      loto_isolated: true,
-      weather_decoupled: true,
-      alarm_suppressed_pct: 74.0,
-      sld_node: "380V AC 併網盤 → INV-08 (110kW 無變壓器五電平拓撲) → IGBT 散熱模組與 LCL 濾波器",
-      fault_signature: "FS-INV-04: 正午高負載下 IGBT 模組溫升斜率異常 (dT/dt > 1.8°C/min) 觸發 Over-Temp Derating，伴隨共模漏電流 >300mA 與 THD 諧波超標 (6.8%) 跳脫",
-      energy_loss_mwh: 28.4,
-      pr_drop_pct: 15.2,
-      financial_claim_ntd: 145000,
-      stage1_human_confirmed: true,
-      audit_score: 88,
-      d8_closed: false,
-      external_report_url: "https://davidyeh51.github.io/solar-8d-portal/高雄遠東鋼鐵_診斷報告.html",
-      d1_team: {
-        champion: "葉大衛 (維運管理部協理)",
-        leader: "姜興中 (資深電氣可靠度工程師)",
-        members: [
-          "洪稜凱 (SCADA 與 FCA-B-FSA 特徵分析師)",
-          "黃昱超 (現場電力品質與熱像檢測師)",
-          "林志強 (第三方逆變器板級維修專家 — 原 OEM 已退場)"
-        ]
-      },
-      d2_5w2h_is_not: {
-        what_is: "INV-08 散熱風道受煉鋼廠金屬粉塵油泥堵塞，導致 IGBT 結溫超標降額與 LCL 濾波電容容值熱衰減引發諧波共振跳機",
-        what_is_not: "非直流組串開路故障，非台電外部停電",
-        where_is: "高雄遠東鋼鐵 B 棟軋鋼廠房屋頂排氣口下風處 INV-08",
-        where_is_not: "非 A 棟行政大樓屋頂逆變器群",
-        when_is: "2026-09-28 至 2026-10-18 每日 10:45–14:30 高環境溫度與鋼廠排氣尖峰",
-        when_is_not: "非清晨或低載時段",
-        how_many: "INV-08 及同排 INV-07 共 220kW 受影響，累計損失 28.4 MWh，原逆變器 OEM 已退出台灣市場，散熱風扇原廠交期逾 40 週",
-        evidence: "電能品質分析儀 THD 6.8% 波形圖、IGBT 散熱鰭片金屬油泥堵塞微距照片、SCADA 內部溫度與風扇電流曲線"
-      },
-      d3_containment: {
-        loto_action: "執行 AC/DC 雙側 LOTO 斷電隔離，拆解 INV-08 散熱風道進行乾冰與高壓絕緣溶劑深度除油泥作業，並設定功率上限 85% 降額保溫運轉",
-        batch_scan: "透過 Neo4j 知識圖譜向左擴展 (⇐ Leftward Expansion) 比對同處軋鋼廠排氣下風處之 INV-06~INV-10，發現 INV-07 與 INV-09 亦呈現早期溫升斜率偏移",
-        alarm_governance: "聚合「IGBT 過溫」、「PLL 鎖相失步」、「漏電流超標」三類連鎖告警為單一 FCA-B-FSA 複合根因事件"
-      },
-      d4_occurrence_rc: "軋鋼廠屋頂天窗排出含細微氧化鐵粉塵與冷卻油霧之熱氣流，被逆變器強制風冷風扇吸入後，在鋁合金散熱鰭片與風扇軸承形成高熱阻油泥層，使散熱熱阻上升 65%；長期高溫（內部環境 >72°C）加速 LCL 交流濾波薄膜電容容值衰減 18%，在廠內大型電弧爐諧波背景耦合下引發鎖相環（PLL）失步與漏電流保護跳機。",
-      d4_escape_rc: "原逆變器 OEM 於電站建成第 4 年退出市場（符合 NREL 45% OEM 退場統計），現場缺乏原廠高階診斷手冊；且既有 SCADA 僅監測「過溫跳機布林警報」，未監控「散熱器溫升斜率 (dT/dt) 與太陽輻照度之比值漂移」，導致油泥累積 8 個月後才因頻繁跳機被發現。",
-      d4_five_why: [
-        { level: 1, why: "為何 INV-08 在晴空正午頻繁發生 AC 側諧波超標 (THD > 5%) 與過溫跳脫？", answer: "因為逆變器內部 IGBT 模組溫度飆升至 94°C 觸發降額與保護，同時 LCL 濾波器電容在長期高溫下容值衰減至額定值 82%，喪失高頻諧波抑制能力。", evidence: "SCADA IGBT 溫度曲線 & LCR 錶實測濾波電容值紀錄" },
-        { level: 2, why: "為何 INV-08 的 IGBT 模組與內部腔體溫度會比同容量標竿機台 (INV-01) 高出 26°C？", answer: "因為背面鋁擠散熱鰭片間隙 70% 被黑色油性鐵粉泥塊堵塞，且 3 顆散熱風扇中有 2 顆轉速下降 45%。", evidence: "拆機內視鏡照片 & 風速計實測出風口風量僅剩 32 CFM" },
-        { level: 3, why: "為何散熱鰭片與風扇會在半年內快速累積油性鐵粉泥塊？", answer: "因為 INV-08 安裝位置正對軋鋼廠房熱軋排氣百葉窗下風處 4 公尺，排出的油霧與氧化鐵微粒直接進入逆變器進風口，而進風口未加裝金屬防塵濾網。", evidence: "廠房氣流煙霧測試影片 & 粉塵成分磁性吸附檢測" },
-        { level: 4, why: "為何風扇轉速下降與原廠備品更換會延宕長達數週？", answer: "因為該逆變器 OEM 已退出市場，原規格 IP55 風扇停產且海外交期長達 52 週，維運倉庫未建立跨廠牌高防護等級（IP68 雙滾珠耐油霧風扇）替代料件認證表。", evidence: "供應商詢價回覆單 & NREL 逆變器備品斷鏈研究對照" },
-        { level: 5, why: "為何重工業污染環境下的散熱退化與備品斷鏈未能提前預防與攔截（系統與管理根因）？", answer: "【發生制度根因】重工業屋頂案場設計規範未將「排氣口下風處隔離距離與進風防油霧過濾箱」列入強制條款，且未針對孤兒機種（Orphaned OEM）建立關鍵耗材（風扇/電容）安全庫存；【流出系統根因】SCADA 未部署『單位功率溫升斜率（°C/kW）異常退化』之預測性維護模型。", evidence: "場站 PFMEA 與備品庫存清冊稽核報告" }
+    d2: {
+      tag: "D2 PROBLEM DESCRIPTION · 晨間併網延遲量化與 Is / Is Not 矩陣",
+      conclusionTitle: "INV #03 與 #07 於每日 06:30–09:30 因絕緣保護鎖死無法併網，待日照蒸發水氣後才恢復，26 天累計損失 8,420 kWh（佔晨間應發電量 100%）",
+      stageComparison: [
+        ["Baseline 季風前穩態", "2026/01/01 – 02/01", "0.998 (-0.2%)", "0 kWh", "晨間 R_iso 穩定維持於 12~18 MΩ，06:10 準時併網"],
+        ["Stage 1 間歇磨損期", "2026/02/02 – 02/17", "0.912 (-8.8%)", "3,180 kWh", "強陣風日隔天清晨偶發 Insulation Fault，延遲約 1.5 小時併網"],
+        ["Stage 2 護套磨穿期", "2026/02/18 – 02/28", "0.829 (-17.1%)", "5,240 kWh", "銅芯微露接觸晨露，每日固定鎖死至 09:30 後才復歸併網"]
       ],
-      d4_citations: [
-        { refId: "CIT-SOLAR-2023-FCA", source: "Solar Energy (2023) Vol. 262: FCA-B-FSA Grid-Tie PV Inverters", quote: "無變壓器逆變器在散熱退化與 LCL 濾波元件老化時，會呈現共模漏電流激增、PLL 失步與 THD 超標之複合故障特徵 (Fault Signatures)。", similarity: 0.97 },
-        { refId: "CIT-NREL-2024-OEM", source: "NREL 2024 PV Inverter Reliability Workshop Report", quote: "高達 45% 已安裝逆變器容量在建成 4 年後面臨 OEM 退出市場，且散熱風扇交期可長達 52 週，必須建立第三方替代工程規格與預測性溫升監控。", similarity: 0.98 }
+      isIsNot: [
+        ["What (異常現象)", "逆變器報出 Code 3501 Insulation Resistance Low，晨間鎖死不併網", "正午高溫跳機、MPPT 熔絲燒斷或交流側電網過壓"],
+        ["Where (空間位置)", "僅發生於迎風面 B 區浮筒陣列跨接橋之 INV #03 與 #07 主幹電纜", "背風面 A/C/D 區浮筒陣列及岸上逆變器本體"],
+        ["When (發生時機)", "僅發生於清晨 06:00–09:30 高濕結露時段及東北季風 > 6 級隔日", "正午 10:00–15:00 乾燥時段（正午 R_iso 自動回升至 3.5 MΩ）"],
+        ["Extent (影響範圍)", "2 台 150kW 逆變器中之 B3-04、B7-02 兩串對地絕緣劣化", "太陽能模組內部封裝進水或水下錨固系統斷裂"]
+      ]
+    },
+    d3: {
+      tag: "D3 INTERIM CONTAINMENT · 分段 Megger 絕緣搖測隔離與全場浮筒跨接點普查",
+      conclusionTitle: "利用清晨結露窗口期執行 1000V Megger 分段搖測，30 分鐘內鎖定並抽離 B3-04、B7-02 兩條磨損組串，使 INV #03/#07 其餘 22 串立即恢復 06:05 正常併網",
+      containmentActions: [
+        ["ICA-1 清晨濕態 Megger 搖測", "改變過往「正午乾燥時進場查無異常」之盲點，指定工班於 06:30 結露狀態下以 Fluke 1507 (1000V) 逐串搖測對地電阻，當場抓出 B3-04 (38 kΩ) 與 B7-02 (42 kΩ)。", "精準定位率 100%，其餘 22 串立即復歸併網", "已完成"],
+        ["ICA-2 浮筒跨接處臨時緩衝墊", "對全場 48 處浮筒主幹道鉸接跨接處進行 100% 普查，發現另外 9 處線纜外護套已有輕微刮痕，立即剪除緊繃束帶並加墊 EPDM 橡膠護墊。", "攔截 9 處潛在絕緣磨穿點", "已完成 (100% 普查)"],
+        ["ICA-3 R_iso 斜率預警上線", "於 SCADA 告警控制台設定「晨間最低 R_iso 連續 3 日低於 1.0 MΩ」提前預警，不再等待跌破 50 kΩ 硬跳機才通知。", "提前 10~14 天捕捉絕緣劣化", "已上線"]
       ],
-      d5_pca: [
-        { action: "導入工業級 IP68 耐油霧雙滾珠散熱風扇（Sanyo Denki 同尺寸替代件）與耐 105°C 薄膜濾波電容完成 INV-06~INV-10 預防性升級。", owner: "林志強 / 姜興中", due: "2026-10-25", risk_check: "已完成 48 小時滿載熱室測試，溫升降低 19.4°C" },
-        { action: "於逆變器進風側加裝快拆式 304 不鏽鋼迷宮防油霧濾網箱，並設計導風罩隔絕軋鋼廠排氣直吹。", owner: "黃昱超", due: "2026-10-28", risk_check: "風阻壓降 < 8%，不影響額定風量" },
-        { action: "透過 searlion 邏輯章節切塊將該退場 OEM 全系列維修手冊與替代料件表寫入雙模態 RAG 知識庫，並於 SCADA 部署『IGBT 溫升/出力比值』早期預警規則。", owner: "洪稜凱", due: "2026-11-02", risk_check: "歷史檢索速度 < 10 秒" }
+      batchStats: [
+        { label: "全場浮筒跨接點普查", value: "48 處跨接橋", note: "涵蓋 A/B/C/D 四大浮筒陣列區" },
+        { label: "已磨穿外皮故障點", value: "2 處 (B3-04 / B7-02)", note: "雙層 XLPE 護套遭金屬槽邊緣磨穿見銅" },
+        { label: "攔截外皮輕微刮傷點", value: "9 處 (迎風面 B/C 區)", note: "束帶固定過死，波浪起伏時承受剪切應力" }
+      ]
+    },
+    d4a: {
+      tag: "D4 ROOT CAUSE VERIFICATION · 波浪撓曲應力與晨露導電雙軌 5-Why 實證",
+      conclusionTitle: "實證確認：浮筒鉸接處未預留 Ω 型線纜伸縮環且金屬走線槽缺導角護邊（發生根因），加上傳統巡檢僅於午後乾燥時段量測 R_iso（流出根因）",
+      fiveWhyOccurrence: [
+        ["Why 1", "為何 INV #03 與 #07 會在清晨報出絕緣阻抗過低 (R_iso < 50 kΩ) 跳機？", "因為 B3-04 與 B7-02 直流負極線纜在浮筒鉸接處外皮破損，清晨結露與水氣使銅芯對接地金屬走線槽構成漏電迴路。"],
+        ["Why 2", "為何使用符合 EN 50618 標準之雙層絕緣 PV 線纜會在運轉 2 年後破損？", "因為線纜在跨接相鄰兩個浮筒的活動關節處，遭鍍鋅鋼走線槽銳利邊緣反覆摩擦切削。"],
+        ["Why 3", "為何線纜會與走線槽邊緣產生高強度往復摩擦？", "因為東北季風期間水面波浪使相鄰浮筒產生 ±12° 俯仰角位移，而線纜被尼龍束帶死鎖在走線槽兩端，毫無伸縮餘裕。"],
+        ["Why 4", "為何施工時未預留浮筒活動關節之線纜撓曲裕度與護邊？", "因為原施工圖直接套用「陸地屋頂型固定支架」佈線規範，未針對水面浮筒三自由度運動設計 Ω 型膨脹彎 (Expansion Loop)。"],
+        ["Why 5 (發生根因)", "為何水面型專案會誤用陸地固定式佈線圖說？", "【發生根因 Occurrence RC】工程設計與外包驗收規範缺乏《水面浮力式光電動態撓曲防護標準》，未強制要求活動關節處加裝 HDPE 導角護套與 Ω 型撓性波紋管。"]
       ],
-      d6_validation: {
-        short_term: "INV-08 完成風道重構與替代風扇/電容更換後，正午滿載 IGBT 溫度由 94°C 降至 66.5°C，THD 降至 2.1% (<5% 法規上限)。",
-        long_term_p2p: "待 D5 全數部署後啟動 90 天 UNSW P2P 與 HP 濾波長期收斂追蹤。",
-        before_ratio: 0.812,
-        after_ratio: 0.945,
-        recurrence_rate: 0
+      fiveWhyEscape: [
+        ["Why 1", "為何過去兩週已發生數次晨間短暫跳脫，駐點人員進場卻回報「量測正常」？", "因為工班皆於上午 10:30 後登浮筒檢修，此時強烈日照已將破損處水氣蒸發，高阻計量測值回升至 3.5 MΩ 以上。"],
+        ["Why 2", "為何監控中心未能從歷史數據識破「晨間濕態漏電、正午乾態復原」之特徵？", "因為舊版報表僅統計「日平均 R_iso」，正午的高阻抗掩蓋了清晨 06:00 的極低值。"],
+        ["Why 3 (流出根因)", "為何系統缺乏針對晨間極小值之趨勢預警？", "【流出根因 Escape RC】SCADA 缺乏「每日清晨最低 R_iso 分位數追蹤」與「濕度耦合殘差預警」，且維運 SOP 未規定絕緣異常必須於清晨高濕窗口期或噴水模擬下執行搖測。"]
+      ]
+    },
+    d4b: {
+      tag: "D4 HYPOTHESIS ELIMINATION · 水上光電絕緣故障六大假說排除與 TWVNS 溯源",
+      conclusionTitle: "排除「模組玻璃進水、水下接頭浸水、逆變器防雷器擊穿」等假說，確認故障 100% 集中於水面以上之浮筒鉸接機械磨損點",
+      hypotheses: [
+        ["H1：雙玻模組邊框封裝失效導致水氣滲入電池片 (PID/Delamination)", "若為模組內部進水，高濕度下整串開路電壓與 EL 影像皆會異常，且更換跨接線纜無法消除故障。", "將跨接段前後切開單獨搖測模組陣列本體，清晨濕態下 R_iso 仍高達 25 MΩ。", "❌ 已排除"],
+        ["H2：逆變器內部直流防雷器 (SPD) 劣化漏電", "若為逆變器內部 SPD 漏電，拔除外部所有組串後逆變器本體仍會報絕緣故障。", "切離 B3-04 組串後，INV #03 本體與其餘 11 串清晨 R_iso 立即恢復 16 MΩ。", "❌ 已排除"],
+        ["H3：MC4 接頭落水浸泡導致漏電", "若為接頭落水，不論清晨或正午皆會持續短路接地，不會在 09:30 出太陽後自動恢復。", "全場 MC4 接頭皆固定於模組背軌上方 35cm 處，無任何浸水現象。", "❌ 已排除"],
+        ["H4：浮筒鉸接處波浪往復剪切磨穿線纜外皮 + 晨露導通接地", "夜間與清晨高濕結露時透過破損處對金屬槽導電（<50kΩ），09:30 日照升溫蒸發水膜後絕緣回升。", "現場於跨接槽邊緣發現 4mm 外皮磨穿露銅點，噴霧模擬即刻重現 35 kΩ 接地。", "✅ 實證確立"]
+      ],
+      graphPath: [
+        { code: "T (Task 任務)", name: "2MW 水面浮力式光電案場季風期維運", detail: "高濕度、波浪往復運動環境" },
+        { code: "W (Work Step 步驟)", name: "浮筒陣列活動鉸接橋之直流主幹電纜跨接敷設", detail: "承受長期波浪俯仰與橫搖應力" },
+        { code: "V (Failure 失效模式)", name: "束帶死鎖無伸縮裕度 + 金屬槽銳邊磨穿 XLPE 絕緣層", detail: "晨露導通致 R_iso < 50 kΩ 鎖死跳機" },
+        { code: "N (Norm 法規與標準)", name: "IEC 62548 / 水面型光電系統設計規範 (FPV Guidelines)", detail: "動態關節處必須預留撓曲半徑與耐磨護套" },
+        { code: "S (Safeguard 防護控制)", name: "Ω 型撓性波紋管跨接 + 金屬槽 EPDM 護邊 + 晨間 R_iso P10 趨勢告警", detail: "徹底隔絕機械磨損並提前 14 天預警" }
+      ]
+    },
+    d5: {
+      tag: "D5 PERMANENT CORRECTIVE ACTIONS · 浮筒動態跨接防護改造與濕態絕緣預警",
+      conclusionTitle: "全面導入「Ω 型膨脹彎 ＋ 雙層抗 UV 尼龍波紋管 ＋ 走線槽橡膠護邊」三合一機械防護，並建立「晨間 R_iso 1.0 MΩ 提前派工閾值」",
+      pcaTable: [
+        ["PCA-1 浮筒鉸接處 Ω 型撓性改造", "將 B3-04、B7-02 受損線段換新為 TUV 認證水上專用耐候電纜 (AD8 防水等級)，並對全場 48 處浮筒鉸接跨接點全面改為「預留 30cm Ω 型鬆弛弧度 + 穿入 PA6 抗 UV 波紋管 + 金屬槽口加裝 EPDM 導角護條」。", "通過 10 萬次 ±15° 往復擺動模擬零磨損；濕態 R_iso > 15 MΩ", "零副作用；徹底消除金屬銳邊接觸"],
+        ["PCA-2 晨間最低 R_iso 分位數告警", "於監控平台新增「每日 05:30–07:30 R_iso 第 10 百分位數 (P10)」追蹤指標，當連續 3 日低於 1.0 MΩ 時即觸發預防性巡檢，不等跌至 50 kΩ 跳機。", "跳機停機時數降至 0 小時", "避免正午乾燥假象掩蓋絕緣劣化"],
+        ["PCA-3 濕態噴霧絕緣查線 SOP", "修訂水上案場查修 SOP：凡遇間歇性絕緣告警而日間搖測正常者，強制對浮筒跨接段執行「低壓水霧噴灑模擬測試」搭配高阻計搖測。", "間歇性接地故障一次查獲率達 100%", "大幅減少工班重複登浮筒次數"]
+      ]
+    },
+    d6: {
+      tag: "D6 VALIDATION OF EFFECTIVENESS · 季風降雨期實測與 60 天晨間併網率驗證",
+      conclusionTitle: "改造完成後歷經 3 波鋒面降雨與 7 級東北季風實測，INV #03 與 #07 晨間最低 R_iso 穩定維持於 15.2 MΩ 以上，晨間 06:05 準時併網率達 100%",
+      validationMetrics: [
+        ["晨間 06:30 最低絕緣阻抗 (R_iso)", "38 kΩ (跳機鎖死)", "15.2 MΩ (雨天實測)", "≥ 1.0 MΩ (IEC 62446)", "✅ 通過（提升 400 倍安全裕度）"],
+        ["晨間 06:00–09:30 發電同儕比", "0.000 (完全停機)", "0.998", "≥ 0.980", "✅ 通過（挽回全部晨間電量）"],
+        ["全場日均 PR 值", "68.4%", "82.1%", "≥ 81.0%", "✅ 通過（與岸上標準組完全一致）"],
+        ["48 處跨接點波浪擺動檢查", "11 處磨損/刮傷", "0 處摩擦接觸", "0 處異常", "✅ 通過（Ω 型波紋管運作正常）"]
+      ],
+      longTermNote: "透過 UNSW P2P 與清晨 R_iso 時間序列連續追蹤 60 天，確認在相對濕度 95% 之春雨期間無任何阻抗下滑斜率。"
+    },
+    d7: {
+      tag: "D7 PREVENT RECURRENCE · 水面型光電工程標準升版與集團水域案場橫向展開",
+      conclusionTitle: "完成《水面型光電浮筒佈線 PFMEA 與管制計畫》v3.0 升版，並將 Ω 型撓性跨接標準橫向展開至嘉義、台南共 5 座滯洪池與魚電共生案場",
+      docRevisions: [
+        ["PFMEA 水面佈線失效分析", "PFMEA-FPV-CAB-002", "v1.2 → v3.0", "將「浮筒鉸接波浪剪切磨損」列為 S=9 高風險項目，強制規定無 Ω 型膨脹彎與導角護邊不得放行（RPN 由 432 降至 27）。"],
+        ["水上光電施工管制計畫", "CP-FPV-INST-005", "v1.0 → v2.0", "增列「浮筒跨接點 ±15° 自由度拉動測試」與「清晨濕態 1000V Megger 基線建檔」為併網驗收必備條件。"],
+        ["間歇性絕緣查修 SOP", "SOP-OM-FPV-011", "v1.1 → v2.0", "明定「清晨結露窗口搖測法」與「噴霧模擬查線法」，禁止僅憑正午高阻值結案。"],
+        ["SCADA 絕緣趨勢預警規則", "ALM-RULE-RISO-02", "v1.0 → v2.0", "部署晨間 R_iso P10 < 1.0 MΩ 自動預警與濕度解耦模型。"]
+      ],
+      yokotenSites: [
+        { site: "台中大安・龜殼段水上光電 (本案)", capacity: "1,999.8 kWp", status: "100% 完成 48 處改造", finding: "修復 2 處磨穿 + 加固 9 處刮傷點" },
+        { site: "嘉義義竹・滯洪池水上光電", capacity: "3,450.0 kWp", status: "100% 完成橫向加固", finding: "預防性改裝 64 處浮筒鉸接波紋管" },
+        { site: "台南學甲・室內外魚電共生案場", capacity: "2,120.0 kWp", status: "100% 完成規則部署", finding: "導入晨間 R_iso P10 趨勢告警規則" }
+      ]
+    },
+    d8: {
+      tag: "D8 CLOSURE & FINANCIAL VALUATION · 水上光電 20 年 DCF 防損估值與結案認證",
+      conclusionTitle: "以 NT$ 28,000 跨接防護改造投入，挽回年化 NT$ 23.72 萬晨間發電營收（43.1 天回本），20 年生命周期 DCF 防損淨現值達 NT$ 312.0 萬",
+      financialSummary: [
+        ["全場 48 處 Ω 型波紋管與護邊改造費用", "NT$ 28,000", "含 AD8 耐候線材、PA6 波紋管、EPDM 護條與水上施工工時"],
+        ["異常期間歷史短少電費 (26 天)", "8,420 kWh (NT$ 36,442)", "依 FIT = NT$ 4.3280 / kWh 核算"],
+        ["年化避免發電損失 (Annual Avoided Loss)", "54,800 kWh / 年 (NT$ 237,174 / 年)", "同時避免直流接地演變為逆變器 IGBT 模組炸機（單台更換成本逾 NT$ 25 萬）"],
+        ["20 年 DCF 累積防損淨現值 (NPV)", "NT$ 3,120,000 (312.0 萬)", "含發電防損現金流與避免逆變器主機損壞之風險調整現值"],
+        ["投資回收期 (Payback Period)", "43.1 天 (0.12 年)", "高投報率之工程防呆改造"]
+      ],
+      rubricScores: [
+        ["D0/D1 濕態特徵捕捉與水上 LOTO (10%)", "10 / 10", "SMOTE 捕捉晨間濕態特徵，落實水面救生與驗電 LOTO"],
+        ["D2 晨間損失切分與 Is/Is Not (15%)", "15 / 15", "精準切分晨間 06:30–09:30 損失與迎風面空間邊界"],
+        ["D3 清晨搖測隔離與 48 處普查 (10%)", "10 / 10", "改變巡檢時段當場抓出漏電串並完成全場跨接橋普查"],
+        ["D4 波浪剪切物理實證與流出分析 (30%)", "29 / 30", "完整揭示陸地規範誤用於水面之設計根因與正午量測盲點"],
+        ["D5/D6 Ω 型改造與鋒面降雨驗證 (20%)", "19 / 20", "歷經春雨實測 R_iso > 15.2 MΩ，零跳機紀錄"],
+        ["D7/D8 水面規範升版與 DCF 估值 (15%)", "13 / 15", "展開至 5 座水域案場並寫入 TWVNS 知識庫"]
+      ]
+    },
+    charts: {
+      execWaterfall: {
+        categories: ["同儕基準應發電", "Stage 1 間歇延遲(-8.8%)", "Stage 2 晨間鎖死(-17.1%)", "異常期實發電量", "D6 改造後恢復發電"],
+        values: [64200, -3180, -5240, 55780, 64050],
+        prLine: [82.5, 75.2, 68.4, 68.4, 82.1]
       },
-      d7_docs_updated: {
-        pfmea_dfmea: { updated: false, oldVer: "v2.4", newVer: "待 D6 驗證後升版", summary: "擬新增鋼鐵/化工廠屋頂排氣熱油霧腐蝕失效模式。" },
-        control_plan: { updated: false, oldVer: "CP-IND-01", newVer: "待 D6 驗證後升版", summary: "擬新增每季逆變器單位功率溫升比值 (ΔT/P_ac) 監控。" },
-        sop_sip: { updated: false, oldVer: "SOP-INV-05", newVer: "待 D6 驗證後升版", summary: "編撰孤兒逆變器 (Orphaned OEM) 風扇與電容板級替代檢修作業書。" },
-        scada_rule: { updated: false, oldVer: "RULE-TEMP-02", newVer: "待 D6 驗證後升版", summary: "測試 IGBT 溫升斜率與風扇電流異常預警規則中。" }
+      d2Timeline: {
+        dates: ["01/25", "01/30", "02/02(季風)", "02/06", "02/10", "02/14", "02/18(鎖死)", "02/21", "02/24", "02/28(隔離)", "03/04(改造)", "03/10", "03/15", "03/20"],
+        peerRatio: [1.00, 0.99, 0.92, 0.90, 0.91, 0.89, 0.83, 0.82, 0.83, 0.96, 0.99, 1.00, 1.00, 1.00],
+        irradiance: [4.5, 4.8, 4.2, 4.9, 5.1, 4.6, 5.3, 5.0, 5.4, 5.2, 5.5, 5.1, 5.6, 5.7]
+      },
+      d3AlarmFunnel: {
+        labels: ["原始絕緣/電網瞬態通知", "剔除夜間通訊重連雜訊", "ISA-18.2 因果折疊聚合", "SMOTE 濕度耦合篩選", "確認之物理線纜磨損接地"],
+        counts: [310, 180, 75, 18, 2]
+      },
+      d4Mppt: {
+        hours: ["06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"],
+        normalMpptCurrent: [1.2, 5.8, 12.6, 18.5, 23.4, 26.2, 27.0, 26.5, 22.8, 16.4, 8.2, 1.8],
+        faultMppt1Current: [0.0, 0.0, 0.0, 0.0, 23.1, 26.0, 26.8, 26.3, 22.6, 16.2, 8.0, 1.7],
+        stage1Mppt1Current: [0.0, 0.0, 8.4, 18.2, 23.2, 26.1, 26.9, 26.4, 22.7, 16.3, 8.1, 1.8],
+        normalVoltage: [680, 710, 735, 745, 750, 748, 742, 744, 749, 740, 720, 685]
+      },
+      d6Convergence: {
+        days: ["D-30", "D-25", "D-20", "D-15", "D-10", "D-5", "D0(改造)", "D+5", "D+10", "D+15", "D+30", "D+45", "D+60"],
+        rawP2P: [0.91, 0.90, 0.83, 0.82, 0.83, 0.82, 0.99, 1.00, 1.00, 0.99, 1.00, 1.00, 1.00],
+        hpTrend: [0.905, 0.880, 0.845, 0.830, 0.828, 0.826, 0.988, 0.995, 0.997, 0.998, 0.998, 0.999, 0.999]
+      },
+      d8Dcf: {
+        years: ["Y1", "Y2", "Y3", "Y4", "Y5", "Y6", "Y7", "Y8", "Y9", "Y10", "Y12", "Y14", "Y16", "Y18", "Y20"],
+        cumNpvWan: [20.9, 41.2, 60.4, 78.6, 95.8, 112.1, 127.5, 142.1, 155.9, 169.0, 193.1, 214.7, 234.1, 251.5, 312.0]
       }
     }
-  ],
-
-  // 3. 中層 Layer 2：雙模態知識庫邏輯語義塊與 FCA-B-FSA 圖譜節點庫
-  knowledgeChunks: [
-    {
-      chunk_code: "SEC-DC-019",
-      source_doc: "IEC 62852 & 進金生水面型光電 PFMEA 專家驗證庫 v3.3",
-      section_hierarchy: "CH4 直流配電系統 > 4.2 MC4 連接器 > 4.2.3 跨廠牌混插與微動腐蝕失效",
-      fault_signature: "FS-DC-01: 晴空下 MPPT V_mp 正常 (98%~102% Peer)，I_mp 階梯式下跌 (1/N 比例)，伴隨間歇 R_iso < 1MΩ 告警與接頭局部熱斑 ΔT > 15°C",
-      sld_topology_node: "PV String → MC4 Cross-Connector → DC Combiner / MPPT Input",
-      occurrence_rc: "跨廠牌公母連接器混插（Cross-mating）公差不匹配 + 浮體/支架微振無應力釋放弧度，引發插針微動腐蝕（Fretting Corrosion）與接觸電阻激增 (>30mΩ)。",
-      escape_rc: "SCADA 僅設整機零發電告警，未部署 UNSW P2P 支路電流均衡度監測；巡檢抽樣未涵蓋高撓曲跨接區。",
-      recommended_pca: "100% 汰換為同型號原廠認證接頭（如 Stäubli MC4-Evo 2）+ 專用壓接鉗與 2.5 N·m 扭力簽核 + 增設 Ω 型應力緩衝彎 + 部署 MPPT 同儕電流偏移 >12% 自動派工規則。",
-      expert_validated: true,
-      citation_ref: "[CIT-IEC-62852 / NREL-2024-P14 / UNSW-DC50]"
+  },
+  {
+    id: "8D-2026-GS02",
+    code: "8D-2026-GS02",
+    siteName: "高雄岡山・五甲尾地面型升壓站案場",
+    capacityKwp: 4999.2,
+    inverterSpec: "Sungrow SG250HX 250kW × 20 台（集中升壓併入 22.8kV 饋線）",
+    targetEquip: "全場 20 台逆變器與 22.8kV 併網點 (PCC) 無功功率控制器 (PPC)",
+    occurDate: "2026-02-05（正午過壓降載）→ 2026-03-01（午間跳脫截割）",
+    reportDate: "2026-03-22",
+    stage: "D7",
+    statusLabel: "D7 防再發展開中",
+    traceScore: 46,
+    weightedScore: 91,
+    fitRate: 4.0512,
+    lostKwh: 19650.0,
+    lostRevenueNtd: 79606,
+    annualLossKwh: 142000,
+    annualLossNtd: 575270,
+    dcf20YrNpvNtd: 7450000,
+    repairCostNtd: 45000,
+    paybackDays: 28.5,
+    prBefore: 71.8,
+    prPeer: 83.4,
+    prAfter: 83.1,
+    irrPct: 11.20,
+    cover: {
+      tag: "8D PROBLEM SOLVING & GRID OVERVOLTAGE CLIPPING REPORT · 8D-2026-GS02",
+      conclusionTitle: "五甲尾 5MW 案場正午平頂截割損失 14.2 萬度/年係因饋線末端電壓升至 1.048 p.u. 觸發逆變器高壓降額，啟用 PPC 動態 Q(V) 吸收無功後全數消除截割",
+      subtitle: "結合 UNSW Clipping 識別、微電網 MPC 電壓告警控制台與 PPC 無功閉環調校之 8D 決策報告",
+      kpis: [
+        { label: "35 天累計截割損失 (D2)", value: "19,650 kWh", note: "每日 11:15–13:45 正午黃金時段平頂截割", isAccent: true },
+        { label: "年化預期挽回營收 (D8)", value: "NT$ 575,270 /年", note: "年化防損 142,000 kWh (FIT 4.0512)", isAccent: true },
+        { label: "20 年 DCF 累積防損淨現值", value: "NT$ 745.0 萬", note: "PPC 韌體與變壓器分接頭調校僅 NT$ 4.5 萬", isAccent: false },
+        { label: "8D 合規審查 / TRACE 評分", value: "91 分 / 46/50", note: "D6 驗證完成，正執行 D7 地面型案場橫向展開", isAccent: false }
+      ],
+      metaLeft: [
+        ["案場名稱與容量", "高雄岡山・五甲尾地面型案場（4,999.2 kWp，22.8kV 專線併網）"],
+        ["異常標的設備", "22.8kV 升壓變壓器有載分接頭 (OLTC) 與電廠控制器 (PPC)"],
+        ["異常演進時間軸", "2026/02/05 饋線新增鄰近光電併網 → 正午 PCC 電壓衝高至 23.9kV"]
+      ],
+      metaRight: [
+        ["核心調用 AI Skills", "pv-microgrid-alarm-mpc · pv-performance-diagnosis · quality-8d-engineering-skills"],
+        ["物理根因結論 (D4)", "PPC 固定設為 PF=1.0 純實功輸出，正午饋線逆送電壓超標觸發逆變器 P(V) 降額"],
+        ["系統流出根因 (D4)", "SCADA 誤將逆變器主動高壓降額歸類為「正常運轉無故障碼」，未計算平頂截割損失"]
+      ]
     },
-    {
-      chunk_code: "SEC-INV-042",
-      source_doc: "Solar Energy (2023) FCA-B-FSA & 退場 OEM 逆變器板級維修知識庫 v2.1",
-      section_hierarchy: "CH7 無變壓器逆變器拓撲 > 7.4 IGBT 熱管理與 LCL 濾波退化 > 7.4.2 工業油霧環境複合失效",
-      fault_signature: "FS-INV-04: 正午高出力時段 IGBT 溫升斜率 dT/dt > 1.5°C/min、功率主動降額 (Thermal Derating)，伴隨共模漏電流 >300mA 與 AC THD > 5% 鎖相失步跳機",
-      sld_topology_node: "Inverter Power Stack (IGBT) → Heatsink & Cooling Fan → LCL Output Filter → PCC",
-      occurrence_rc: "工業排氣油霧與金屬粉塵堵塞散熱鰭片及風扇軸承，熱阻上升致腔體長期高溫 (>70°C)，加速 LCL 薄膜電容容值熱衰減，引發電網諧波耦合共振。",
-      escape_rc: "OEM 退出市場致原廠備品與診斷中斷；SCADA 僅監控過溫跳機點，缺乏「單位功率溫升比值 (ΔT/kW)」退化趨勢監控。",
-      recommended_pca: "認證工業級 IP68 耐油霧雙滾珠替代風扇與 105°C 薄膜電容 + 進風口加裝 304 不鏽鋼迷宮濾網箱 + 部署 IGBT 溫升斜率預測性維護模型。",
-      expert_validated: true,
-      citation_ref: "[CIT-SOLAR-2023-FCA / CIT-NREL-2024-OEM]"
+    summary: {
+      tag: "EXECUTIVE SUMMARY · 電網過壓截割 (Grid Overvoltage Clipping) 決策摘要",
+      conclusionTitle: "透過 UNSW 晴空曲線斜率比對與微電網電壓控制台，識破「無故障碼之隱性過壓降載」，以 Q(V) 動態無功吸收將正午併網點電壓壓回 1.015 p.u.",
+      kpis: [
+        { label: "正午峰值截割幅度", value: "-21.5% P_ac", sub: "正午出力被鎖死於 3.65 MW（應達 4.65 MW）", isAccent: true },
+        { label: "PCC 正午電壓控制", value: "1.015 p.u.", sub: "由 1.048 p.u. 降至安全帶內 (PF=0.96 滯後)", isAccent: false },
+        { label: "平頂截割時數歸零", value: "0.0 hrs/日", sub: "由原本每日截割 2.5 小時降至 0", isAccent: false }
+      ],
+      matrixRows: [
+        ["D0~D1 立案與安全", "pv-microgrid-alarm-mpc", "SCADA 告警控制台捕捉到正午 22.8kV 母線電壓 > 1.045 p.u. 與有功功率平頂截割高度同步，成立高壓電力調度小組。"],
+        ["D2 量化問題描述", "pv-performance-diagnosis", "利用 pvlib 晴空模型重建正午鐘型曲線頂部面積，精算 35 天隱性截割損失達 19,650 kWh（NT$ 79,606）。"],
+        ["D3 暫時圍堵對策", "pv-microgrid-alarm-mpc", "先由遠端將逆變器功率因數臨時固定調為 PF = 0.97 滯後（吸收無功），當日正午截割損失立即減少 80%。"],
+        ["D4 雙軌根因實證", "quality-8d-engineering-skills", "發生根因：台電饋線新增大量光電併網致午間背景電壓墊高，而本場變壓器分接頭置於 +2.5% 檔位且未啟用 Q(V) 曲線；流出根因：無故障碼隱性降載未納入告警。"],
+        ["D5~D6 永久對策驗證", "pv-microgrid-alarm-mpc", "停電調降升壓變壓器無載分接頭 (Tap) 一檔 (-2.5%)，並於 PPC 啟用 IEEE 1547 標準 Q(V) 動態電壓無功控制，PR 恢復至 83.1%。"],
+        ["D7~D8 防再發與估值", "skill-8d-report-analyzer", "將「正午晴空 Clipping 面積自動積分告警」部署至全集團地面型電廠，保全 20 年 DCF 淨現值 NT$ 745.0 萬。"]
+      ]
     },
-    {
-      chunk_code: "SEC-MET-008",
-      source_doc: "ALZ-11 數據審計管線 & UNSW-Solar HP 時序濾波診斷規範 v1.5",
-      section_hierarchy: "CH2 SCADA 數據預處理 > 2.3 氣象感測器漂移解耦 > 2.3.1 日照計結露失真與泥膜積垢分離",
-      fault_signature: "FS-MET-02: 表觀 PR 異常大於 100% (105%~115%)，但全場等價時數 Ey 相對 pvlib 晴空模型與鄰近基準站持續下滑 >10%",
-      sld_topology_node: "POA Pyranometer → Modbus RTU Logger → SCADA PR Engine & PV Array Surface",
-      occurrence_rc: "日照計球罩受泥霧污染或內部結露導致輻照度分母讀數偏低 20%+，同時低傾角模組表面受汛期鈣化泥膜覆蓋致真實透光率下降。",
-      escape_rc: "SCADA 直接信任單點日照計分母，未部署 pvlib 晴空輻照度包絡線自檢與 HP 濾波趨勢分解。",
-      recommended_pca: "部署 pvlib 晴空模型自動交叉審計（偏差 >12% 自動切換備援基準並派修日照計）+ 導入汛期後 10 日內旋轉軟毛刷機械清洗 SOP。",
-      expert_validated: true,
-      citation_ref: "[CIT-ALZ11-AUDIT / CIT-UNSW-HP40]"
+    d0d1: {
+      tag: "D0 SYMPTOM & D1 TEAM · 隱性過壓截割識別、22.8kV 高壓 LOTO 與調度團隊",
+      conclusionTitle: "逆變器雖無任何跳機故障碼，但 UNSW 晴空模型偵測到正午 11:15–13:45 功率波形呈「水平削頂」，鎖定為 22.8kV 電網過壓觸發之 P(V) 自動降額",
+      symptomCards: [
+        { title: "1. 零故障碼之隱性平頂截割偵測 (UNSW Clipping Engine)", metric: "每日削頂 2.5 小時", desc: "多數商用逆變器在電網電壓逼近上限 (1.04~1.05 p.u.) 時，會啟動內建 P(V) 保護自動削減實功輸出而不會報出停機告警。本平台透過 pv-performance-diagnosis 比對正午日射計鐘型峰值與實功平頂差值，揪出每日高達 560 kWh 之隱性蒸發電量。" },
+        { title: "2. 22.8kV 特高壓/高壓變壓器分接頭調校 LOTO", metric: "台電調度聯繫 + 接地銅棒", desc: "調整升壓變壓器無載分接頭 (NLTC) 涉及 22.8kV 高壓側作業，必須於夜間停機時段執行 VCB 斷開 → 拉出車體 → 22.8kV 驗電筆驗電 → 掛設三相短路接地線組 (LOTO) → 吸收殘餘電荷後始得切換檔位。" }
+      ],
+      raciTable: [
+        ["D1 專案負責人 (Champion)", "高壓機電總工程師", "核准變壓器分接頭調整計畫與台電饋線電壓協調", "Accountable (A)"],
+        ["AI 數據與電力系統工程師", "運維數據中心", "執行 Q(V) 無功潮流模擬與正午 Clipping 面積積分核算", "Responsible (R)"],
+        ["甲級電器承裝技術員", "高壓維護班", "執行 22.8kV VCB LOTO 接地、變壓器 Tap 切換與接觸電阻測試", "Responsible (R)"],
+        ["SCADA 控制工程師", "自動化組", "燒錄 PPC 動態 Q(V) 雙斜率曲線與部署 Clipping 預警規則", "Responsible (R)"]
+      ]
     },
-    {
-      chunk_code: "SEC-AC-031",
-      source_doc: "UNSW-Solar Clipping 診斷庫 & 自發自用防逆流微電網控制規範 v2.0",
-      section_hierarchy: "CH6 併網與功率控制 > 6.1 零輸出防逆流 (Zero-Export) > 6.1.4 假日負載驟降與過阻尼壓載",
-      fault_signature: "FS-AC-03: 晴空高輻照時段全場逆變器同步呈現水平或鋸齒狀功率截割 (Clipping)，V_dc 偏高 (接近 V_oc)、I_dc 隨指令下調，無硬體故障碼",
-      sld_topology_node: "Point of Common Coupling (PCC) CT Meter → Smart Logger Zero-Export PID → All Inverters",
-      occurrence_rc: "廠區假日或午休生產負載低於光電出力，加上防逆流控制器安全死區設定過大与慢速 PID 響應，導致過度棄光。",
-      escape_rc: "SCADA 未分離「防逆流指令棄光量」與「設備故障損失」，致使長期棄光被誤判為日照不足。",
-      recommended_pca: "調優防逆流控制週期至 1 秒級並縮小安全死區至 2% + 部署 UNSW Clipping 面積積分獨立計量 + 規劃表後儲能 (BESS) 能量時移。",
-      expert_validated: true,
-      citation_ref: "[CIT-UNSW-CLIP50 / CIT-OIHIKA-MPC]"
+    d2: {
+      tag: "D2 PROBLEM DESCRIPTION · 正午黃金時段削頂損失量化與 Is / Is Not 矩陣",
+      conclusionTitle: "全場 20 台逆變器於晴空正午同步受限於 73% 容量上限，35 天累計削頂損失 19,650 kWh，且異常與饋線母線電壓 > 23.8 kV 呈 100% 正相關",
+      stageComparison: [
+        ["Baseline 冬季併網初期", "2026/01/01 – 02/04", "0.996 (-0.4%)", "0 kWh", "正午 PCC 電壓約 23.1 kV (1.013 p.u.)，功率呈完整鐘型曲線"],
+        ["Stage 1 鄰場併網墊高期", "2026/02/05 – 02/28", "0.892 (-10.8%)", "10,450 kWh", "鄰近 8MW 光電併入同一台電饋線，正午電壓升至 23.8 kV，觸發輕度 P(V) 降額"],
+        ["Stage 2 春季高日照截割期", "2026/03/01 – 03/11", "0.841 (-15.9%)", "9,200 kWh", "春季正午日射突破 920 W/m²，電壓觸及 24.0 kV，全場削頂幅度達 -21.5%"]
+      ],
+      isIsNot: [
+        ["What (異常現象)", "正午 11:15–13:45 交流實功輸出呈水平直線削頂，伴隨交流電壓 V_ac > 1.045 p.u.", "直流側組串開路、模組熱斑或逆變器 IGBT 過溫降載"],
+        ["Where (空間位置)", "全場 20 台逆變器同步發生（越靠近升壓站尾端之逆變器削頂越深）", "單一逆變器或單一 MPPT 迴路之局部故障"],
+        ["When (發生時機)", "僅發生於晴空日正午高出力時段（饋線總逆送潮流最高時）", "陰天、清晨、傍晚或假日工業區用電負載高時段"],
+        ["Extent (影響範圍)", "正午峰值削減約 1,000 kW（每日損失 500~850 kWh）", "全天候固定比例之效率衰減"]
+      ]
     },
-    {
-      chunk_code: "SEC-PV-005",
-      source_doc: "sprince0031 I-V-G 非線性分類器 & ISA-18.2 告警合理化手冊 v1.2",
-      section_hierarchy: "CH1 D0 前置初篩 > 1.1 氣象干擾解耦 > 1.1.2 內部線間短路 (LL Fault) vs 短暫雲層遮擋",
-      fault_signature: "FS-DC-05: 太陽輻照度 G 維持 >800 W/m² 高水準，但單一組串電壓 V_mp 瞬間跌落 ΔV > 10% (約 2~3 個模組電壓) 且電流逆流或驟降",
-      sld_topology_node: "PV Module Sub-string Bypass Diode / Cable Insulation → String Fuse",
-      occurrence_rc: "模組背板或跨接線纜受支架銳邊磨損對地/線間短路（Line-to-Line Fault），或旁路二極體擊穿短路。",
-      escape_rc: "傳統定值告警易將短暫烏雲飄過（G 與 I 同步下降，V 微降）誤報為故障，或為防誤報而調寬閾值導致真實 LL 短路被忽略。",
-      recommended_pca: "部署 sprince0031 Random Forest / SVM 之 I-V-G 三維非線性分類器於 D0 閘門：自動忽略 G 同步下挫之雲遮事件，僅在 G 高而 V 異常塌陷時鎖定 LL 短路派工。",
-      expert_validated: true,
-      citation_ref: "[CIT-SPRINCE-IVG / CIT-ISA-18.2]"
+    d3: {
+      tag: "D3 INTERIM CONTAINMENT · 遠端固定功率因數 (PF=0.97) 緊急壓降母線電壓",
+      conclusionTitle: "在不需停機的條件下，由中央監控遠端將 PPC 功率因數由 PF=1.0 調整為 PF=0.97 滯後（感性吸收無功），10 分鐘內將正午母線電壓壓低 0.024 p.u. 並挽回 85% 截割電力",
+      containmentActions: [
+        ["ICA-1 遠端投入感性無功 (PF=0.97 Lagging)", "利用逆變器剩餘視在功率容量 (S = 250kVA) 吸收電網感性無功 Q ≈ -60 kvar/台，抵消饋線電抗器壓升效應 ($\\Delta V \\approx (R P + X Q)/V$)。", "正午 PCC 電壓立即由 23.95 kV 降至 23.40 kV，削頂消失 85%", "已完成 (遠端即時生效)"],
+        ["ICA-2 升壓變壓器分接頭檔位盤點", "調閱 2,500kVA 升壓變壓器出廠試驗報告與現場銘牌，確認目前無載分接頭位於 Tap 2 (+2.5%)，具備下調至 Tap 3 (額定 0%) 之物理空間。", "確認硬體調降電壓空間", "已完成"],
+        ["ICA-3 全面盤點集團饋線末端案場", "針對全集團併入台電農村型長距離饋線之 8 座地面型案場，啟動 UNSW Clipping 掃描。", "發現台南將軍案場亦有輕微正午過壓現象", "已納入橫向展開"]
+      ],
+      batchStats: [
+        { label: "全場受影響逆變器", value: "20 台 / 20 台 (100%)", note: "全場受公共併網點 (PCC) 電壓連動" },
+        { label: "ICA 投入無功容量", value: "-1.15 Mvar (感性)", note: "不影響有功上限之前提下壓低母線電壓" },
+        { label: "當日立即挽回發電量", value: "+740 kWh / 日", note: "遠端參數調校後次一個晴空日實測" }
+      ]
+    },
+    d4a: {
+      tag: "D4 ROOT CAUSE VERIFICATION · 饋線阻抗壓升物理公式與雙向 5-Why 實證",
+      conclusionTitle: "物理公式 $\\Delta V \\approx (RP + XQ)/V$ 實證：饋線高實功逆送加上變壓器 Tap 偏高致電壓超標（發生根因），而監控系統未監測無故障碼之 P(V) 降額（流出根因）",
+      fiveWhyOccurrence: [
+        ["Why 1", "為何五甲尾 5MW 案場在正午陽光最強時，發電功率被鎖死在 3.65 MW？", "因為逆變器交流側端電壓超過 836V AC (1.045 p.u.)，觸發韌體內建之高壓降載曲線 P(V) 自動削減有功輸出。"],
+        ["Why 2", "為何逆變器交流端電壓會高達 1.045 p.u.？", "因為台電 22.8kV 饋線在正午有大量鄰近光電案場同時逆送電力，且本場升壓變壓器低壓側電壓被分接頭額外墊高了 +2.5%。"],
+        ["Why 3", "為何在饋線電壓升高時，本場電廠控制器 (PPC) 未自動拉低電壓？", "因為 PPC 出廠時被設定為固定「PF = 1.0（純實功模式，Q = 0）」，未啟用隨電壓動態吸收無功之 Q(V) 下垂控制。"],
+        ["Why 4", "為何竣工併網時將變壓器設於 +2.5% 且關閉 Q(V) 控制？", "因為兩年前併網初期該饋線尚無其他光電案場，工程師為補償長距離線路壓降而調高分接頭，此後未隨區域光電密度增加而重評估。"],
+        ["Why 5 (發生根因)", "為何饋線背景電壓結構改變卻未觸發系統參數重整？", "【發生根因 Occurrence RC】缺乏「併網點 (PCC) 季節性電壓裕度審查與 PPC 閉環無功控制標準」，仍採用靜態開環設定應對高滲透率光電電網。"]
+      ],
+      fiveWhyEscape: [
+        ["Why 1", "為何每日正午損失逾 560 kWh 持續 35 天，監控室卻以為案場完全正常？", "因為全場 20 台逆變器狀態燈皆顯示綠色「Grid Connected (正常併網)」，無任何 Fault Alarm 跳出。"],
+        ["Why 2", "為何損失 21.5% 峰值功率卻未被 PR 報表突顯？", "因為春季整體日照時數拉長，全月累積發電量仍達預算目標之 96%，掩蓋了正午黃金 2.5 小時的削頂損失。"],
+        ["Why 3 (流出根因)", "為何監控系統無法抓出「晴空正午削頂」？", "【流出根因 Escape RC】SCADA 缺乏「pvlib 理論晴空鐘型曲線 vs. 實際出力之正午二階導數/平頂截割檢測演算法 (UNSW Clipping Detector)」。"]
+      ]
+    },
+    d4b: {
+      tag: "D4 HYPOTHESIS ELIMINATION · 地面型案場正午平頂截割假說排除與知識溯源",
+      conclusionTitle: "排除「容配比超配截割 (DC/AC Ratio Clipping)、逆變器風扇故障過溫降額、台電 DNP3 遠端限電指令」三大假說，確立為「PCC 過壓自發 P(V) 降額」",
+      hypotheses: [
+        ["H1：設計容配比 (DC/AC Ratio) 超配導致逆變器達額定功率上限截割", "若為容配比自然截割，平頂高度必等於逆變器額定滿載功率 (250kW × 20 = 5.0 MW)。", "實測削頂高度僅 3.65 MW（單機僅 182 kW，遠低於額定 250 kW）。", "❌ 已排除"],
+        ["H2：台電調度中心透過 DREAMS / DNP3 下達有功限電指令 (Curtailment)", "若為台電遠端限電，PPC 紀錄器中之 Active Power Setpoint 暫存器會由 100% 變為 73%。", "查核 PPC 歷史 Log，台電端 Setpoint 全程維持 100% 未變動。", "❌ 已排除"],
+        ["H3：逆變器散熱風扇故障導致正午內部 IGBT 過溫降額 (Thermal Derating)", "過溫降額會因各台逆變器日照與通風位置不同而參差不齊，且機箱溫度 > 75°C。", "全場 20 台同步削頂且機箱溫度僅 51°C，且遠端投入無功 Q 後削頂立即消失。", "❌ 已排除"],
+        ["H4：饋線背景電壓墊高 + 變壓器 Tap 偏高致觸發逆變器高壓 P(V) 降額", "當 V_ac > 1.04 p.u. 時實功隨電壓線性下調；投入感性無功壓低電壓後實功即刻恢復滿載。", "ICA-1 調為 PF=0.97 後當日正午出力立即由 3.65 MW 躍升至 4.58 MW。", "✅ 實證確立"]
+      ],
+      graphPath: [
+        { code: "T (Task 任務)", name: "5MW 地面型高壓併網光電案場電力調度維運", detail: "高光電滲透率之 22.8kV 配電饋線" },
+        { code: "W (Work Step 步驟)", name: "升壓變壓器分接頭設定與 PPC 電廠無功功率控制", detail: "決定正午大發時段之併網點電壓穩定度" },
+        { code: "V (Failure 失效模式)", name: "固定 PF=1.0 無電壓調節能力，致 PCC 電壓 > 1.045 p.u. 觸發 P(V) 削頂", detail: "無故障碼下每日蒸發 560+ kWh" },
+        { code: "N (Norm 法規與標準)", name: "IEEE 1547-2018 / 台電再生能源發電系統併聯技術要點", detail: "支援電壓-無功 Q(V) 自動調節模式" },
+        { code: "S (Safeguard 防護控制)", name: "變壓器 Tap 調回 0% 額定檔 + PPC 啟用動態 Q(V) 曲線 + UNSW 削頂檢測", detail: "平時 PF=1.0 零線損，僅於 V>1.02 p.u. 時動態吸無功" }
+      ]
+    },
+    d5: {
+      tag: "D5 PERMANENT CORRECTIVE ACTIONS · 變壓器分接頭優化與動態 Q(V) 閉環控制",
+      conclusionTitle: "為何不長期固定 PF=0.97？因為全天候吸收無功會增加線損！永久對策改採「變壓器 Tap 下調 2.5% ＋ IEEE 1547 動態 Q(V) 死區控制」，兼顧零截割與最低線損",
+      pcaTable: [
+        ["PCA-1 升壓變壓器分接頭物理調降", "利用夜間停機窗口執行 22.8kV LOTO，將兩具 2,500kVA 升壓變壓器無載分接頭由 Tap 2 (+2.5%) 調回 Tap 3 (0% 額定檔位)，並完成三相繞組直流電阻平衡測試（偏差 < 0.4%）。", "低壓側基準電壓直接下降 2.5%，消除靜態電壓偏置", "夜間施工零發電損失"],
+        ["PCA-2 PPC 啟用動態 Q(V) 電壓-無功曲線", "取代臨時固定 PF=0.97 方案，於 PPC 寫入動態 Q(V) 曲線：當 V_pcc ≤ 1.02 p.u. 時維持 PF = 1.0（零無功線損）；當 V_pcc 介於 1.02~1.04 p.u. 時線性增加感性無功吸收（最大至 PF = 0.95）。", "正午峰值電壓穩定控制在 1.015 p.u.，非正午時段維持零無功損耗", "較固定 PF 方案每年額外減少約 8,200 kWh 銅損"],
+        ["PCA-3 部署 UNSW 正午削頂自動偵測器", "於進能服雲端平台啟用 `pv-performance-diagnosis` Clipping 演算法：自動比對晴空日 11:00–14:00 輻照度曲線二階導數與有功功率二階導數，一旦出現無限電指令之平頂削波即刻報警。", "100% 捕捉隱性過壓或溫升削頂", "徹底堵住「無故障碼降載」之監控盲區"]
+      ]
+    },
+    d6: {
+      tag: "D6 VALIDATION OF EFFECTIVENESS · 晴空正午鐘型曲線復原與無功損耗驗證",
+      conclusionTitle: "對策實施後正午峰值出力由 3.65 MW 躍升至 4.68 MW（完整鐘型曲線無削頂），全場晴空 PR 達 83.1%，每日淨增發電量達 685 kWh",
+      validationMetrics: [
+        ["正午 12:15 峰值有功出力 (G=940 W/m²)", "3.65 MW (削頂受限)", "4.68 MW (完整鐘型)", "≥ 4.60 MW", "✅ 通過（峰值功率提升 +28.2%）"],
+        ["正午 PCC 最高併網電壓", "23.95 kV (1.050 p.u.)", "23.14 kV (1.015 p.u.)", "≤ 23.48 kV (1.03 p.u.)", "✅ 通過（遠離過壓降載門檻）"],
+        ["每日正午平頂截割時數", "2.5 小時 / 日", "0.0 小時 / 日", "0.0 小時", "✅ 通過（Clipping 完全歸零）"],
+        ["全場晴空日 PR 值", "71.8%", "83.1%", "≥ 82.0%", "✅ 通過（較異常期提升 +11.3% pt）"]
+      ],
+      longTermNote: "持續透過 `pv-microgrid-alarm-mpc` 監控 22.8kV 饋線四季電壓分佈，確認動態 Q(V) 死區控制在陰晴交替日無震盪現象。"
+    },
+    d7: {
+      tag: "D7 PREVENT RECURRENCE · 高壓併網控制標準升版與大型地面站橫向展開",
+      conclusionTitle: "修訂《高壓併網電廠 PPC 電壓控制與分接頭設計規範》，並對集團轄下 8 座 2MW 以上地面型案場完成正午削頂普查與 Q(V) 曲線植入",
+      docRevisions: [
+        ["高壓併網系統設計規範", "STD-HV-PPC-003", "v1.1 → v2.0", "強制規定所有 11.4kV/22.8kV 併網案場必須啟用 PPC 動態 Q(V) 曲線，嚴禁設為死鎖 PF=1.0。"],
+        ["變壓器試運轉管制計畫", "CP-HV-TR-009", "v1.3 → v2.0", "併網滿載 30 天後必須依據實測正午 PCC 電壓分佈重新確認最佳 Tap 檔位。"],
+        ["SCADA 性能演算法規則庫", "ALM-RULE-CLIP-04", "v1.0 → v2.0", "正式上線 UNSW 平頂截割積分檢測器，將無故障碼之 P(V) 與過溫降載納入日報表核心指標。"]
+      ],
+      yokotenSites: [
+        { site: "高雄岡山・五甲尾地面型 (本案)", capacity: "4,999.2 kWp", status: "100% 完成 Tap 與 Q(V) 優化", finding: "年化挽回 14.2 萬度截割損失" },
+        { site: "台南將軍・鹽灘地光電案場", capacity: "6,200.0 kWp", status: "完成 Q(V) 曲線植入", finding: "消除正午 12:00–13:00 輕微過壓削頂 (+4.2% PR)" },
+        { site: "屏東枋寮・農電地面型案場", capacity: "3,800.0 kWp", status: "完成普查驗證", finding: "PCC 電壓裕度充足，已完成 Clipping 告警綁定" }
+      ]
+    },
+    d8: {
+      tag: "D8 CLOSURE & FINANCIAL VALUATION · 5MW 地面站 20 年 DCF 防損估值與審查",
+      conclusionTitle: "僅投入 NT$ 4.5 萬高壓調校費用，每年直接創造 NT$ 57.53 萬額外售電營收（28.5 天回本），20 年生命周期 DCF 防損淨現值高達 NT$ 745.0 萬",
+      financialSummary: [
+        ["高壓變壓器 Tap 切換與 PPC 曲線調校成本", "NT$ 45,000", "含夜間高壓技術員作業、繞組直阻測試與自動化工程師工時"],
+        ["35 天歷史已發生削頂損失", "19,650 kWh (NT$ 79,606)", "依 FIT = NT$ 4.0512 / kWh 核算"],
+        ["年化避免截割損失 (Annual Avoided Clipping)", "142,000 kWh / 年 (NT$ 575,270 / 年)", "直接轉化為純營業利益（邊際發電成本為 0）"],
+        ["20 年 DCF 累積防損淨現值 (NPV)", "NT$ 7,450,000 (745.0 萬)", "折現率 WACC = 5.2% 計算之 20 年長期現金流貢獻"],
+        ["投資回收期 (Payback Period)", "28.5 天 (0.08 年)", "零硬體更換之高槓桿軟體與電氣參數優化"]
+      ],
+      rubricScores: [
+        ["D0/D1 無故障碼削頂捕捉與 22.8kV LOTO (10%)", "10 / 10", "UNSW 削頂檢測結合特高壓接地掛鎖規範"],
+        ["D2 正午鐘型積分核算與 Is/Is Not (15%)", "14 / 15", "精確量化每日 2.5 小時削頂面積"],
+        ["D3 遠端 PF=0.97 即時止血對策 (10%)", "10 / 10", "10 分鐘內遠端壓低母線電壓挽回 85% 損失"],
+        ["D4 饋線壓升公式與雙軌 5-Why 實證 (30%)", "28 / 30", "清楚解構 ΔV=(RP+XQ)/V 物理機制與無故障碼流出盲點"],
+        ["D5/D6 Tap 下調 + 動態 Q(V) 驗證 (20%)", "17 / 20", "消除固定 PF 線損副作用，正午峰值提升 28.2%"],
+        ["D7/D8 高壓規範升版與 745 萬 DCF 估值 (15%)", "12 / 15", "D7 跨案場展開進行中（完成度 90%）"]
+      ]
+    },
+    charts: {
+      execWaterfall: {
+        categories: ["晴空理論應發電", "Stage 1 輕度過壓(-10.8%)", "Stage 2 嚴重削頂(-15.9%)", "異常期實發電量", "D6 Q(V)投入後發電"],
+        values: [148500, -10450, -9200, 128850, 148100],
+        prLine: [83.4, 75.8, 71.8, 71.8, 83.1]
+      },
+      d2Timeline: {
+        dates: ["01/28", "02/02", "02/05(鄰場併網)", "02/10", "02/15", "02/20", "02/25", "03/01(高日照)", "03/05", "03/09", "03/11(D3調PF)", "03/15(D5調Tap)", "03/19", "03/22"],
+        peerRatio: [1.00, 0.99, 0.90, 0.89, 0.88, 0.89, 0.88, 0.84, 0.83, 0.84, 0.97, 1.00, 1.00, 1.00],
+        irradiance: [4.9, 5.0, 5.3, 5.4, 5.2, 5.5, 5.6, 6.1, 6.2, 6.0, 6.1, 6.3, 6.2, 6.4]
+      },
+      d3AlarmFunnel: {
+        labels: ["每日逆變器瞬態電壓波動紀錄", "剔除台電夜間調壓操作", "UNSW 正午晴空平頂篩選", "PCC 母線電壓 > 1.04 p.u. 交集", "確認之系統級 P(V) 過壓截割事件"],
+        counts: [580, 320, 95, 20, 1]
+      },
+      d4Mppt: {
+        hours: ["06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"],
+        normalMpptCurrent: [0.15, 0.85, 2.10, 3.45, 4.30, 4.65, 4.72, 4.68, 4.15, 3.10, 1.65, 0.35],
+        faultMppt1Current: [0.15, 0.85, 2.10, 3.42, 3.65, 3.65, 3.65, 3.65, 3.65, 3.08, 1.65, 0.35],
+        stage1Mppt1Current: [0.15, 0.85, 2.10, 3.44, 4.05, 4.10, 4.10, 4.10, 4.02, 3.10, 1.65, 0.35],
+        normalVoltage: [22.9, 23.1, 23.4, 23.7, 23.9, 24.0, 24.0, 23.9, 23.8, 23.5, 23.2, 23.0]
+      },
+      d6Convergence: {
+        days: ["D-30", "D-25", "D-20", "D-15", "D-10", "D-5", "D0(D3/D5)", "D+5", "D+10", "D+15", "D+20", "D+25", "D+30"],
+        rawP2P: [0.89, 0.88, 0.89, 0.84, 0.83, 0.84, 0.97, 1.00, 1.00, 0.99, 1.00, 1.00, 1.00],
+        hpTrend: [0.888, 0.885, 0.875, 0.850, 0.838, 0.836, 0.965, 0.994, 0.998, 0.998, 0.999, 0.999, 0.999]
+      },
+      d8Dcf: {
+        years: ["Y1", "Y2", "Y3", "Y4", "Y5", "Y6", "Y7", "Y8", "Y9", "Y10", "Y12", "Y14", "Y16", "Y18", "Y20"],
+        cumNpvWan: [50.2, 98.6, 144.3, 187.5, 228.3, 266.8, 303.2, 337.6, 370.1, 400.8, 457.2, 507.6, 552.6, 592.8, 745.0]
+      }
     }
-  ],
-
-  // 4. 文件四大權威表格完整結構化資料 (供 Tab 5 與各層審查引擎調用)
-  disciplineSpecs: [
-    { d: "D0", name: "緊急響應與初篩", layer: "Layer 1", task: "電氣安全隔離（LOTO）、火災/電弧風險評估、SCADA 氣象干擾解耦", tools: "pvlib 晴空輻照模型、I-V-G 非線性分類器、光伏 FMEA 嚴重度 (S_PV in [1,5])", gate: "退件缺失：將雲層遮擋或溫標 (°F/°C) / 單位 (W/kW) 跳變誤判為設備故障而盲目派工；S_PV=5 未立即執行 LOTO 隔離。", weight: "前置門檻" },
-    { d: "D1", name: "成立跨職能團隊", layer: "Layer 1", task: "組建涵蓋現場電氣、SCADA 數據、OEM 供應商 FAE 與資產管理之 2–10 人團隊", tools: "角色權責矩陣（Leader、Champion、SME）、Kamble (2026) 多目標 AI 團隊組建演算法", gate: "退件缺失：僅由單一維運人員掛名、未指定具決策權之 Champion、缺乏跨部門協同、或將 D1 與 D2 順序混淆（FQI 警示）。", weight: "10%" },
-    { d: "D2", name: "問題精確描述", layer: "Layer 1", task: "量化 5W2H 與損失（MWh、PR 跌幅、金額），繪製 SLD 單線圖故障位置與附上客觀證據", tools: "Is / Is Not 邊界分析法、無人機 IR 熱像 / EL 影像、SCADA 故障波形切片、UNSW P2P", gate: "退件缺失：僅寫「3號逆變器異常」等定性模糊詞彙，無量化損失數據、無 Is/Is Not 矩陣或無客觀影像佐證。", weight: "15%" },
-    { d: "D3", name: "臨時遏制措施", layer: "Layer 2", task: "切離故障組串/MPPT、熱插拔備件替換、同批次設備 100% 紅外線普查、SCADA 告警降噪", tools: "ISA-18.2 / IEC 62682 / EEMUA 191 告警合理化規範、倉儲批次追溯系統（Batch Localization）", gate: "退件缺失：僅寫「加強巡檢」而無具體隔離範圍、未排查同批次設備、無完成時間點、未驗證遏制措施是否引入諧波副作用。", weight: "15%" },
-    { d: "D4", name: "根本原因分析 (RCA)", layer: "Layer 2 & 3", task: "雙軌分析：追查物理/管理「發生根因 (Occurrence RC)」與 SCADA/巡檢「流出根因 (Escape RC)」", tools: "5-Why（>=5 層且符 MECE 與雙向可逆）、6M 魚骨圖、FTA 故障樹、FCA-B-FSA、CIRCA / TWVNS 圖譜推論、uptrain 引文核驗", gate: "退件缺失：止步於 1–3 層 Why、歸咎於「人員操作疏忽 (Human Error)」或「零件自然老化」、未區分發生因與流出因、無實測數據或超出專家知識庫產生 AI 幻覺。", weight: "30% (核心雙倍權重)" },
-    { d: "D5", name: "永久糾正措施 (PCA)", layer: "Layer 2", task: "針對 D4 每一條發生因與流出因一對一制定軟硬體改造（韌體更新、散熱改良、換料、預測模型）", tools: "糾正措施對照矩陣、副作用與二次風險評估（Risk Assessment）、熱應力驗證、ArnabbLank Copilot", gate: "退件缺失：D5 對策與 D4 根因邏輯脫節、使用「提升人員意識/加強培訓」等空泛描述、無明確負責人與期限。", weight: "15%" },
-    { d: "D6", name: "實施與效果驗證", layer: "Layer 3", task: "全面部署永久對策、移除 D3 臨時措施、執行短期晴空日確認與 3–6 個月長期 PR 追蹤驗證", tools: "UNSW-Solar 同儕比對演算法（P2P PR）、Hodrick-Prescott (HP) 時序濾波分解", gate: "退件缺失：剛換完零件即立即結案，缺乏跨氣候週期（3–6 個月）的長期發電恢復收斂與零復發統計驗證。", weight: "10%" },
-    { d: "D7", name: "預防再發與水平展開", layer: "Layer 3", task: "全場站/跨案場水平展開（Yokoten），強制修訂四大核心技術與管理文件版次", tools: "/control-plan-builder、PFMEA/DFMEA（重算 S/O/D 與 RPN/AP）、控制計畫（CP）、SOP/SIP、SCADA 預警庫", gate: "退件缺失：將 D5/D6 對策直接複製貼上至 D7、僅總結教訓卻未實質更新 PFMEA/CP/SOP/SCADA 四大文件版次與培訓簽核紀錄。", weight: "3% (與D8合佔5%)" },
-    { d: "D8", name: "團隊認可與閉環歸檔", layer: "Layer 3", task: "確認行動項 100% 完成、業主/品保主管書面簽核結案、結構化寫入雙模態 RAG 企業知識庫", tools: "結案檢核表（Closure Checklist）、searlion 邏輯章節切塊、Milvus 向量 + Neo4j 圖譜雙模態知識庫", gate: "退件缺失：未取得客戶或品保最終簽核確認、歷史報告散落於本地資料夾而未結構化切塊寫入 RAG 知識庫。", weight: "2% (與D7合佔5%)" }
-  ],
-
-  academicPapers: [
-    { authors: "Oancea, Ionescu & Pirvu (2025)", journal: "MDPI Applied Sciences, Vol. 15(20), 11262", theory: "工業 4.0 整合 8D 軟硬體閉環架構：LLM 客訴解析與批次定位 + 非侵入式 IoT 監控 + 雲端數位編目庫 + 自動化報告引擎", stages: "D1–D8 全流程", metrics: "歷史對策檢索提速 300 倍（300 分鐘降至 <1 分鐘）、報告生成 <1 分鐘、故障復發率降 100%、客訴降 75%、Cpk 達 1.85（最高 Ppk 2.57）、非品質成本由 €12,916 降至 0。" },
-    { authors: "Kamble et al. (2026) & Fischer / Foxley Quality Intelligence (2026)", journal: "SSRG IJME Vol. 13(5) & J. Tech Vol. 16(4) / FQI Fact Check", theory: "LLM 問題分診分類器 + 多目標跨職能團隊優化演算法；輔以 FQI 三大認識論陷阱查核規範", stages: "D1 團隊組建 / D2 問題分診 / D4 邏輯查核", metrics: "67 筆案例分類準確率 89.7%、F1 0.895；FQI 嚴厲警示：(1) 嚴禁混淆 D1 團隊與 D2 描述順序、(2) 分診速度不等於根因品質、(3) D4 看似合理的 AI 推論不等於已驗證物理根因。" },
-    { authors: "Belu et al. & MDPI Applied Sciences (2026)", journal: "Applied Sciences, Vol. 16(5), 2591", theory: "風險分級 AI-FMEA 預處理與 8D 動態互賴：確定性規則過濾低風險 + 封閉專家驗證知識庫約束之 AI 生成（專責中高風險）", stages: "D0 風險分診 / D4 根因分析 / D7 FMEA 更新", metrics: "強制限制 AI 僅能引用專家驗證知識庫（Expert-Validated KB），徹底消除生產環境 AI 幻覺；消除 S-O-D 主觀評分偏差並於 D7 自動回寫 FMEA 與 AP 行動優先級。" },
-    { authors: "Komatina, Marinković & Simić (2025/2026)", journal: "MDPI Algorithms, Vol. 19(7), 510", theory: "混合模糊多準則決策演算法：模糊最佳最差法 (FBWM) + 模糊簡單排序評估法 (FSREM) + 加權 γ-融合矩陣", stages: "D1–D8 資源與審查權重分配", metrics: "透過平方與根號正規化模糊矩陣運算，建立跨企業（Company A, B, C）高度一致的 8D 各步驟折衷排序指標（Compromise Ranking Index）。" },
-    { authors: "FCA-B-FSA (2023) & PV Reliability FMEA (2024)", journal: "Solar Energy Vol. 262(2), 111831 & Sustainability 16(10), 4183", theory: "基於故障特徵分析之併網逆變器失效原因映射 (FCA-B-FSA) + 光伏三階層 FMEA (S_PV in [1,5]) + NREL NLP 字典與 SLD 能量流", stages: "D0 分級 / D2 特徵提取 / D4 物理根因 / D7 風險重算", metrics: "建立交直流故障特徵（共模漏電流、THD、MPPT 電流塌陷）至根因（RCs）統計映射；證明分散式組串逆變器可用度因子高於集中式；破解『異常在逆變器捕獲但根因在 DC 側』盲區。" },
-    { authors: "RCInvestigator & CIRCA / KGroot (2026)", journal: "IEEE / HVDC & Power System Ontology RCA", theory: "知識圖譜可控式交互推理（向上泛化算子 ⇑、水平類比算子 ⇐）+ 兩階段 RCI 與基於拓撲之加權變鄰域搜尋 (TWVNS)", stages: "D2 範圍擴展 / D4 拓撲溯源 / D7 橫向展開", metrics: "透過將 3SAT 約化證明『根因傳播路徑推論屬於 NP-hard 問題』，利用 TWVNS 啟發式演算法即時標定從上游起點至告警終點的完整跨節點故障傳播路徑。" }
-  ],
-
-  githubSkills: [
-    { repo: "RBraga01/Quality-Engineering-Skills", modules: "/8d-coach, 8d-problem-solving, 8d-report-writing, /rca-facilitator, 5why-root-cause, supplier-scar, /control-plan-builder, is-is-not-scoping", standards: "agentskills.io, ISO 9001 §10.2, IATF 16949 §10.2.3, AIAG-VDA FMEA 2019, VDA 6.3, GB/T 29076—2021", role: "包含 22 個品質 Skill 與 8 個互動 Agent：執行驗證優先邏輯（Validation-First Logic），直接退回『人為疏失』根因、強制雙根因（發生因+流出因）、檢查雙向可逆 5-Why 鏈與 D7 控制計畫更新。" },
-    { repo: "duding-engicool/skill-8d-report-analyzer", modules: "SKILL.md, scripts/parse_document.py, references/8d-criteria.md", standards: "Python (docx/PyPDF2/openpyxl), MECE 原則, TRACE 品質測評 47/50 高分認證", role: "強制兩階段工作流（Stage 1 解析經人工確認後方可啟動 Stage 2 評分）；執行百分制加權評鑑（D1:10%, D2:15%, D3:15%, D4:30%, D5:15%, D6:10%, D7/D8:5%）與 D7 四大工程文件版次修訂稽核。" },
-    { repo: "manojsurapaneni/manufacturing-ops-skills", modules: "8D Report Builder, PFMEA Generator", standards: "Manufacturing & O&M AI Agent Skills, FMEA RPN = S x O x D 計分模型", role: "將現場異常事件快速轉換為結構化 8D 報告，並同步生成或重算程序 FMEA (PFMEA) 風險矩陣。" },
-    { repo: "LeoYeAI/openclaw-master-skills & allinherog-star/ai-skills", modules: "complaint-8d-report, quality-complaint-8d-report, zanozbot CLI", standards: "OpenClaw / 通用型 LLM Agent Skill 結構規範與 TypeScript CLI", role: "從非結構化客訴或現場維運報修工單中自動提取 5W2H 特徵，提供 D1–D8 填空式引導與標準模板生成。" },
-    { repo: "aws-samples/sample-intelligent-alarms-agent", modules: "Supervisor Agent, PI Historian Agent, Maximo Ticket Agent, Document Knowledge Agent", standards: "AWS Bedrock AgentCore, Python MCP Tools, ISA-18.2 / IEC 62682 / EEMUA 191", role: "解決 SCADA 告警風暴（自動過濾 60%–80% 附屬誤報），跨時序資料庫、CMMS 工單庫與 SOP 知識庫生成 D2/D3/D4 初稿。" },
-    { repo: "didilili/deepsearch-agents & shopkeeper-agent", modules: "main_agent.py, subagents/ (MySQL, RAGFlow, Web), prompts.yml", standards: "LangGraph, RAGFlow, Qdrant / Elasticsearch, MySQL, FastAPI", role: "提供企業級多智能體 RAG 知識庫底座，聯合查詢結構化 SCADA MySQL 數據與私有非結構化歷史 8D PDF，匯總輸出正式報告。" }
-  ],
-
-  jupyterNotebooks: [
-    { id: 1, repo: "thomasathul/Root-Cause-Analysis-Using-RAG", path: "Generate_LLM_Response.ipynb", stack: "RAG 檢索生成架構、合成數據增強 (Synthetic Data Augmentation)、MCC / F1 / 餘弦相似度評估", role: "【D4 根因推論核心】結合外部領域知識庫克服複雜組件互賴瓶頸，提升罕見故障模式泛化力並量化評估根因準確度。" },
-    { id: 2, repo: "ArnabbLank/Predictive-Maintenance-RCA", path: "week08-knowledge-base-rag/08_knowledge_base_rag.ipynb", stack: "預測性維護感測器異常檢測 + 向量知識庫 RAG + week09 Agentic Copilot", role: "【D4/D5 知識庫連動】將前端遙測設備退化訊號與向量化歷史維修報告、設備 FMEA 及 SOP 直接打通，自動擬定根因與 PCA 對策。" },
-    { id: 3, repo: "uptrain-ai/uptrain", path: "examples/root_cause_analysis/rag_with_citation.ipynb", stack: "RAG_WITH_CITATION 專用 RCA 模板、EvalLLM 本地端錯誤模式診斷", role: "【D4/D7 防幻覺閘門】強制 RAG 系統生成根因與對策時附上精確文檔引文（Cited Responses），支援 Local 私密運行保障保固索賠機密。" },
-    { id: 4, repo: "NVIDIA-AI-Blueprints/streaming-data-to-rag", path: "launchable.ipynb (NVIDIA/context-aware-rag)", stack: "Milvus Standalone (向量庫) + Neo4j (知識圖譜)、時間窗口感知檢索 (CA-RAG)", role: "【D2/D4 時序與圖譜溯源】將即時 SCADA 事件流與現場語音轉錄動態注入 Neo4j 圖譜，支援特定異常前後 5–10 分鐘時間窗口檢索。" },
-    { id: 5, repo: "searlion/rag-strategies", path: "contextual_chunking.ipynb", stack: "Gemini 2.5 Pro (temp=0.0, JSON section_map.json)、all-mpnet-base-v2、FAISS 向量庫", role: "【D7/D8 知識庫文檔治理】解決逆變器手冊與歷史 8D PDF 固定字數切塊語義斷裂問題，依章節邏輯邊界切分為 171 個完整語義塊。" },
-    { id: 6, repo: "UNSW-Solar/performance_diagnosis", path: "20-Preprocess / 22-ClearSky / 32-P2P_LongTerm / 40-AC_Recurring / 50-FIMER_Shading_Clipping_0Gen.ipynb", stack: "pvlib 晴空模型、同儕比對 (P2P PR)、Hodrick-Prescott (HP) 濾波、MPPT 閾值分類", role: "【D0/D2/D4/D6 全週期電氣核心】清洗夜間偏移、建立晴空基準、HP 濾波分離積灰與硬體老化、診斷 DC 零發電/截割，提供 D6 3–6 個月長期 PR 收斂驗證。" },
-    { id: 7, repo: "sprince0031/Solar-Fault-Detection-Classification-Project", path: "Solar_Project.ipynb", stack: "I-V-G 非線性特徵工程、Random Forest (隨機森林)、SVM 多元分類器", role: "【D0/D2 誤報攔截器】精確解耦『組件內部線間短路 (LL Fault)』與『外部短暫雲層遮擋 (Passing Cloud Shading)』，防止假性 8D 立項。" },
-    { id: 8, repo: "ALZ-11/campus-energy-optimization & oihika/Degradation-Aware-MPC", path: "notebooks/campus-energy-optimization.ipynb & code with output.ipynb", stack: "SCADA 溫標(°F/°C)/功率單位(W/kW)審計、pvlib + XGBoost 動態基準、SCADA Alarm Console", role: "【D0/D2/D3 數據清洗與告警主控台】消除單位跳變與靜態常數效率噪聲 (96.99%)，聚合母線電壓/壅塞/低 SOC 告警並自動渲染 PDF 技術報表。" }
-  ]
-};
+  }
+];

@@ -1,443 +1,1336 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
+<!doctype html>
+<html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>進金生能源 6692 ｜ 光伏運維 8D 智慧管理與三層式 AI Agent 閉環工程平台</title>
-
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            acme: {
-              navy: '#0f2957',
-              blue: '#1e40af',
-              gold: '#f59e0b'
-            }
-          }
-        }
-      }
-    };
-  </script>
-
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-
-  <!-- Supabase JS SDK v2 -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>進能服維運事業單位｜8D分析管理平台</title>
+  <meta name="description" content="進能服維運事業單位 — 8D分析管理平台（麥肯錫金字塔原理 × UNSW-Solar 物理診斷 × 11 大光伏維運 AI Agent Skills 三層式閉環系統）" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
   <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+    /* ==========================================================================
+       【視覺風格：麥肯錫顧問風格 (McKinsey Consulting Visual Standard)】
+       1. 配色嚴格限制 3 種主色系：
+          - 主色深藍 (Deep Navy): #0C3A63 / #082644
+          - 中性灰階 (Neutral Grayscale): #12293D / #475569 / #64748B / #CBD5E1 / #F4F7FA / #FFFFFF
+          - 單一強調色 (Amber Gold): #D97706 / #B45309（僅用於最關鍵數字、核心異常或結論）
+       2. 版面：金字塔原理排版 —— 每頁標題直接寫「本頁結論」（一句完整的話）
+       3. 圖表優先於文字：以 ECharts、結構化矩陣、流程圖取代長段落
+       4. 留白充足：每頁嚴格限制 ≤ 3 個視覺群組，避免資訊過密
+       ========================================================================== */
+    :root {
+      --navy-dark: #082644;
+      --navy: #0C3A63;
+      --navy-mid: #164E80;
+      --navy-tint: #EBF2F8;
+
+      --ink: #12293D;
+      --slate: #334155;
+      --muted: #64748B;
+      --line: #CBD5E1;
+      --line-soft: #E2E8F0;
+      --paper: #F4F7FA;
+      --surface: #FFFFFF;
+      --surface-alt: #F8FAFC;
+
+      --accent: #D97706;
+      --accent-dark: #B45309;
+      --accent-tint: #FEF3C7;
+
+      --sans: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
     }
-    @media print {
-      header, nav, .no-print {
-        display: none !important;
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      color: var(--ink);
+      background: var(--paper);
+      line-height: 1.6;
+      font-size: 14.5px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Top Fixed Navigation Bar (仿 madou-shinkun-diagnostic 簡報導覽列) ── */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--navy-dark);
+      color: #FFFFFF;
+      border-bottom: 2px solid var(--accent);
+      box-shadow: 0 4px 16px rgba(8, 38, 68, 0.18);
+    }
+    .topbar-inner {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 8px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-shrink: 0;
+    }
+    .brand {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      white-space: nowrap;
+    }
+    .brand-main {
+      font-weight: 800;
+      font-size: 16.5px;
+      letter-spacing: 0.04em;
+      color: #FFFFFF;
+    }
+    .brand-divider {
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .brand-sub {
+      font-weight: 600;
+      font-size: 13.5px;
+      color: #CBD5E1;
+      letter-spacing: 0.03em;
+    }
+
+    /* 案場切換下拉選單 */
+    .case-switcher-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      padding: 4px 10px;
+    }
+    .case-switcher-label {
+      font-size: 11px;
+      font-family: var(--mono);
+      color: #CBD5E1;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .case-select {
+      background: transparent;
+      color: #FFFFFF;
+      border: none;
+      font-family: var(--sans);
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      outline: none;
+      padding-right: 6px;
+    }
+    .case-select option {
+      background: var(--navy-dark);
+      color: #FFFFFF;
+    }
+
+    /* Slide Tabs */
+    .topnav {
+      display: flex;
+      gap: 3px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .navtab {
+      color: #CBD5E1;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 9px;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      cursor: pointer;
+      background: transparent;
+      font-family: var(--sans);
+      white-space: nowrap;
+    }
+    .navtab:hover {
+      color: #FFFFFF;
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .navtab.active {
+      color: #FFFFFF;
+      background: var(--navy);
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+    .navtab-action {
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #FFFFFF;
+      margin-left: 3px;
+    }
+    .navtab-action:hover {
+      border-color: var(--accent);
+      background: rgba(217, 119, 6, 0.18);
+    }
+    .navtab-accent {
+      background: var(--accent);
+      color: #FFFFFF;
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+    .navtab-accent:hover {
+      background: var(--accent-dark);
+    }
+
+    /* ── Slide Deck Container & Presentation Mode ── */
+    .page {
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 28px 28px 88px;
+    }
+    body.deck-mode {
+      overflow-x: hidden;
+    }
+    body.deck-mode .page {
+      padding-top: 22px;
+      padding-bottom: 84px;
+    }
+    body.deck-mode .slide-page {
+      display: none !important;
+      animation: slideFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    body.deck-mode .slide-page.active-slide {
+      display: block !important;
+      margin-top: 0 !important;
+    }
+    @keyframes slideFadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Bottom Slide Deck Controls ── */
+    .deck-controls {
+      position: fixed;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 95;
+      background: var(--navy-dark);
+      color: #FFFFFF;
+      padding: 7px 16px;
+      border: 1px solid var(--navy-mid);
+      box-shadow: 0 8px 24px rgba(8, 38, 68, 0.28);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 12.5px;
+    }
+    body.full-doc-mode .deck-controls,
+    body.full-doc-mode .deck-progress-track {
+      display: none !important;
+    }
+    .deck-btn {
+      background: rgba(255, 255, 255, 0.1);
+      color: #FFFFFF;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--sans);
+      transition: all 0.15s;
+    }
+    .deck-btn:hover:not(:disabled) {
+      background: var(--navy);
+      border-color: var(--accent);
+    }
+    .deck-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+    .deck-counter {
+      font-family: var(--mono);
+      font-weight: 700;
+      color: #FFFFFF;
+      min-width: 110px;
+      text-align: center;
+      letter-spacing: 0.04em;
+    }
+    .deck-progress-track {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--line);
+      z-index: 96;
+    }
+    .deck-progress-bar {
+      height: 100%;
+      background: var(--accent);
+      width: 8.33%;
+      transition: width 0.22s ease;
+    }
+
+    /* ── McKinsey Slide Card Structure (留白充足，每頁最多 3 個視覺群組) ── */
+    .slide-page {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-top: 4px solid var(--navy);
+      padding: 32px 40px 36px;
+      margin-bottom: 32px;
+      box-shadow: 0 2px 10px rgba(18, 41, 61, 0.04);
+    }
+    .slide-page.cover-slide {
+      background: var(--navy-dark);
+      color: #FFFFFF;
+      border-top: 5px solid var(--accent);
+      padding: 40px 44px 42px;
+    }
+
+    /* 金字塔原理標題區：每頁標題直接寫「本頁結論」（一句完整的話） */
+    .slide-header {
+      border-bottom: 1.5px solid var(--line-soft);
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+    }
+    .slide-header-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .part-tag {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--navy);
+      background: var(--navy-tint);
+      padding: 3px 10px;
+      border-left: 3px solid var(--navy);
+    }
+    .skill-pill {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--slate);
+      background: var(--surface-alt);
+      border: 1px solid var(--line);
+      padding: 2px 9px;
+    }
+    .action-title {
+      margin: 0;
+      font-size: 21px;
+      font-weight: 800;
+      color: var(--ink);
+      line-height: 1.4;
+      letter-spacing: -0.01em;
+    }
+    .cover-slide .action-title {
+      color: #FFFFFF;
+      font-size: 24px;
+      line-height: 1.42;
+      margin-top: 10px;
+    }
+    .cover-subtitle {
+      margin: 10px 0 0;
+      font-size: 14px;
+      color: #CBD5E1;
+      font-weight: 400;
+    }
+
+    /* ── Visual Group Containers (每頁嚴格 ≤ 3 個群組) ── */
+    .visual-group {
+      margin-bottom: 22px;
+    }
+    .visual-group:last-child {
+      margin-bottom: 0;
+    }
+    .group-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--navy);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .group-label::before {
+      content: "";
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: var(--navy);
+    }
+
+    /* ── KPI Row (深藍 + 灰階 + 僅關鍵數字使用強調色 Amber Gold) ── */
+    .kpi-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .kpi-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .kpi-box {
+      background: var(--surface-alt);
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--navy);
+      padding: 16px 18px;
+    }
+    .kpi-box.is-accent {
+      border-left-color: var(--accent);
+      background: #FFFBEB;
+    }
+    .cover-slide .kpi-box {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.16);
+      border-left: 4px solid #94A3B8;
+    }
+    .cover-slide .kpi-box.is-accent {
+      border-left-color: var(--accent);
+      background: rgba(217, 119, 6, 0.12);
+    }
+    .kpi-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .cover-slide .kpi-label {
+      color: #CBD5E1;
+    }
+    .kpi-val {
+      font-family: var(--mono);
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--ink);
+      line-height: 1.2;
+    }
+    .kpi-box.is-accent .kpi-val {
+      color: var(--accent-dark);
+    }
+    .cover-slide .kpi-val {
+      color: #FFFFFF;
+    }
+    .cover-slide .kpi-box.is-accent .kpi-val {
+      color: #FBBF24;
+    }
+    .kpi-note {
+      font-size: 12px;
+      color: var(--slate);
+      margin-top: 6px;
+    }
+    .cover-slide .kpi-note {
+      color: #94A3B8;
+    }
+
+    /* ── Grid Layouts ── */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+      align-items: stretch;
+    }
+    .grid-5-7 {
+      display: grid;
+      grid-template-columns: 5fr 7fr;
+      gap: 22px;
+      align-items: stretch;
+    }
+    .grid-7-5 {
+      display: grid;
+      grid-template-columns: 7fr 5fr;
+      gap: 22px;
+      align-items: stretch;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    /* ── Panel & Matrix Tables (McKinsey Table Formatting) ── */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    .panel-soft {
+      background: var(--surface-alt);
+      border: 1px solid var(--line);
+      padding: 18px 20px;
+    }
+    .cover-panel {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 16px 20px;
+    }
+    .mck-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+    .mck-table th {
+      background: var(--navy);
+      color: #FFFFFF;
+      text-align: left;
+      padding: 9px 12px;
+      font-weight: 700;
+      font-size: 12.5px;
+      letter-spacing: 0.03em;
+      border-bottom: 2px solid var(--navy-dark);
+    }
+    .mck-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line-soft);
+      color: var(--slate);
+      vertical-align: top;
+    }
+    .mck-table tr:last-child td {
+      border-bottom: 1.5px solid var(--navy);
+    }
+    .mck-table tr:hover td {
+      background: var(--surface-alt);
+    }
+    .mck-table td.cell-key {
+      font-weight: 700;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+    .mck-table td.cell-accent {
+      font-family: var(--mono);
+      font-weight: 700;
+      color: var(--accent-dark);
+    }
+    .mck-table td.cell-mono {
+      font-family: var(--mono);
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    /* Cover Meta Table */
+    .cover-meta-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .cover-meta-table td {
+      padding: 7px 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .cover-meta-table tr:last-child td {
+      border-bottom: none;
+    }
+    .cover-meta-table td:first-child {
+      color: #94A3B8;
+      width: 34%;
+      font-weight: 600;
+    }
+    .cover-meta-table td:last-child {
+      color: #FFFFFF;
+      font-weight: 500;
+    }
+
+    /* ── Chart Box ── */
+    .chart-box {
+      width: 100%;
+      height: 300px;
+    }
+    .chart-box-tall {
+      width: 100%;
+      height: 340px;
+    }
+
+    /* ── Process / Architecture Diagram Blocks ── */
+    .arch-flow {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .arch-layer {
+      border: 1px solid var(--line);
+      border-top: 3px solid var(--navy);
+      background: var(--surface-alt);
+      padding: 14px 16px;
+    }
+    .arch-layer.layer-highlight {
+      border-top-color: var(--accent);
+    }
+    .arch-layer-title {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--navy);
+      margin-bottom: 6px;
+    }
+    .arch-layer-desc {
+      font-size: 12.5px;
+      color: var(--slate);
+      margin: 0;
+    }
+
+    /* TWVNS Knowledge Graph Chain */
+    .twvns-chain {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+    .twvns-node {
+      background: var(--surface-alt);
+      border: 1px solid var(--line);
+      border-top: 3px solid var(--navy);
+      padding: 12px;
+      position: relative;
+    }
+    .twvns-node.is-accent {
+      border-top-color: var(--accent);
+      background: #FFFBEB;
+    }
+    .twvns-code {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      font-weight: 800;
+      color: var(--navy);
+      margin-bottom: 4px;
+    }
+    .twvns-node.is-accent .twvns-code {
+      color: var(--accent-dark);
+    }
+    .twvns-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+    .twvns-detail {
+      font-size: 11.5px;
+      color: var(--muted);
+    }
+
+    /* Conclusion Callout Strip */
+    .conclusion-strip {
+      background: var(--navy-tint);
+      border-left: 4px solid var(--navy);
+      padding: 12px 16px;
+      font-size: 13.5px;
+      color: var(--ink);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+    .conclusion-strip strong {
+      color: var(--navy-dark);
+    }
+    .accent-badge {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent-dark);
+      background: var(--accent-tint);
+      border: 1px solid var(--accent);
+      padding: 3px 10px;
+      white-space: nowrap;
+    }
+
+    /* ── Modals ── */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 38, 68, 0.65);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .modal-backdrop.open {
+      display: flex;
+    }
+    .modal-card {
+      background: var(--surface);
+      border-top: 4px solid var(--navy);
+      max-width: 1080px;
+      width: 100%;
+      max-height: 88vh;
+      overflow-y: auto;
+      padding: 28px 32px;
+      box-shadow: 0 20px 50px rgba(8, 38, 68, 0.35);
+    }
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1.5px solid var(--line);
+      padding-bottom: 14px;
+      margin-bottom: 20px;
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--ink);
+      margin: 0;
+    }
+    .modal-close {
+      background: var(--surface-alt);
+      border: 1px solid var(--line);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .form-field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+    .form-field input,
+    .form-field select,
+    .form-field textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      font-family: var(--sans);
+      font-size: 13.5px;
+      color: var(--ink);
+    }
+
+    @media (max-width: 1024px) {
+      .kpi-grid-4, .kpi-grid-3, .grid-2, .grid-5-7, .grid-7-5, .grid-3, .arch-flow, .twvns-chain {
+        grid-template-columns: 1fr;
       }
-      body {
-        background: #ffffff !important;
-      }
-      #case-detail-modal {
-        position: static !important;
-        display: block !important;
-        background: #ffffff !important;
-        padding: 0 !important;
-      }
-      #case-detail-modal-card {
-        max-width: 100% !important;
-        box-shadow: none !important;
-        border: none !important;
+      .slide-page {
+        padding: 22px 20px;
       }
     }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col antialiased">
+<body class="deck-mode">
 
-  <!-- =========================================================================
-       頂部導航列 (Header)
-       ========================================================================= -->
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm no-print">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <div class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 text-white font-black text-base tracking-wider shadow">
-          ACME 6692
+  <!-- ==================== TOP FIXED NAVIGATION BAR ==================== -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand-group">
+        <div class="brand">
+          <span class="brand-main">進能服維運事業單位</span>
+          <span class="brand-divider">｜</span>
+          <span class="brand-sub">8D分析管理平台</span>
         </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <h1 class="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight">
-              光伏運維 8D 智慧管理與三層式 AI Agent 閉環平台
-            </h1>
-            <span class="hidden md:inline-block px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-800 border border-blue-200">
-              MIL-STD-1520 ✕ IATF 16949 §10.2.3 ✕ UNSW-Solar
-            </span>
-          </div>
-          <p class="text-[11px] text-slate-500 hidden sm:block">
-            4.6.4.2.3 8D 架構核心落地：SCADA 物理特徵驅動（底層）＋ 雙模態知識圖譜 RAG（中層）＋ 強制驗證閘門 AI Agent（頂層）
-          </p>
+        <div class="case-switcher-wrap" title="切換不同案場之 8D 決策簡報">
+          <span class="case-switcher-label">CASE</span>
+          <select id="case-selector" class="case-select" onchange="switchCase(this.value)"></select>
         </div>
       </div>
 
-      <div class="flex items-center gap-2">
-        <!-- Supabase 狀態燈 -->
-        <button onclick="openSupabaseModal()" id="sb-status-pill" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100 transition cursor-pointer">
-          <span id="sb-status-dot" class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-          <span id="sb-status-text">連線檢測中...</span>
-        </button>
-
-        <!-- 匯出 CSV -->
-        <button onclick="exportAllCasesCSV()" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 transition">
-          <i data-lucide="download" class="w-3.5 h-3.5"></i>
-          <span>匯出 8D 清冊</span>
-        </button>
-
-        <!-- 新增 8D 立項 -->
-        <button onclick="openNewCaseModal()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-blue-900 hover:bg-blue-800 text-white shadow transition">
-          <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
-          <span>+ 啟動 8D 立案</span>
-        </button>
-      </div>
+      <nav class="topnav" id="slide-tabs">
+        <button class="navtab active" onclick="goToSlide(0)">封面</button>
+        <button class="navtab" onclick="goToSlide(1)">決策摘要</button>
+        <button class="navtab" onclick="goToSlide(2)">D0~D1 立案分工</button>
+        <button class="navtab" onclick="goToSlide(3)">D2 量化描述</button>
+        <button class="navtab" onclick="goToSlide(4)">D3 暫時圍堵</button>
+        <button class="navtab" onclick="goToSlide(5)">D4 根因實證</button>
+        <button class="navtab" onclick="goToSlide(6)">D4 推論排除</button>
+        <button class="navtab" onclick="goToSlide(7)">D5 永久對策</button>
+        <button class="navtab" onclick="goToSlide(8)">D6 效果驗證</button>
+        <button class="navtab" onclick="goToSlide(9)">D7 防止再發</button>
+        <button class="navtab" onclick="goToSlide(10)">D8 結案估值</button>
+        <button class="navtab" onclick="goToSlide(11)">AI Skills 架構</button>
+        <button class="navtab navtab-action" id="btn-view-mode" onclick="toggleViewMode()">📄 完整報告模式</button>
+        <button class="navtab navtab-action" onclick="openModal('modal-skills')">⚙️ 已安裝 Skills (11)</button>
+        <button class="navtab navtab-action" onclick="openModal('modal-audit')">📊 數據對帳</button>
+        <button class="navtab navtab-accent" onclick="openModal('modal-new-case')">＋ 新增立案</button>
+      </nav>
     </div>
-
-    <!-- 主功能分頁切換列 (5 Tabs) -->
-    <nav class="bg-slate-50 border-t border-slate-200 px-4 sm:px-6 lg:px-8">
-      <div class="max-w-7xl mx-auto flex items-center gap-2 overflow-x-auto py-2">
-        <button id="nav-tab-cockpit" onclick="switchMainTab('cockpit')" class="nav-tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-blue-900 text-white shadow-md transition whitespace-nowrap">
-          <i data-lucide="layers" class="w-4 h-4"></i>
-          <span>結論主體：三層閉環戰情中樞</span>
-        </button>
-        <button id="nav-tab-layer1" onclick="switchMainTab('layer1')" class="nav-tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs sm:text-sm text-slate-600 hover:bg-slate-200/80 transition whitespace-nowrap">
-          <i data-lucide="activity" class="w-4 h-4 text-sky-600"></i>
-          <span>【底層 Layer 1】SCADA 預處理 & D0–D2 立項</span>
-        </button>
-        <button id="nav-tab-layer2" onclick="switchMainTab('layer2')" class="nav-tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs sm:text-sm text-slate-600 hover:bg-slate-200/80 transition whitespace-nowrap">
-          <i data-lucide="network" class="w-4 h-4 text-indigo-600"></i>
-          <span>【中層 Layer 2】雙模態知識圖譜 & D3–D5 推論</span>
-        </button>
-        <button id="nav-tab-layer3" onclick="switchMainTab('layer3')" class="nav-tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs sm:text-sm text-slate-600 hover:bg-slate-200/80 transition whitespace-nowrap">
-          <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
-          <span>【頂層 Layer 3】三大治理鐵律 & D4/D6–D8 審查</span>
-        </button>
-        <button id="nav-tab-reference" onclick="switchMainTab('reference')" class="nav-tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs sm:text-sm text-slate-600 hover:bg-slate-200/80 transition whitespace-nowrap">
-          <i data-lucide="book-open-check" class="w-4 h-4 text-amber-600"></i>
-          <span>學術理論 ✕ GitHub Skill ✕ 8大 Notebook 基準庫</span>
-        </button>
-      </div>
-    </nav>
   </header>
 
-  <!-- =========================================================================
-       主內容區 (Main Content)
-       ========================================================================= -->
-  <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 space-y-6 no-print">
+  <!-- ==================== MAIN SLIDE DECK CANVAS ==================== -->
+  <main class="page" id="deck-container">
 
-    <!-- =======================================================================
-         VIEW 1: 結論主體 — 三層式自動化閉環工程系統戰情中樞 (cockpit)
-         ======================================================================= -->
-    <section id="view-cockpit" class="space-y-6">
-      <!-- 核心結論宣言 Hero Banner -->
-      <div class="rounded-3xl bg-gradient-to-r from-slate-950 via-blue-950 to-indigo-950 text-white p-6 sm:p-8 shadow-xl border border-blue-800/50 relative overflow-hidden">
-        <div class="max-w-5xl space-y-3">
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-extrabold">
-            <span>📌 工程結論核心主體（The Core Engineering Conclusion）</span>
-          </div>
-          <h2 class="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight leading-snug">
-            拒絕事後行政填表：打造「SCADA 物理特徵驅動 ＋ 雙模態知識圖譜 RAG ＋ 強制驗證閘門 AI Agent」三層式自動化閉環工程系統
-          </h2>
-          <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
-            面對全美光伏每年 <strong>25 億美元</strong>非計畫停機損失、<strong>60%</strong> 逆變器失效佔比、平均 <strong>1.5~2.2 年</strong>首次出險、以及 <strong>45% 逆變器原廠於建成 4 年後退出市場</strong>的文檔與備品斷鏈危機，本平台依據《光伏運維 8D 報告與知識庫》研究結論，將 D0–D8 全流程重構為具備嚴格驗證閘門（Validation Gates）的三層式 AI Agent 工程系統，徹底切斷「Reset 復位 / 單純換保險絲」之症狀復發鏈。
-          </p>
+    <!-- ───────── SLIDE 0: COVER (封面) ───────── -->
+    <section class="slide-page cover-slide active-slide" data-slide-index="0" id="cover">
+      <!-- Group 1:的金字塔行動結論標題 -->
+      <div class="slide-header" style="border-bottom-color: rgba(255,255,255,0.18);">
+        <div class="slide-header-meta">
+          <span class="part-tag" id="cover-tag" style="background: rgba(217,119,6,0.2); color: #FBBF24; border-left-color: #FBBF24;"></span>
+          <span class="skill-pill" style="background: rgba(255,255,255,0.08); color: #E2E8F0; border-color: rgba(255,255,255,0.2);">McKinsey Pyramid Principle · 結論先行決策簡報</span>
         </div>
-
-        <!-- 關鍵工程實證指標列 -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-6 pt-5 border-t border-white/10 text-xs">
-          <div class="bg-white/5 rounded-xl p-3 border border-white/10">
-            <div class="text-slate-400 text-[11px]">Oancea (2025) 知識檢索</div>
-            <div class="text-lg font-black text-amber-400 mt-0.5">提速 300 倍</div>
-            <div class="text-[11px] text-slate-300">300 分鐘 ➔ &lt; 1 分鐘</div>
-          </div>
-          <div class="bg-white/5 rounded-xl p-3 border border-white/10">
-            <div class="text-slate-400 text-[11px]">ISA-18.2 告警風暴治理</div>
-            <div class="text-lg font-black text-sky-400 mt-0.5">-60% ~ 80%</div>
-            <div class="text-[11px] text-slate-300">剔除連鎖附屬誤報</div>
-          </div>
-          <div class="bg-white/5 rounded-xl p-3 border border-white/10">
-            <div class="text-slate-400 text-[11px]">NREL 4 年後 OEM 退場率</div>
-            <div class="text-lg font-black text-rose-400 mt-0.5">45% 斷鏈防護</div>
-            <div class="text-[11px] text-slate-300">邏輯章節切塊永久留存</div>
-          </div>
-          <div class="bg-white/5 rounded-xl p-3 border border-white/10">
-            <div class="text-slate-400 text-[11px]">D4 雙根因核心評分權重</div>
-            <div class="text-lg font-black text-indigo-300 mt-0.5">30% 雙倍權重</div>
-            <div class="text-[11px] text-slate-300">發生因 + 流出因 + ≥5 Why</div>
-          </div>
-          <div class="bg-white/5 rounded-xl p-3 border border-white/10">
-            <div class="text-slate-400 text-[11px]">本平台列管損失電量</div>
-            <div id="kpi-total-mwh" class="text-lg font-black text-emerald-400 mt-0.5">253.9 MWh</div>
-            <div id="kpi-total-ntd" class="text-[11px] text-slate-300">NT$ 124.0 萬</div>
-          </div>
-          <div class="bg-white/5 rounded-xl p-3 border border-white/10">
-            <div class="text-slate-400 text-[11px]">列管案件 / TRACE 均分</div>
-            <div id="kpi-total-cases" class="text-lg font-black text-white mt-0.5">4 案</div>
-            <div id="kpi-avg-score" class="text-[11px] text-emerald-300">92 / 100 分</div>
-          </div>
-        </div>
+        <h2 class="action-title" id="cover-conclusion-title"></h2>
+        <p class="cover-subtitle" id="cover-subtitle"></p>
       </div>
 
-      <!-- 三層式自動化閉環工程系統架構圖卡片 -->
-      <div>
-        <div class="flex items-center justify-between mb-3">
-          <h3 class="text-base sm:text-lg font-extrabold text-slate-900 flex items-center gap-2">
-            <i data-lucide="cpu" class="w-5 h-5 text-blue-800"></i>
-            <span>三層式自動化閉環工程系統架構（點擊各層可直接進入對應 AI Agent 工作台）</span>
-          </h3>
-          <span class="text-xs font-semibold text-slate-500 hidden sm:inline">底層預處理 (D0–D2) ➔ 中層圖譜推論 (D3–D5) ➔ 頂層合規閉環 (D4審查 & D6–D8)</span>
-        </div>
-        <div id="cockpit-layers-grid" class="grid grid-cols-1 lg:grid-cols-3 gap-5"></div>
+      <!-- Group 2: 4 核心量化指標 (僅最關鍵數字使用強調色) -->
+      <div class="visual-group">
+        <div class="kpi-grid-4" id="cover-kpi-grid"></div>
       </div>
 
-      <!-- 光伏運維中高嚴重度 8D 立案工單列表 -->
-      <div class="space-y-4">
-        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h3 class="text-base font-extrabold text-slate-900">📋 光伏電站中高嚴重度（S_PV ≥ 3）8D 閉環列管案件庫</h3>
-            <p class="text-xs text-slate-500">涵蓋跨系統故障傳播定位（異常在逆變器端捕獲、根因在 DC 配電/感測器/防逆流）、雙根因鑑識與 D7 四大工程文件升版追蹤</p>
+      <!-- Group 3: 案場與三層式 AI 診斷元數據雙欄矩陣 -->
+      <div class="visual-group">
+        <div class="grid-2">
+          <div class="cover-panel">
+            <div class="group-label" style="color: #E2E8F0;">案場資產與異常邊界定義</div>
+            <table class="cover-meta-table" id="cover-meta-left"></table>
           </div>
-          <div class="flex flex-wrap items-center gap-2">
-            <input id="case-search-input" oninput="renderCasesList()" type="text" placeholder="搜尋案號、電站、SLD節點、根因..." class="px-3 py-1.5 rounded-xl border border-slate-300 text-xs w-52 focus:outline-none focus:border-blue-600" />
-            <select id="case-layer-filter" onchange="renderCasesList()" class="px-3 py-1.5 rounded-xl border border-slate-300 text-xs bg-white font-semibold">
-              <option value="all">所有架構層級 (Layer 1~3)</option>
-              <option value="1">Layer 1：D0–D2 預處理與立項</option>
-              <option value="2">Layer 2：D3–D5 圖譜根因推論</option>
-              <option value="3">Layer 3：D6–D8 驗證與文件閉環</option>
-            </select>
-            <select id="case-spv-filter" onchange="renderCasesList()" class="px-3 py-1.5 rounded-xl border border-slate-300 text-xs bg-white font-semibold">
-              <option value="all">所有嚴重度 (S_PV 3~5)</option>
-              <option value="5">S_PV = 5 (嚴重危害級 / LOTO)</option>
-              <option value="4">S_PV = 4 (高度風險級 / AP:H)</option>
-              <option value="3">S_PV = 3 (中度風險級)</option>
-            </select>
+          <div class="cover-panel">
+            <div class="group-label" style="color: #FBBF24;">AI Skills 診斷引擎與雙軌根因結論</div>
+            <table class="cover-meta-table" id="cover-meta-right"></table>
           </div>
         </div>
-
-        <div id="cockpit-cases-container" class="grid grid-cols-1 lg:grid-cols-2 gap-5"></div>
       </div>
     </section>
 
-    <!-- =======================================================================
-         VIEW 2: 【底層 Layer 1】邊緣與 SCADA 數據預處理層 (賦能 D0、D1、D2)
-         ======================================================================= -->
-    <section id="view-layer1" class="hidden space-y-6">
-      <div class="bg-gradient-to-r from-sky-950 to-slate-900 text-white rounded-2xl p-6 shadow-lg border border-sky-700/50">
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-          <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-sky-500/20 text-sky-300 border border-sky-400/40">
-            Layer 1 底層架構 ｜ 賦能 D0 初篩、D1 跨職能團隊、D2 5W2H 與邊界量化
-          </span>
-          <span class="text-xs font-mono text-amber-300">ALZ-11 ✕ UNSW-Solar ✕ sprince0031 (I-V-G) ✕ aws-samples (ISA-18.2)</span>
+    <!-- ───────── SLIDE 1: EXECUTIVE SUMMARY (決策摘要) ───────── -->
+    <section class="slide-page" data-slide-index="1" id="exec-summary">
+      <div class="slide-header">
+        <div class="slide-header-meta">
+          <span class="part-tag" id="sum-tag"></span>
+          <span class="skill-pill">調用技能：solar-8d-diagnostic · pv-performance-diagnosis</span>
         </div>
-        <h2 class="text-xl font-black">邊緣與 SCADA 數據預處理、氣象干擾解耦與 D0–D2 自動立項工作台</h2>
-        <p class="text-xs text-slate-300 mt-1 leading-relaxed">
-          常駐數據審計管線自動修復氣象站溫標（°F/°C）與逆變器功率單位（W/kW）錯置，結合 <code>sprince0031</code> Random Forest / SVM 分類器解耦「短暫雲層遮擋」與「內部線間短路 (LL Fault)」，並以 <code>ISA-18.2</code> 剔除 60%–80% 告警風暴。唯有當真實故障觸及 <strong>光伏 FMEA 嚴重度 S_PV ≥ 3</strong> 時才鎖定立項！
-        </p>
+        <h2 class="action-title" id="sum-conclusion-title"></h2>
       </div>
 
-      <!-- 情境選擇器 -->
-      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
-        <div class="text-sm font-extrabold text-slate-900">👇 請選擇現場 SCADA 遙測輸入情境（即時體驗 Layer 1 解耦、降噪與自動立項判定）：</div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-          <button data-scenario="cloud_false_alarm" onclick="renderLayer1Simulator('cloud_false_alarm')" class="sim-scenario-btn text-left p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-medium text-xs transition">
-            <div class="font-extrabold text-emerald-700 mb-1">情境 A：假性告警攔截 (S_PV=1)</div>
-            <div>短暫雲層遮擋 + °F/°C 溫標跳變（免派工示範）</div>
-          </button>
-          <button data-scenario="dc_arc_mc4" onclick="renderLayer1Simulator('dc_arc_mc4')" class="sim-scenario-btn text-left p-3 rounded-xl border-2 border-sky-600 bg-sky-50/90 text-slate-900 font-bold text-xs shadow-sm transition">
-            <div class="font-extrabold text-rose-700 mb-1">情境 B：水上 MC4 熱熔拉弧 (S_PV=5)</div>
-            <div>大安龜殼段 MPPT 少 1/3 電流 + LOTO 隔離立項</div>
-          </button>
-          <button data-scenario="orphan_inv_igbt" onclick="renderLayer1Simulator('orphan_inv_igbt')" class="sim-scenario-btn text-left p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-medium text-xs transition">
-            <div class="font-extrabold text-amber-700 mb-1">情境 C：孤兒逆變器過溫諧波 (S_PV=4)</div>
-            <div>遠東鋼鐵油霧堵塞 IGBT 降額 + THD 6.8% 跳機</div>
-          </button>
-          <button data-scenario="pyranometer_soiling" onclick="renderLayer1Simulator('pyranometer_soiling')" class="sim-scenario-btn text-left p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-medium text-xs transition">
-            <div class="font-extrabold text-indigo-700 mb-1">情境 D：日照計失真掩蓋泥膜 (S_PV=4)</div>
-            <div>岡山五甲尾表觀 PR 109% 虛高解耦真實衰退</div>
-          </button>
-        </div>
+      <!-- Group 1: 3 個核心結論數據 -->
+      <div class="visual-group">
+        <div class="kpi-grid-3" id="sum-kpi-grid"></div>
+      </div>
 
-        <!-- 模擬輸出容器 -->
-        <div id="layer1-sim-output" class="pt-2"></div>
+      <!-- Group 2: 左圖（發電損失拆解與修復對比圖）+ 右表（D0~D8 閉環結論矩陣） -->
+      <div class="visual-group">
+        <div class="grid-5-7">
+          <div class="panel">
+            <div class="group-label">異常期發電損失瀑布拆解與 D6 修復恢復對比 (kWh / PR%)</div>
+            <div id="chart-exec-waterfall" class="chart-box"></div>
+          </div>
+          <div class="panel">
+            <div class="group-label">D0 ~ D8 麥肯錫金字塔執行結論與 AI Skill 映射矩陣</div>
+            <table class="mck-table">
+              <thead>
+                <tr>
+                  <th style="width:18%;">8D 階段</th>
+                  <th style="width:24%;">驅動 AI Skill</th>
+                  <th>核心實證與行動結論</th>
+                </tr>
+              </thead>
+              <tbody id="sum-matrix-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Group 3: 三層式閉環系統結論條 -->
+      <div class="visual-group">
+        <div class="conclusion-strip">
+          <div><strong>管理決策啟示：</strong>將傳統「事後紙本填空」升級為「Layer 1 物理時序感知 → Layer 2 多代理告警降噪 → Layer 3 雙向 5-Why 與 DCF 估值」自動化閉環。</div>
+          <span class="accent-badge" id="sum-payback-badge"></span>
+        </div>
       </div>
     </section>
 
-    <!-- =======================================================================
-         VIEW 3: 【中層 Layer 2】雙模態 8D 知識庫與圖譜推論層 (賦能 D3、D4、D5)
-         ======================================================================= -->
-    <section id="view-layer2" class="hidden space-y-6">
-      <div class="bg-gradient-to-r from-indigo-950 to-slate-900 text-white rounded-2xl p-6 shadow-lg border border-indigo-700/50">
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-          <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-indigo-500/20 text-indigo-300 border border-indigo-400/40">
-            Layer 2 中層架構 ｜ 賦能 D3 批次圍堵、D4 雙根因拓撲溯源、D5 永久對策擬定
-          </span>
-          <span class="text-xs font-mono text-amber-300">searlion 邏輯切塊 ✕ Milvus + Neo4j ✕ FCA-B-FSA & TWVNS ✕ uptrain 引文閘門</span>
+    <!-- ───────── SLIDE 2: D0 ~ D1 (立案與團隊分工) ───────── -->
+    <section class="slide-page" data-slide-index="2" id="sec-d0d1">
+      <div class="slide-header">
+        <div class="slide-header-meta">
+          <span class="part-tag" id="d0d1-tag"></span>
+          <span class="skill-pill">調用技能：pv-ll-cloud-decoupling · pv-scada-audit-reporting</span>
         </div>
-        <h2 class="text-xl font-black">雙模態 8D 知識庫（Vector + Graph DB）與跨系統拓撲根因推論工作台</h2>
-        <p class="text-xs text-slate-300 mt-1 leading-relaxed">
-          破解 <strong>45% 逆變器原廠於建成 4 年後退出市場</strong>之文檔斷鏈危機！結合 <code>FCA-B-FSA</code> 故障特徵映射與 <code>CIRCA / RCInvestigator</code> 知識圖譜算子，解決 kWh Analytics (11 GW) 實證指出之「異常在逆變器端被捕獲，但真實物理根因位於上游直流配電側」盲區，並強制透過 <code>uptrain RAG_WITH_CITATION</code> 杜絕 AI 幻覺。
-        </p>
+        <h2 class="action-title" id="d0d1-conclusion-title"></h2>
       </div>
 
-      <!-- 圖譜控制器與畫布 -->
-      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div class="flex flex-wrap items-center gap-2">
-            <label class="text-xs font-extrabold text-slate-800">選擇推論案件：</label>
-            <select id="layer2-case-select" onchange="selectGraphCase(this.value)" class="px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50"></select>
+      <!-- Group 1: D0 氣象解耦與 LOTO 安全雙核心卡 -->
+      <div class="visual-group">
+        <div class="grid-2" id="d0d1-symptom-cards"></div>
+      </div>
+
+      <!-- Group 2: D0 閘門檢核流程圖 (視覺化流程取代文字) -->
+      <div class="visual-group">
+        <div class="arch-flow">
+          <div class="arch-layer">
+            <div class="arch-layer-title">Gate 1：SCADA 髒數據清洗</div>
+            <p class="arch-layer-desc">透過 <code>pv-scada-audit-reporting</code> 自動攔截 °F/°C 溫度錯置、W/kW 溢位與夜間恆定 96.99% 靜態假效率。</p>
           </div>
-          <div class="flex flex-wrap items-center gap-2">
-            <span class="text-xs font-bold text-slate-600">切換圖譜導航算子：</span>
-            <button onclick="setGraphOperator('twvns')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-900 text-white hover:bg-indigo-800 transition">
-              🧭 TWVNS 跨系統路徑推論 (CIRCA)
-            </button>
-            <button onclick="setGraphOperator('upward')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-100 text-amber-900 hover:bg-amber-200 border border-amber-300 transition">
-              ⇑ 向上泛化算子 (D3 同批次普查)
-            </button>
-            <button onclick="setGraphOperator('leftward')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-100 text-sky-900 hover:bg-sky-200 border border-sky-300 transition">
-              ⇐ 水平類比算子 (P2P 同儕比對)
-            </button>
+          <div class="arch-layer layer-highlight">
+            <div class="arch-layer-title">Gate 2：I-V-G 浮雲遮蔽解耦</div>
+            <p class="arch-layer-desc">透過 <code>pv-ll-cloud-decoupling</code> 比對同場鄰機斜率 $dI/dG$，排除短暫雲層遮蔽，確認內部電氣異常。</p>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-title">Gate 3：1000V DC LOTO 掛鎖派工</div>
+            <p class="arch-layer-desc">嚴禁帶載插拔 MC4！強制先斷 AC → 斷 DC → 掛鎖掛牌 (LOTO) → 勾表與驗電確認零電流後拆檢。</p>
           </div>
         </div>
+      </div>
 
-        <div id="layer2-graph-canvas"></div>
+      <!-- Group 3: D1 跨職能 RACI 權責矩陣 -->
+      <div class="visual-group">
+        <div class="panel">
+          <div class="group-label">D1 跨職能專案小組與 RACI 責任分配矩陣</div>
+          <table class="mck-table">
+            <thead>
+              <tr>
+                <th style="width:20%;">8D 角色</th>
+                <th style="width:22%;">負責單位 / 搭配 Skill</th>
+                <th>核心交付職責</th>
+                <th style="width:15%;">RACI 權責</th>
+              </tr>
+            </thead>
+            <tbody id="d0d1-raci-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
 
-        <!-- 零幻覺邊界攔截測試區 -->
-        <div class="pt-3 border-t border-slate-200">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <span class="text-xs font-extrabold text-slate-800">🛡️ 測試 Belu et al. (2026) & <code>uptrain-ai/rag_with_citation.ipynb</code> 零幻覺強制專家知識庫邊界閘門：</span>
-            <div class="flex flex-wrap gap-2">
-              <button onclick="testHallucinationGuard('valid')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-900 hover:bg-emerald-200 border border-emerald-300 transition">
-                ✓ 測試專家知識庫內檢索 (附精確引文)
-              </button>
-              <button onclick="testHallucinationGuard('hallucination')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-100 text-rose-900 hover:bg-rose-200 border border-rose-300 transition">
-                🚫 測試超出知識庫邊界之 AI 自由幻覺推論 (強制拒絕)
-              </button>
+    <!-- ───────── SLIDE 3: D2 (問題量化描述) ───────── -->
+    <section class="slide-page" data-slide-index="3" id="sec-d2">
+      <div class="slide-header">
+        <div class="slide-header-meta">
+          <span class="part-tag" id="d2-tag"></span>
+          <span class="skill-pill">調用技能：pv-scada-audit-reporting · quality-8d-engineering-skills (is-is-not-scoping)</span>
+        </div>
+        <h2 class="action-title" id="d2-conclusion-title"></h2>
+      </div>
+
+      <!-- Group 1: 左圖（兩階段劣化時序與日射解耦圖）+ 右表（三階段定量損益表） -->
+      <div class="visual-group">
+        <div class="grid-2">
+          <div class="panel">
+            <div class="group-label">同儕發電比 (P2P Ratio) 階梯式劣化與日射解耦時序圖</div>
+            <div id="chart-d2-loss" class="chart-box"></div>
+          </div>
+          <div class="panel">
+            <div class="group-label">5W2H 分階段發電損失定量核算表</div>
+            <table class="mck-table">
+              <thead>
+                <tr>
+                  <th>演進階段</th>
+                  <th>期間</th>
+                  <th>同儕發電比</th>
+                  <th>累計短少度數</th>
+                  <th>物理現象特徵</th>
+                </tr>
+              </thead>
+              <tbody id="d2-stage-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Group 2: Is / Is Not 邊界收斂矩陣 -->
+      <div class="visual-group">
+        <div class="panel">
+          <div class="group-label">Is / Is Not（是／不是）問題邊界收斂對照矩陣（排除無關變數）</div>
+          <table class="mck-table">
+            <thead>
+              <tr>
+                <th style="width:16%;">分析維度</th>
+                <th style="width:42%;">IS（明確發生的異常特徵）</th>
+                <th style="width:42%;">IS NOT（明確未發生／已排除的範圍）</th>
+              </tr>
+            </thead>
+            <tbody id="d2-isisnot-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────── SLIDE 4: D3 (暫時圍堵對策 ICA) ───────── -->
+    <section class="slide-page" data-slide-index="4" id="sec-d3">
+      <div class="slide-header">
+        <div class="slide-header-meta">
+          <span class="part-tag" id="d3-tag"></span>
+          <span class="skill-pill">調用技能：pv-isa182-intelligent-alarms · pv-vision-defect-suite</span>
+        </div>
+        <h2 class="action-title" id="d3-conclusion-title"></h2>
+      </div>
+
+      <!-- Group 1: 同批次橫向普查 3 大指標 -->
+      <div class="visual-group">
+        <div class="kpi-grid-3" id="d3-batch-kpis"></div>
+      </div>
+
+      <!-- Group 2: 左圖（ISA-18.2 告警降噪漏斗圖）+ 右表（D3 三大圍堵行動） -->
+      <div class="visual-group">
+        <div class="grid-5-7">
+          <div class="panel">
+            <div class="group-label">ISA-18.2 智慧告警合理化降噪漏斗 (消除無效通知)</div>
+            <div id="chart-d3-alarm" class="chart-box"></div>
+          </div>
+          <div class="panel">
+            <div class="group-label">D3 緊急圍堵對策 (ICA) 與同批次 100% 普查執行清單</div>
+            <table class="mck-table">
+              <thead>
+                <tr>
+                  <th style="width:20%;">圍堵項目</th>
+                  <th>具體執行內容（含橫向批次清查）</th>
+                  <th style="width:22%;">量化攔截成效</th>
+                  <th style="width:14%;">狀態</th>
+                </tr>
+              </thead>
+              <tbody id="d3-ica-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────── SLIDE 5: D4a (根因實證：高頻時序與雙向 5-Why) ───────── -->
+    <section class="slide-page" data-slide-index="5" id="sec-d4a">
+      <div class="slide-header">
+        <div class="slide-header-meta">
+          <span class="part-tag" id="d4a-tag"></span>
+          <span class="skill-pill">調用技能：pv-performance-diagnosis · quality-8d-engineering-skills (5why-root-cause)</span>
+        </div>
+        <h2 class="action-title" id="d4a-conclusion-title"></h2>
+      </div>
+
+      <!-- Group 1: UNSW 高頻時序電氣穿透圖 + 物理機制說明 -->
+      <div class="visual-group">
+        <div class="grid-7-5">
+          <div class="panel">
+            <div class="group-label">UNSW 高頻時序電氣穿透：正常迴路 vs. 劣化期 vs. 斷路期日內波形</div>
+            <div id="chart-d4-mppt" class="chart-box"></div>
+          </div>
+          <div class="panel-soft" style="display:flex; flex-direction:column; justify-content:space-between;">
+            <div>
+              <div class="group-label">雙軌根因拆解原則（嚴禁以「人為疏忽」結案）</div>
+              <p style="margin:0 0 12px; font-size:13.5px; color:var(--slate);">
+                依據《光伏運維 8D 報告與知識庫》D4 最高權重（30%）審查規範，任何光電異常皆須同時回答兩個獨立問題：
+              </p>
+              <div style="border-left:3px solid var(--accent); padding-left:12px; margin-bottom:12px;">
+                <strong style="color:var(--ink);">Track A — 發生根因 (Occurrence Root Cause)：</strong>
+                <div style="font-size:13px; color:var(--slate);">物理、材料或施工製程上，為什麼會產生高接觸電阻、機械磨損或過壓降額？</div>
+              </div>
+              <div style="border-left:3px solid var(--navy); padding-left:12px;">
+                <strong style="color:var(--ink);">Track B — 流出根因 (Escape Root Cause)：</strong>
+                <div style="font-size:13px; color:var(--slate);">竣工驗收與 SCADA 監控規則為什麼未能第一時間攔截，導致損失持續累積數週？</div>
+              </div>
+            </div>
+            <div class="conclusion-strip" style="margin-top:12px;">
+              <span><strong>逆向驗證：</strong>每一階 Why 均通過「因為 B，故必然導致 A」物理檢驗</span>
+              <span class="accent-badge">D4 權重 30%</span>
             </div>
           </div>
-          <div id="hallucination-guard-result"></div>
         </div>
       </div>
 
-      <!-- searlion/rag-strategies 邏輯章節切塊知識庫列表 -->
-      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h3 class="text-base font-extrabold text-slate-900">📚 雙模態專家驗證知識庫（Gemini 2.5 Pro 邏輯章節切塊 <code>section_map.json</code> ✕ FAISS/Milvus）</h3>
-            <p class="text-xs text-slate-500">避免傳統固定字數切塊（Naive Chunking）造成故障代碼與檢修步驟語義斷裂，完整保留原廠手冊、IEC 規範與歷史 8D 因果邊</p>
+      <!-- Group 2: 雙向 5-Why 穿透矩陣 (發生鏈 vs 流出鏈) -->
+      <div class="visual-group">
+        <div class="grid-2">
+          <div class="panel">
+            <div class="group-label">Track A：技術與製程【發生根因鏈 (Occurrence 5-Why)】</div>
+            <table class="mck-table">
+              <thead>
+                <tr>
+                  <th style="width:18%;">階層</th>
+                  <th style="width:36%;">追問問題</th>
+                  <th>現場實證與根因結論</th>
+                </tr>
+              </thead>
+              <tbody id="d4a-why-occ-body"></tbody>
+            </table>
           </div>
-          <input id="kb-search-input" oninput="renderKnowledgeChunksList()" type="text" placeholder="搜尋故障特徵碼、MC4、IGBT、日照計..." class="px-3 py-1.5 rounded-xl border border-slate-300 text-xs w-64" />
+          <div class="panel">
+            <div class="group-label">Track B：監控與檢驗【流出根因鏈 (Escape 5-Why)】</div>
+            <table class="mck-table">
+              <thead>
+                <tr>
+                  <th style="width:18%;">階層</th>
+                  <th style="width:36%;">追問問題</th>
+                  <th>監控盲區與系統根因結論</th>
+                </tr>
+              </thead>
+              <tbody id="d4a-why-esc-body"></tbody>
+            </table>
+          </div>
         </div>
-        <div id="layer2-chunks-list" class="space-y-3"></div>
       </div>
     </section>
 
-    <!-- =======================================================================
-         VIEW 4: 【頂層 Layer 3】Agent Skill 合規審查與文件閉環層 (賦能 D4 審查與 D6–D8)
-         ======================================================================= -->
-    <section id="view-layer3" class="hidden space-y-6">
-      <div class="bg-gradient-to-r from-emerald-950 to-slate-900 text-white rounded-2xl p-6 shadow-lg border border-emerald-700/50">
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-          <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
-            Layer 3 頂層架構 ｜ 賦能 D4 雙根因審查 (權重 30%)、D6 長期驗證、D7 四大文件升版與 D8 知識庫歸檔
-          </span>
-          <span class="text-xs font-mono text-amber-300">RBraga01 (/8d-coach) ✕ duding-engicool (TRACE 47/50) ✕ UNSW P2P+HP</span>
+    <!-- ───────── SLIDE 6: D4b (假說排除矩陣與知識圖譜溯源) ───────── -->
+    <section class="slide-page" data-slide-index="6" id="sec-d4b">
+      <div class="slide-header">
+        <div class="slide-header-meta">
+          <span class="part-tag" id="d4b-tag"></span>
+          <span class="skill-pill">調用技能：skill-8d-report-analyzer · TWVNS Knowledge Graph</span>
         </div>
-        <h2 class="text-xl font-black">Agent Skill 合規審查、三大治理鐵律驗證閘門與 D7 四大工程文件閉環工作台</h2>
-        <p class="text-xs text-slate-300 mt-1 leading-relaxed">
-          嚴格執行報告結論之<strong>三大治理鐵律</strong>：① Stage 1 解析後須經工程師人工確認方可進入深度分析；② D4（30% 核心權重）強制要求雙根因（發生因＋流出因）與 ≥5 層雙向可逆 5-Why，嚴格退回「人員疏忽/零件自然老化」；③ D6 完成 3–6 個月 UNSW P2P+HP 濾波零復發驗證後，於 D7 強制更新四大工程文件版次！
-        </p>
+        <h2 class="action-title" id="d4b-conclusion-title"></h2>
       </div>
 
-      <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
-        <div class="flex items-center gap-2">
-          <label class="text-xs font-extrabold text-slate-800">選擇審查與閉環簽核案件：</label>
-          <select id="layer3-case-select" onchange="selectAuditCase(this.value)" class="px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50"></select>
+      <!-- Group 1: 假說驗證與排除矩陣 -->
+      <div class="visual-group">
+        <div class="panel">
+          <div class="group-label">科學消去法：可能成因假說推論與現場實測排除矩陣 (Hypothesis Verification Matrix)</div>
+          <table class="mck-table">
+            <thead>
+              <tr>
+                <th style="width:24%;">待驗證假說 (Hypothesis)</th>
+                <th style="width:32%;">理論預期物理特徵</th>
+                <th style="width:30%;">本案 SCADA 與現場實測證據</th>
+                <th style="width:14%;">判定結論</th>
+              </tr>
+            </thead>
+            <tbody id="d4b-hypo-body"></tbody>
+            </table>
         </div>
-        <button onclick="openCaseDetailModal(document.getElementById('layer3-case-select').value)" class="px-3.5 py-1.5 rounded-xl bg-blue-900 hover:bg-blue-800 text-white text-xs font-bold shadow">
-          📄 預覽 / 列印本案完整 G8D 鑑識報告
-        </button>
       </div>
 
-      <div id="layer3-audit-workspace"></div>
+      <!-- Group 2: TWVNS 五維度知識圖譜溯源鏈 -->
+      <div class="visual-group">
+        <div class="group-label">TWVNS 五維度領域知識圖譜實體關係路徑（零幻覺防禦閘門）</div>
+        <div class="twvns-chain" id="d4b-twvns-chain"></div>
+      </div>
     </section>
 
-    <!-- =======================================================================
-         VIEW 5: 學術理論、GitHub 開源生態與八大 Notebook 基準庫 (reference)
-         ======================================================================= -->
-    <section id="view-reference" class="hidden space-y-6">
-      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
-        <h2 class="text-lg font-black text-slate-900">1. 光伏運維 D0–D8 各階段核心工程任務、分析工具與品質審核退件閘門總表</h2>
-        <div class="overflow-x-auto">
-          <table class="w-full text-xs text-left border-collapse">
+    <!-- ───────── SLIDE 7: D5 (永久矯正對策 PCA) ───────── -->
+    <section class="slide-page" data-slide-index="7" id="sec-d5">
+      <div class="slide-header">
+        <div class="slide-header-meta">
+          <span class="part-tag" id="d5-tag"></span>
+          <span class="skill-pill">調用技能：quality-8d-engineering-skills (supplier-scar / control-plan-builder)</span>
+        </div>
+        <h2 class="action-title" id="d5-conclusion-title"></h2>
+      </div>
+
+      <!-- Group 1: D5 永久矯正對策與二次副作用評估矩陣 -->
+      <div class="visual-group">
+        <div class="panel">
+          <div class="group-label">D5 永久矯正對策 (PCA) 決策矩陣（硬體防呆 × 軟體演算法 × 供應商 SCAR 追償）</div>
+          <table class="mck-table">
             <thead>
-              <tr class="bg-slate-900 text-white">
-                <th class="p-3 rounded-tl-xl">8D 階段 (Discipline)</th>
-                <th class="p-3">光伏運維 (PV O&M) 核心工程任務</th>
-                <th class="p-3">關鍵數據與分析工具</th>
-                <th class="p-3 rounded-tr-xl">品質審核閘門 (Validation Gate) 與常見退件缺失</th>
+              <tr>
+                <th style="width:20%;">對策維度</th>
+                <th style="width:42%;">永久矯正工程方案 (PCA Specification)</th>
+                <th style="width:20%;">量化工程指標</th>
+                <th style="width:18%;">二次副作用與風險評估</th>
               </tr>
             </thead>
-            <tbody id="ref-table-disciplines"></tbody>
+            <tbody id="d5-pca-body"></tbody>
           </table>
         </div>
       </div>
 
-      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
-        <h2 class="text-lg font-black text-slate-900">2. 國際學術論文之 8D 理論演進、根因分析方法論與工業 4.0 架構對照表</h2>
-        <div class="overflow-x-auto">
-          <table class="w-full text-xs text-left border-collapse">
+      <!-- Group 2: D3 暫時圍堵 vs D5 永久對策本質差異對照 -->
+      <div class="visual-group">
+        <div class="arch-flow">
+          <div class="arch-layer">
+            <div class="arch-layer-title">禁止將「加強巡檢」當作 D5 對策</div>
+            <p class="arch-layer-desc">依據 <code>/8d-coach</code> 稽核鐵律：依賴人員記憶或教育訓練之對策不具防呆效力，必須從硬體選型（原廠端子/波紋管）與自動控制邏輯根除。</p>
+          </div>
+          <div class="arch-layer layer-highlight">
+            <div class="arch-layer-title">同時消除「發生度 O」與「難檢度 D」</div>
+            <p class="arch-layer-desc">PCA-1 直接將物理失效發生度 (O) 降至最低；PCA-2 透過 UNSW P2P 與趨勢演算法將難檢度 (D) 壓至 15 分鐘內自動告警。</p>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-title">SCAR 供應商與承攬商閉環追償</div>
+            <p class="arch-layer-desc">調用 <code>supplier-scar</code> 自動產出合規索賠單，確保零組件瑕疵或外包施工不合規之整改費用由責任方承擔。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────── SLIDE 8: D6 (效果驗證與長週期收斂) ───────── -->
+    <section class="slide-page" data-slide-index="8" id="sec-d6">
+      <div class="slide-header">
+        <div class="slide-header-meta">
+          <span class="part-tag" id="d6-tag"></span>
+          <span class="skill-pill">調用技能：pv-performance-diagnosis (P2P + HP Filter Long-Term Convergence)</span>
+        </div>
+        <h2 class="action-title" id="d6-conclusion-title"></h2>
+      </div>
+
+      <!-- Group 1: 左圖（UNSW P2P 殘差與 HP 濾波收斂曲線）+ 右表（修復前後量化驗證表） -->
+      <div class="visual-group">
+        <div class="grid-5-7">
+          <div class="panel">
+            <div class="group-label">修復前後 UNSW P2P 同儕發電比與 HP 濾波趨勢收斂圖</div>
+            <div id="chart-d6-p2p" class="chart-box"></div>
+          </div>
+          <div class="panel">
+            <div class="group-label">D6 短期晴空實測與長週期性能指標對照表</div>
+            <table class="mck-table">
+              <thead>
+                <tr>
+                  <th>驗證指標</th>
+                  <th>修復前 (Before)</th>
+                  <th>修復後 (After)</th>
+                  <th>驗收標準</th>
+                  <th>判定結果</th>
+                </tr>
+              </thead>
+              <tbody id="d6-metrics-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Group 2: 長週期季節性驗證結論條 -->
+      <div class="visual-group">
+        <div class="conclusion-strip">
+          <div id="d6-longterm-note"></div>
+          <span class="accent-badge">HP 濾波斜率 ≥ 0 認證通過</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────── SLIDE 9: D7 (防止再發與系統標準化) ───────── -->
+    <section class="slide-page" data-slide-index="9" id="sec-d7">
+      <div class="slide-header">
+        <div class="slide-header-meta">
+          <span class="part-tag" id="d7-tag"></span>
+          <span class="skill-pill">調用技能：quality-8d-engineering-skills (pfmea-builder · control-plan-builder)</span>
+        </div>
+        <h2 class="action-title" id="d7-conclusion-title"></h2>
+      </div>
+
+      <!-- Group 1: 四大工程文件強制升版清單 -->
+      <div class="visual-group">
+        <div class="panel">
+          <div class="group-label">D7 制度化防呆：四大核心工程文件強制升版紀錄 (無文件版次更新禁止結案)</div>
+          <table class="mck-table">
             <thead>
-              <tr class="bg-indigo-950 text-white">
-                <th class="p-3 rounded-tl-xl">學術研究領域與代表文獻</th>
-                <th class="p-3">核心理論、演算法與模型架構</th>
-                <th class="p-3">對應 8D 階段</th>
-                <th class="p-3 rounded-tr-xl">關鍵量化指標與工程實證結論</th>
+              <tr>
+                <th style="width:20%;">工程文件類別</th>
+                <th style="width:16%;">文件編號</th>
+                <th style="width:12%;">版次變更</th>
+                <th>實質修訂內容與防呆強制條款</th>
               </tr>
             </thead>
-            <tbody id="ref-table-papers"></tbody>
+            <tbody id="d7-docs-body"></tbody>
           </table>
         </div>
       </div>
 
-      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
-        <h2 class="text-lg font-black text-slate-900">3. GitHub 專門針對 8D 報告與品質知識庫之核心 Skill 與 Agent 專案對照表</h2>
-        <div class="overflow-x-auto">
-          <table class="w-full text-xs text-left border-collapse">
+      <!-- Group 2: 跨案場橫向展開 (Yokoten) 矩陣 -->
+      <div class="visual-group">
+        <div class="panel">
+          <div class="group-label">平行橫向展開 (Yokoten)：集團同類型案場預防性普查與規則植入進度</div>
+          <table class="mck-table">
             <thead>
-              <tr class="bg-slate-900 text-white">
-                <th class="p-3 rounded-tl-xl">GitHub 開源專案 / Skill 名稱</th>
-                <th class="p-3">核心模組與檔案結構</th>
-                <th class="p-3">遵循標準與技術框架</th>
-                <th class="p-3 rounded-tr-xl">在光伏運維 8D 知識庫中的核心功能定位</th>
+              <tr>
+                <th style="width:30%;">橫向展開案場名稱</th>
+                <th style="width:16%;">裝置容量</th>
+                <th style="width:20%;">展開執行狀態</th>
+                <th>預防性攔截與加固成果</th>
               </tr>
             </thead>
-            <tbody id="ref-table-skills"></tbody>
+            <tbody id="d7-yokoten-body"></tbody>
           </table>
         </div>
       </div>
+    </section>
 
-      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
-        <h2 class="text-lg font-black text-slate-900">4. 構建 8D 報告知識庫與光伏根因分析之八大核心 Jupyter Notebook (.ipynb) 來源</h2>
-        <div class="overflow-x-auto">
-          <table class="w-full text-xs text-left border-collapse">
+    <!-- ───────── SLIDE 10: D8 (結案認證與 20 年 DCF 財務估值) ───────── -->
+    <section class="slide-page" data-slide-index="10" id="sec-d8">
+      <div class="slide-header">
+        <div class="slide-header-meta">
+          <span class="part-tag" id="d8-tag"></span>
+          <span class="skill-pill">調用技能：skill-8d-report-analyzer · solar-8d-diagnostic (20-Year DCF Engine)</span>
+        </div>
+        <h2 class="action-title" id="d8-conclusion-title"></h2>
+      </div>
+
+      <!-- Group 1: 左圖（20年 DCF 累積防損淨現值曲線）+ 右表（財務估值模型明細） -->
+      <div class="visual-group">
+        <div class="grid-5-7">
+          <div class="panel">
+            <div class="group-label">20 年殘餘合約期 DCF 累積防損淨現值曲線 (單位：新台幣萬元)</div>
+            <div id="chart-d8-dcf" class="chart-box"></div>
+          </div>
+          <div class="panel">
+            <div class="group-label">D8 生命周期財務防損估值模型 (Lifecycle Financial Valuation)</div>
+            <table class="mck-table">
+              <thead>
+                <tr>
+                  <th style="width:34%;">財務評估項目</th>
+                  <th style="width:24%;">量化金額 / 指標</th>
+                  <th>精算基準與說明</th>
+                </tr>
+              </thead>
+              <tbody id="d8-fin-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Group 2: 百分制加權合規評分表 (duding-engicool/skill-8d-report-analyzer) -->
+      <div class="visual-group">
+        <div class="panel">
+          <div class="group-label">8D 報告百分制加權合規評分與 TRACE 結案認證表（及格門檻：≥ 85 分）</div>
+          <table class="mck-table">
             <thead>
-              <tr class="bg-emerald-950 text-white">
-                <th class="p-3 rounded-tl-xl text-center">編號</th>
-                <th class="p-3">GitHub 倉庫與核心 Notebook (.ipynb) 路徑</th>
-                <th class="p-3">核心演算法與數據技術棧</th>
-                <th class="p-3 rounded-tr-xl">對應光伏 8D 報告與知識庫之工程角色</th>
+              <tr>
+                <th style="width:32%;">審查章節與配分權重</th>
+                <th style="width:16%;">實得評分</th>
+                <th>稽核通過依據（Two-Stage Anti-Hallucination Verified）</th>
               </tr>
             </thead>
-            <tbody id="ref-table-notebooks"></tbody>
+            <tbody id="d8-rubric-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────── SLIDE 11: AI SKILLS ECOSYSTEM & ARCHITECTURE (三層 AI 與 11 大已安裝 Skills) ───────── -->
+    <section class="slide-page" data-slide-index="11" id="sec-skills">
+      <div class="slide-header">
+        <div class="slide-header-meta">
+          <span class="part-tag">AI AGENT & SKILLS ARCHITECTURE · 光伏維運 AI Agent 應用與研究全量安裝清單</span>
+          <span class="skill-pill">本地安裝路徑：C:\Users\davidyeh\.gemini\config\skills\</span>
+        </div>
+        <h2 class="action-title">本平台已全數安裝並整合 11 大國際開源光伏維運與 8D 品質工程 AI Skills，構成「時序感知 → 多代理降噪 → 知識圖譜沉澱」三層式閉環架構</h2>
+      </div>
+
+      <!-- Group 1: 三層式系統架構圖 -->
+      <div class="visual-group">
+        <div class="arch-flow">
+          <div class="arch-layer">
+            <div class="arch-layer-title">Layer 1：數據感知與時序物理診斷層</div>
+            <p class="arch-layer-desc">整合 <code>UNSW-Solar</code> P2P/HP 濾波、<code>pv-ll-cloud-decoupling</code> 浮雲解耦、<code>SOMA</code> 10s IoT、<code>ALZ-11</code> 髒數據清洗與 <code>SMOTE</code> 罕見故障預警。</p>
+          </div>
+          <div class="arch-layer layer-highlight">
+            <div class="arch-layer-title">Layer 2：多代理協同與告警合理化層</div>
+            <p class="arch-layer-desc">整合 <code>AWS ISA-18.2</code> 四代理告警降噪（消除 60%–80% 假告警）、<code>Freiburg MPC</code> 電網電壓控制台與 <code>pv-vision</code> IR/EL 視覺雙軌定位。</p>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-title">Layer 3：數位品質工程與知識沉澱層</div>
+            <p class="arch-layer-desc">整合 <code>Quality-Engineering-Skills</code> (/8d-coach, 5-Why, SCAR, PFMEA)、<code>skill-8d-report-analyzer</code> (D4 佔 30% 加權評分) 與 <code>solar-8d-diagnostic</code>。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Group 2: 11 大已安裝 Skills 完整對照矩陣 -->
+      <div class="visual-group">
+        <div class="panel">
+          <div class="group-label">已安裝 11 大光伏維運與 8D 品質工程 AI Skills 總覽表（點擊上方「⚙️ 已安裝 Skills」可檢視本地路徑與執行指令）</div>
+          <table class="mck-table">
+            <thead>
+              <tr>
+                <th style="width:20%;">Skill 代號</th>
+                <th style="width:22%;">開源專案來源 (GitHub)</th>
+                <th style="width:14%;">對應 8D 階段</th>
+                <th>核心技術結論與解決之維運痛點</th>
+              </tr>
+            </thead>
+            <tbody id="skills-slide-body"></tbody>
           </table>
         </div>
       </div>
@@ -445,110 +1338,135 @@
 
   </main>
 
-  <!-- =========================================================================
-       MODAL 1: D0–D8 完整報告檢視與列印模態框
-       ========================================================================= -->
-  <div id="case-detail-modal" class="hidden fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm overflow-y-auto p-4 sm:p-6 flex items-start justify-center">
-    <div id="case-detail-modal-card" class="bg-white rounded-2xl max-w-5xl w-full p-6 shadow-2xl border border-slate-200 my-4">
-      <div id="case-detail-modal-body"></div>
+  <!-- ==================== BOTTOM SLIDE DECK CONTROLS ==================== -->
+  <div class="deck-controls">
+    <button class="deck-btn" id="btn-prev-slide" onclick="changeSlide(-1)">⬅️ 上一頁</button>
+    <span class="deck-counter" id="deck-counter">Slide 1 / 12</span>
+    <button class="deck-btn" id="btn-next-slide" onclick="changeSlide(1)">下一頁 ➡️</button>
+  </div>
+  <div class="deck-progress-track">
+    <div class="deck-progress-bar" id="deck-progress-bar"></div>
+  </div>
+
+  <!-- ==================== MODAL 1: 已安裝 11 大 AI SKILLS 詳細庫 ==================== -->
+  <div class="modal-backdrop" id="modal-skills" onclick="if(event.target===this)closeModal('modal-skills')">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 class="modal-title">⚙️ 進能服維運事業單位 — 已安裝 11 大光伏維運與 8D AI Skills 清冊</h3>
+        <button class="modal-close" onclick="closeModal('modal-skills')">✕ 關閉</button>
+      </div>
+      <p style="margin:0 0 14px; font-size:13.5px; color:var(--slate);">
+        參照《光伏維運 AI Agent 應用與研究.md》與《光伏運維 8D 報告與知識庫.docx》，以下 11 組技能包與 GitHub 儲存庫已全數部署於本地技能庫（<code>C:\Users\davidyeh\.gemini\config\skills\</code>），可直接於 Agent 對談或 8D 診斷流程中調用：
+      </p>
+      <table class="mck-table">
+        <thead>
+          <tr>
+            <th>Skill 名稱與代號</th>
+            <th>所屬架構層級</th>
+            <th>本地安裝路徑與核心腳本</th>
+            <th>量化效益與標準</th>
+          </tr>
+        </thead>
+        <tbody id="modal-skills-tbody"></tbody>
+      </table>
     </div>
   </div>
 
-  <!-- =========================================================================
-       MODAL 2: 新增 8D 立案模態框 (內建治理鐵律防呆)
-       ========================================================================= -->
-  <div id="new-case-modal" class="hidden fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm overflow-y-auto p-4 flex items-center justify-center no-print">
-    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200">
-      <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-200">
-        <h3 class="text-base font-extrabold text-slate-900">+ 啟動新光伏電站中高嚴重度 8D 立項（含 /8d-coach 雙根因防呆）</h3>
-        <button onclick="closeNewCaseModal()" class="text-slate-400 hover:text-slate-700 font-bold text-sm">✕</button>
+  <!-- ==================== MODAL 2: 數據對帳與零幻覺稽核 ==================== -->
+  <div class="modal-backdrop" id="modal-audit" onclick="if(event.target===this)closeModal('modal-audit')">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 class="modal-title">📊 SCADA 數據治理對帳單與兩階段防幻覺稽核 (Data & Citation Audit)</h3>
+        <button class="modal-close" onclick="closeModal('modal-audit')">✕ 關閉</button>
       </div>
-      <form onsubmit="submitNew8DCase(event)" class="space-y-3 text-xs">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div>
-            <label class="font-bold text-slate-700 block mb-1">8D 案號代碼</label>
-            <input id="nc-case-no" type="text" placeholder="如 8D-2026-TY05" required class="w-full px-3 py-2 rounded-lg border border-slate-300" />
+      <div class="grid-2" style="margin-bottom:18px;">
+        <div class="panel-soft">
+          <div class="group-label">Stage 1：ALZ-11 四大髒數據清洗檢核</div>
+          <table class="mck-table">
+            <thead>
+              <tr><th>審計項目</th><th>檢出異常筆數</th><th>自動處置結果</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="cell-key">°F / °C 溫度單位錯置尖峰</td><td class="cell-mono">0 筆</td><td>全數通過物理邊界檢定 (-5°C ~ 85°C)</td></tr>
+              <tr><td class="cell-key">W / kW 功率暫存器倍率溢位</td><td class="cell-mono">2 筆</td><td>自動依額定容量上限攔截並正規化</td></tr>
+              <tr><td class="cell-key">夜間/斷線恆定 96.99% 假效率</td><td class="cell-mono">148 筆</td><td>滑動視窗變異數檢定剔除，不計入 PR 分母</td></tr>
+              <tr><td class="cell-key">浮雲短暫掠過動態遮蔽</td><td class="cell-mono">38 次</td><td>由 pv-ll-cloud-decoupling 解耦排除派工</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="panel-soft">
+          <div class="group-label">Stage 2：零幻覺引文閘門 (Citation Gate)</div>
+          <table class="mck-table">
+            <thead>
+              <tr><th>強制引文欄位</th><th>本案綁定狀態</th><th>對應證據編號</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="cell-key">SCADA 時序區間證據</td><td class="cell-accent">✅ 已驗證</td><td class="cell-mono">HIST-5MIN-2026Q1</td></tr>
+              <tr><td class="cell-key">現場儀器實測證據 (Voc/IR/Megger)</td><td class="cell-accent">✅ 已驗證</td><td class="cell-mono">FLIR-IR-20260313</td></tr>
+              <tr><td class="cell-key">雙向 5-Why 逆向邏輯閉環</td><td class="cell-accent">✅ 已驗證</td><td class="cell-mono">RCA-OCC-ESC-01</td></tr>
+              <tr><td class="cell-key">D7 工程文件實質升版版次</td><td class="cell-accent">✅ 已驗證</td><td class="cell-mono">PFMEA-v3.0 / CP-v2.0</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 3: 新增 8D 異常立案 ==================== -->
+  <div class="modal-backdrop" id="modal-new-case" onclick="if(event.target===this)closeModal('modal-new-case')">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 class="modal-title">＋ 新增光伏維運 8D 專案立案（自動套用麥肯錫金字塔簡報模板）</h3>
+        <button class="modal-close" onclick="closeModal('modal-new-case')">✕ 關閉</button>
+      </div>
+      <form id="new-case-form" onsubmit="createNewCase(event)">
+        <div class="form-grid">
+          <div class="form-field">
+            <label>8D 報告編號</label>
+            <input type="text" id="nc-code" value="8D-2026-NEW01" required />
           </div>
-          <div>
-            <label class="font-bold text-slate-700 block mb-1">電站名稱</label>
-            <input id="nc-site-name" type="text" placeholder="如 桃園長榮大園物流中心光電廠" required class="w-full px-3 py-2 rounded-lg border border-slate-300" />
+          <div class="form-field">
+            <label>案場名稱</label>
+            <input type="text" id="nc-site" placeholder="例如：台南新市・物流中心屋頂電站" required />
           </div>
-          <div>
-            <label class="font-bold text-slate-700 block mb-1">裝置容量 (kWp)</label>
-            <input id="nc-capacity" type="number" step="0.1" value="1850.0" required class="w-full px-3 py-2 rounded-lg border border-slate-300" />
+          <div class="form-field">
+            <label>裝置容量 (kWp)</label>
+            <input type="number" step="0.01" id="nc-kwp" value="1250.0" required />
+          </div>
+          <div class="form-field">
+            <label>異常標的設備</label>
+            <input type="text" id="nc-equip" placeholder="例如：INV #05 (MPPT2 & MPPT4)" required />
+          </div>
+          <div class="form-field">
+            <label>異常期間累計短少度數 (kWh)</label>
+            <input type="number" step="0.1" id="nc-lost-kwh" value="4500" required />
+          </div>
+          <div class="form-field">
+            <label>躉購費率 FIT (NT$/kWh)</label>
+            <input type="number" step="0.0001" id="nc-fit" value="4.1835" required />
+          </div>
+          <div class="form-field" style="grid-column: span 2;">
+            <label>本案核心結論標題（麥肯錫金字塔結論句：一句完整的話寫出異常量、物理根因與預期挽回效益）</label>
+            <input type="text" id="nc-conclusion" placeholder="例如：新市物流案場 INV #05 發電短少 18.5% 係因直流隔離開關端子氧化過熱所致，換新後可挽回年化 NT$ 15.2 萬營收" required />
+          </div>
+          <div class="form-field">
+            <label>D4 技術發生根因 (Occurrence Root Cause)</label>
+            <textarea id="nc-occ-rc" rows="2" required>端子未依規定塗佈抗氧化導電膏且鎖固扭力不足，高溫循環下接觸電阻激增。</textarea>
+          </div>
+          <div class="form-field">
+            <label>D4 系統流出根因 (Escape Root Cause)</label>
+            <textarea id="nc-esc-rc" rows="2" required>SCADA 未啟用 UNSW P2P 同儕發電比 (< 0.88) 動態告警，僅依賴整機離線通知。</textarea>
           </div>
         </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="font-bold text-slate-700 block mb-1">光伏 FMEA 嚴重度 (S_PV 觸發門檻 ≥ 3)</label>
-            <select id="nc-spv" class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white font-bold">
-              <option value="5">S_PV = 5 (嚴重危害級：DC電弧/熱失控/絕緣崩潰，強制 LOTO)</option>
-              <option value="4" selected>S_PV = 4 (高度風險：PR持續低於同儕/IGBT過溫降額/MPPT截割)</option>
-              <option value="3">S_PV = 3 (中度風險：局部熱斑/週期性異常衰減)</option>
-            </select>
-          </div>
-          <div>
-            <label class="font-bold text-slate-700 block mb-1">單線圖 (SLD) 拓撲節點位置</label>
-            <input id="nc-sld" type="text" placeholder="如 Sub-Array A → INV-04 → MPPT-01 → String-02" required class="w-full px-3 py-2 rounded-lg border border-slate-300" />
-          </div>
-        </div>
-
-        <div>
-          <label class="font-bold text-slate-700 block mb-1">D2 可觀測電氣/熱力學故障特徵 (FCA-B-FSA Fault Signature)</label>
-          <input id="nc-fs" type="text" placeholder="如 晴空下 V_mp 正常但 I_mp 下挫 33%，伴隨直流箱端子溫升 ΔT=+24°C" required class="w-full px-3 py-2 rounded-lg border border-slate-300" />
-        </div>
-
-        <div>
-          <label class="font-bold text-rose-800 block mb-1">D4 物理與技術發生根因 (Occurrence Root Cause) — 嚴禁填寫「人員疏忽/自然老化」</label>
-          <textarea id="nc-occ-rc" rows="2" placeholder="請描述物理失效機制與制度失守原因..." required class="w-full px-3 py-2 rounded-lg border border-rose-300"></textarea>
-        </div>
-
-        <div>
-          <label class="font-bold text-amber-800 block mb-1">D4 SCADA 與巡檢流出/逃逸根因 (Escape Root Cause) — 強制雙根因維度</label>
-          <textarea id="nc-esc-rc" rows="2" placeholder="請說明為何現有 SCADA 預警閾值或日常巡檢 SOP 未能提前捕捉..." required class="w-full px-3 py-2 rounded-lg border border-amber-300"></textarea>
-        </div>
-
-        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-200">
-          <button type="button" onclick="closeNewCaseModal()" class="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold">取消</button>
-          <button type="submit" class="px-4 py-2 rounded-lg bg-blue-900 hover:bg-blue-800 text-white font-bold shadow">驗證雙根因並建立 8D 工單</button>
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+          <button type="button" class="modal-close" onclick="closeModal('modal-new-case')">取消</button>
+          <button type="submit" class="navtab navtab-accent" style="padding:8px 18px; font-size:13.5px;">立即生成 12 頁麥肯錫 8D 簡報</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- =========================================================================
-       MODAL 3: Supabase BaaS 雲端連線設定模態框
-       ========================================================================= -->
-  <div id="supabase-config-modal" class="hidden fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm overflow-y-auto p-4 flex items-center justify-center no-print">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200">
-      <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-200">
-        <h3 class="text-base font-extrabold text-slate-900">⚙️ Supabase BaaS 雲端知識庫連線設定 (遵循零私鑰安全規範)</h3>
-        <button onclick="closeSupabaseModal()" class="text-slate-400 hover:text-slate-700 font-bold text-sm">✕</button>
-      </div>
-      <form onsubmit="saveSupabaseConfigForm(event)" class="space-y-3 text-xs">
-        <p class="text-slate-600 leading-relaxed">
-          本平台支援 GitHub Pages 純前端部署與 Supabase PostgreSQL + Storage 雲端同步。請僅填入公開之 <code>Anon Public Key</code>（嚴禁填入 <code>service_role</code> 私鑰）。未設定時自動採用本地雙模態展示快取。
-        </p>
-        <div>
-          <label class="font-bold text-slate-700 block mb-1">Supabase Project URL</label>
-          <input id="sb-cfg-url" type="url" placeholder="https://your-project.supabase.co" class="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono" />
-        </div>
-        <div>
-          <label class="font-bold text-slate-700 block mb-1">Supabase Anon Public Key</label>
-          <input id="sb-cfg-key" type="password" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." class="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono" />
-        </div>
-        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-200">
-          <button type="button" onclick="closeSupabaseModal()" class="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold">關閉</button>
-          <button type="submit" class="px-4 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-bold shadow">儲存並測試連線</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- 載入種子資料與應用程式邏輯 -->
   <script src="seed-data.js"></script>
-  <script src="supabase-client.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
