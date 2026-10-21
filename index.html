@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>進金生能源 6692 ｜ 光伏運維 8D 智慧管理與三層式 AI Agent 閉環工程平台</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            acme: {
+              navy: '#0f2957',
+              blue: '#1e40af',
+              gold: '#f59e0b'
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Supabase JS SDK v2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+    }
+    @media print {
+      header, nav, .no-print {
+        display: none !important;
+      }
+      body {
+        background: #ffffff !important;
+      }
+      #case-detail-modal {
+        position: static !important;
+        display: block !important;
+        background: #ffffff !important;
+        padding: 0 !important;
+      }
+      #case-detail-modal-card {
+        max-width: 100% !important;
+        box-shadow: none !important;
+        border: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col antialiased">
+
+  <!-- =========================================================================
+       頂部導航列 (Header)
+       ========================================================================= -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 text-white font-black text-base tracking-wider shadow">
+          ACME 6692
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight">
+              光伏運維 8D 智慧管理與三層式 AI Agent 閉環平台
+            </h1>
+            <span class="hidden md:inline-block px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-800 border border-blue-200">
+              MIL-STD-1520 ✕ IATF 16949 §10.2.3 ✕ UNSW-Solar
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-500 hidden sm:block">
+            4.6.4.2.3 8D 架構核心落地：SCADA 物理特徵驅動（底層）＋ 雙模態知識圖譜 RAG（中層）＋ 強制驗證閘門 AI Agent（頂層）
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <!-- Supabase 狀態燈 -->
+        <button onclick="openSupabaseModal()" id="sb-status-pill" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100 transition cursor-pointer">
+          <span id="sb-status-dot" class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+          <span id="sb-status-text">連線檢測中...</span>
+        </button>
+
+        <!-- 匯出 CSV -->
+        <button onclick="exportAllCasesCSV()" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 transition">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i>
+          <span>匯出 8D 清冊</span>
+        </button>
+
+        <!-- 新增 8D 立項 -->
+        <button onclick="openNewCaseModal()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-blue-900 hover:bg-blue-800 text-white shadow transition">
+          <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+          <span>+ 啟動 8D 立案</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 主功能分頁切換列 (5 Tabs) -->
+    <nav class="bg-slate-50 border-t border-slate-200 px-4 sm:px-6 lg:px-8">
+      <div class="max-w-7xl mx-auto flex items-center gap-2 overflow-x-auto py-2">
+        <button id="nav-tab-cockpit" onclick="switchMainTab('cockpit')" class="nav-tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-blue-900 text-white shadow-md transition whitespace-nowrap">
+          <i data-lucide="layers" class="w-4 h-4"></i>
+          <span>結論主體：三層閉環戰情中樞</span>
+        </button>
+        <button id="nav-tab-layer1" onclick="switchMainTab('layer1')" class="nav-tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs sm:text-sm text-slate-600 hover:bg-slate-200/80 transition whitespace-nowrap">
+          <i data-lucide="activity" class="w-4 h-4 text-sky-600"></i>
+          <span>【底層 Layer 1】SCADA 預處理 & D0–D2 立項</span>
+        </button>
+        <button id="nav-tab-layer2" onclick="switchMainTab('layer2')" class="nav-tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs sm:text-sm text-slate-600 hover:bg-slate-200/80 transition whitespace-nowrap">
+          <i data-lucide="network" class="w-4 h-4 text-indigo-600"></i>
+          <span>【中層 Layer 2】雙模態知識圖譜 & D3–D5 推論</span>
+        </button>
+        <button id="nav-tab-layer3" onclick="switchMainTab('layer3')" class="nav-tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs sm:text-sm text-slate-600 hover:bg-slate-200/80 transition whitespace-nowrap">
+          <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
+          <span>【頂層 Layer 3】三大治理鐵律 & D4/D6–D8 審查</span>
+        </button>
+        <button id="nav-tab-reference" onclick="switchMainTab('reference')" class="nav-tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs sm:text-sm text-slate-600 hover:bg-slate-200/80 transition whitespace-nowrap">
+          <i data-lucide="book-open-check" class="w-4 h-4 text-amber-600"></i>
+          <span>學術理論 ✕ GitHub Skill ✕ 8大 Notebook 基準庫</span>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- =========================================================================
+       主內容區 (Main Content)
+       ========================================================================= -->
+  <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 space-y-6 no-print">
+
+    <!-- =======================================================================
+         VIEW 1: 結論主體 — 三層式自動化閉環工程系統戰情中樞 (cockpit)
+         ======================================================================= -->
+    <section id="view-cockpit" class="space-y-6">
+      <!-- 核心結論宣言 Hero Banner -->
+      <div class="rounded-3xl bg-gradient-to-r from-slate-950 via-blue-950 to-indigo-950 text-white p-6 sm:p-8 shadow-xl border border-blue-800/50 relative overflow-hidden">
+        <div class="max-w-5xl space-y-3">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-extrabold">
+            <span>📌 工程結論核心主體（The Core Engineering Conclusion）</span>
+          </div>
+          <h2 class="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight leading-snug">
+            拒絕事後行政填表：打造「SCADA 物理特徵驅動 ＋ 雙模態知識圖譜 RAG ＋ 強制驗證閘門 AI Agent」三層式自動化閉環工程系統
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            面對全美光伏每年 <strong>25 億美元</strong>非計畫停機損失、<strong>60%</strong> 逆變器失效佔比、平均 <strong>1.5~2.2 年</strong>首次出險、以及 <strong>45% 逆變器原廠於建成 4 年後退出市場</strong>的文檔與備品斷鏈危機，本平台依據《光伏運維 8D 報告與知識庫》研究結論，將 D0–D8 全流程重構為具備嚴格驗證閘門（Validation Gates）的三層式 AI Agent 工程系統，徹底切斷「Reset 復位 / 單純換保險絲」之症狀復發鏈。
+          </p>
+        </div>
+
+        <!-- 關鍵工程實證指標列 -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-6 pt-5 border-t border-white/10 text-xs">
+          <div class="bg-white/5 rounded-xl p-3 border border-white/10">
+            <div class="text-slate-400 text-[11px]">Oancea (2025) 知識檢索</div>
+            <div class="text-lg font-black text-amber-400 mt-0.5">提速 300 倍</div>
+            <div class="text-[11px] text-slate-300">300 分鐘 ➔ &lt; 1 分鐘</div>
+          </div>
+          <div class="bg-white/5 rounded-xl p-3 border border-white/10">
+            <div class="text-slate-400 text-[11px]">ISA-18.2 告警風暴治理</div>
+            <div class="text-lg font-black text-sky-400 mt-0.5">-60% ~ 80%</div>
+            <div class="text-[11px] text-slate-300">剔除連鎖附屬誤報</div>
+          </div>
+          <div class="bg-white/5 rounded-xl p-3 border border-white/10">
+            <div class="text-slate-400 text-[11px]">NREL 4 年後 OEM 退場率</div>
+            <div class="text-lg font-black text-rose-400 mt-0.5">45% 斷鏈防護</div>
+            <div class="text-[11px] text-slate-300">邏輯章節切塊永久留存</div>
+          </div>
+          <div class="bg-white/5 rounded-xl p-3 border border-white/10">
+            <div class="text-slate-400 text-[11px]">D4 雙根因核心評分權重</div>
+            <div class="text-lg font-black text-indigo-300 mt-0.5">30% 雙倍權重</div>
+            <div class="text-[11px] text-slate-300">發生因 + 流出因 + ≥5 Why</div>
+          </div>
+          <div class="bg-white/5 rounded-xl p-3 border border-white/10">
+            <div class="text-slate-400 text-[11px]">本平台列管損失電量</div>
+            <div id="kpi-total-mwh" class="text-lg font-black text-emerald-400 mt-0.5">253.9 MWh</div>
+            <div id="kpi-total-ntd" class="text-[11px] text-slate-300">NT$ 124.0 萬</div>
+          </div>
+          <div class="bg-white/5 rounded-xl p-3 border border-white/10">
+            <div class="text-slate-400 text-[11px]">列管案件 / TRACE 均分</div>
+            <div id="kpi-total-cases" class="text-lg font-black text-white mt-0.5">4 案</div>
+            <div id="kpi-avg-score" class="text-[11px] text-emerald-300">92 / 100 分</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 三層式自動化閉環工程系統架構圖卡片 -->
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-base sm:text-lg font-extrabold text-slate-900 flex items-center gap-2">
+            <i data-lucide="cpu" class="w-5 h-5 text-blue-800"></i>
+            <span>三層式自動化閉環工程系統架構（點擊各層可直接進入對應 AI Agent 工作台）</span>
+          </h3>
+          <span class="text-xs font-semibold text-slate-500 hidden sm:inline">底層預處理 (D0–D2) ➔ 中層圖譜推論 (D3–D5) ➔ 頂層合規閉環 (D4審查 & D6–D8)</span>
+        </div>
+        <div id="cockpit-layers-grid" class="grid grid-cols-1 lg:grid-cols-3 gap-5"></div>
+      </div>
+
+      <!-- 光伏運維中高嚴重度 8D 立案工單列表 -->
+      <div class="space-y-4">
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 class="text-base font-extrabold text-slate-900">📋 光伏電站中高嚴重度（S_PV ≥ 3）8D 閉環列管案件庫</h3>
+            <p class="text-xs text-slate-500">涵蓋跨系統故障傳播定位（異常在逆變器端捕獲、根因在 DC 配電/感測器/防逆流）、雙根因鑑識與 D7 四大工程文件升版追蹤</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <input id="case-search-input" oninput="renderCasesList()" type="text" placeholder="搜尋案號、電站、SLD節點、根因..." class="px-3 py-1.5 rounded-xl border border-slate-300 text-xs w-52 focus:outline-none focus:border-blue-600" />
+            <select id="case-layer-filter" onchange="renderCasesList()" class="px-3 py-1.5 rounded-xl border border-slate-300 text-xs bg-white font-semibold">
+              <option value="all">所有架構層級 (Layer 1~3)</option>
+              <option value="1">Layer 1：D0–D2 預處理與立項</option>
+              <option value="2">Layer 2：D3–D5 圖譜根因推論</option>
+              <option value="3">Layer 3：D6–D8 驗證與文件閉環</option>
+            </select>
+            <select id="case-spv-filter" onchange="renderCasesList()" class="px-3 py-1.5 rounded-xl border border-slate-300 text-xs bg-white font-semibold">
+              <option value="all">所有嚴重度 (S_PV 3~5)</option>
+              <option value="5">S_PV = 5 (嚴重危害級 / LOTO)</option>
+              <option value="4">S_PV = 4 (高度風險級 / AP:H)</option>
+              <option value="3">S_PV = 3 (中度風險級)</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="cockpit-cases-container" class="grid grid-cols-1 lg:grid-cols-2 gap-5"></div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         VIEW 2: 【底層 Layer 1】邊緣與 SCADA 數據預處理層 (賦能 D0、D1、D2)
+         ======================================================================= -->
+    <section id="view-layer1" class="hidden space-y-6">
+      <div class="bg-gradient-to-r from-sky-950 to-slate-900 text-white rounded-2xl p-6 shadow-lg border border-sky-700/50">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+          <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-sky-500/20 text-sky-300 border border-sky-400/40">
+            Layer 1 底層架構 ｜ 賦能 D0 初篩、D1 跨職能團隊、D2 5W2H 與邊界量化
+          </span>
+          <span class="text-xs font-mono text-amber-300">ALZ-11 ✕ UNSW-Solar ✕ sprince0031 (I-V-G) ✕ aws-samples (ISA-18.2)</span>
+        </div>
+        <h2 class="text-xl font-black">邊緣與 SCADA 數據預處理、氣象干擾解耦與 D0–D2 自動立項工作台</h2>
+        <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+          常駐數據審計管線自動修復氣象站溫標（°F/°C）與逆變器功率單位（W/kW）錯置，結合 <code>sprince0031</code> Random Forest / SVM 分類器解耦「短暫雲層遮擋」與「內部線間短路 (LL Fault)」，並以 <code>ISA-18.2</code> 剔除 60%–80% 告警風暴。唯有當真實故障觸及 <strong>光伏 FMEA 嚴重度 S_PV ≥ 3</strong> 時才鎖定立項！
+        </p>
+      </div>
+
+      <!-- 情境選擇器 -->
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+        <div class="text-sm font-extrabold text-slate-900">👇 請選擇現場 SCADA 遙測輸入情境（即時體驗 Layer 1 解耦、降噪與自動立項判定）：</div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+          <button data-scenario="cloud_false_alarm" onclick="renderLayer1Simulator('cloud_false_alarm')" class="sim-scenario-btn text-left p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-medium text-xs transition">
+            <div class="font-extrabold text-emerald-700 mb-1">情境 A：假性告警攔截 (S_PV=1)</div>
+            <div>短暫雲層遮擋 + °F/°C 溫標跳變（免派工示範）</div>
+          </button>
+          <button data-scenario="dc_arc_mc4" onclick="renderLayer1Simulator('dc_arc_mc4')" class="sim-scenario-btn text-left p-3 rounded-xl border-2 border-sky-600 bg-sky-50/90 text-slate-900 font-bold text-xs shadow-sm transition">
+            <div class="font-extrabold text-rose-700 mb-1">情境 B：水上 MC4 熱熔拉弧 (S_PV=5)</div>
+            <div>大安龜殼段 MPPT 少 1/3 電流 + LOTO 隔離立項</div>
+          </button>
+          <button data-scenario="orphan_inv_igbt" onclick="renderLayer1Simulator('orphan_inv_igbt')" class="sim-scenario-btn text-left p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-medium text-xs transition">
+            <div class="font-extrabold text-amber-700 mb-1">情境 C：孤兒逆變器過溫諧波 (S_PV=4)</div>
+            <div>遠東鋼鐵油霧堵塞 IGBT 降額 + THD 6.8% 跳機</div>
+          </button>
+          <button data-scenario="pyranometer_soiling" onclick="renderLayer1Simulator('pyranometer_soiling')" class="sim-scenario-btn text-left p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-medium text-xs transition">
+            <div class="font-extrabold text-indigo-700 mb-1">情境 D：日照計失真掩蓋泥膜 (S_PV=4)</div>
+            <div>岡山五甲尾表觀 PR 109% 虛高解耦真實衰退</div>
+          </button>
+        </div>
+
+        <!-- 模擬輸出容器 -->
+        <div id="layer1-sim-output" class="pt-2"></div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         VIEW 3: 【中層 Layer 2】雙模態 8D 知識庫與圖譜推論層 (賦能 D3、D4、D5)
+         ======================================================================= -->
+    <section id="view-layer2" class="hidden space-y-6">
+      <div class="bg-gradient-to-r from-indigo-950 to-slate-900 text-white rounded-2xl p-6 shadow-lg border border-indigo-700/50">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+          <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-indigo-500/20 text-indigo-300 border border-indigo-400/40">
+            Layer 2 中層架構 ｜ 賦能 D3 批次圍堵、D4 雙根因拓撲溯源、D5 永久對策擬定
+          </span>
+          <span class="text-xs font-mono text-amber-300">searlion 邏輯切塊 ✕ Milvus + Neo4j ✕ FCA-B-FSA & TWVNS ✕ uptrain 引文閘門</span>
+        </div>
+        <h2 class="text-xl font-black">雙模態 8D 知識庫（Vector + Graph DB）與跨系統拓撲根因推論工作台</h2>
+        <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+          破解 <strong>45% 逆變器原廠於建成 4 年後退出市場</strong>之文檔斷鏈危機！結合 <code>FCA-B-FSA</code> 故障特徵映射與 <code>CIRCA / RCInvestigator</code> 知識圖譜算子，解決 kWh Analytics (11 GW) 實證指出之「異常在逆變器端被捕獲，但真實物理根因位於上游直流配電側」盲區，並強制透過 <code>uptrain RAG_WITH_CITATION</code> 杜絕 AI 幻覺。
+        </p>
+      </div>
+
+      <!-- 圖譜控制器與畫布 -->
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-2">
+            <label class="text-xs font-extrabold text-slate-800">選擇推論案件：</label>
+            <select id="layer2-case-select" onchange="selectGraphCase(this.value)" class="px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50"></select>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs font-bold text-slate-600">切換圖譜導航算子：</span>
+            <button onclick="setGraphOperator('twvns')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-900 text-white hover:bg-indigo-800 transition">
+              🧭 TWVNS 跨系統路徑推論 (CIRCA)
+            </button>
+            <button onclick="setGraphOperator('upward')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-100 text-amber-900 hover:bg-amber-200 border border-amber-300 transition">
+              ⇑ 向上泛化算子 (D3 同批次普查)
+            </button>
+            <button onclick="setGraphOperator('leftward')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-100 text-sky-900 hover:bg-sky-200 border border-sky-300 transition">
+              ⇐ 水平類比算子 (P2P 同儕比對)
+            </button>
+          </div>
+        </div>
+
+        <div id="layer2-graph-canvas"></div>
+
+        <!-- 零幻覺邊界攔截測試區 -->
+        <div class="pt-3 border-t border-slate-200">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="text-xs font-extrabold text-slate-800">🛡️ 測試 Belu et al. (2026) & <code>uptrain-ai/rag_with_citation.ipynb</code> 零幻覺強制專家知識庫邊界閘門：</span>
+            <div class="flex flex-wrap gap-2">
+              <button onclick="testHallucinationGuard('valid')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-900 hover:bg-emerald-200 border border-emerald-300 transition">
+                ✓ 測試專家知識庫內檢索 (附精確引文)
+              </button>
+              <button onclick="testHallucinationGuard('hallucination')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-100 text-rose-900 hover:bg-rose-200 border border-rose-300 transition">
+                🚫 測試超出知識庫邊界之 AI 自由幻覺推論 (強制拒絕)
+              </button>
+            </div>
+          </div>
+          <div id="hallucination-guard-result"></div>
+        </div>
+      </div>
+
+      <!-- searlion/rag-strategies 邏輯章節切塊知識庫列表 -->
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 class="text-base font-extrabold text-slate-900">📚 雙模態專家驗證知識庫（Gemini 2.5 Pro 邏輯章節切塊 <code>section_map.json</code> ✕ FAISS/Milvus）</h3>
+            <p class="text-xs text-slate-500">避免傳統固定字數切塊（Naive Chunking）造成故障代碼與檢修步驟語義斷裂，完整保留原廠手冊、IEC 規範與歷史 8D 因果邊</p>
+          </div>
+          <input id="kb-search-input" oninput="renderKnowledgeChunksList()" type="text" placeholder="搜尋故障特徵碼、MC4、IGBT、日照計..." class="px-3 py-1.5 rounded-xl border border-slate-300 text-xs w-64" />
+        </div>
+        <div id="layer2-chunks-list" class="space-y-3"></div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         VIEW 4: 【頂層 Layer 3】Agent Skill 合規審查與文件閉環層 (賦能 D4 審查與 D6–D8)
+         ======================================================================= -->
+    <section id="view-layer3" class="hidden space-y-6">
+      <div class="bg-gradient-to-r from-emerald-950 to-slate-900 text-white rounded-2xl p-6 shadow-lg border border-emerald-700/50">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+          <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
+            Layer 3 頂層架構 ｜ 賦能 D4 雙根因審查 (權重 30%)、D6 長期驗證、D7 四大文件升版與 D8 知識庫歸檔
+          </span>
+          <span class="text-xs font-mono text-amber-300">RBraga01 (/8d-coach) ✕ duding-engicool (TRACE 47/50) ✕ UNSW P2P+HP</span>
+        </div>
+        <h2 class="text-xl font-black">Agent Skill 合規審查、三大治理鐵律驗證閘門與 D7 四大工程文件閉環工作台</h2>
+        <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+          嚴格執行報告結論之<strong>三大治理鐵律</strong>：① Stage 1 解析後須經工程師人工確認方可進入深度分析；② D4（30% 核心權重）強制要求雙根因（發生因＋流出因）與 ≥5 層雙向可逆 5-Why，嚴格退回「人員疏忽/零件自然老化」；③ D6 完成 3–6 個月 UNSW P2P+HP 濾波零復發驗證後，於 D7 強制更新四大工程文件版次！
+        </p>
+      </div>
+
+      <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <label class="text-xs font-extrabold text-slate-800">選擇審查與閉環簽核案件：</label>
+          <select id="layer3-case-select" onchange="selectAuditCase(this.value)" class="px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50"></select>
+        </div>
+        <button onclick="openCaseDetailModal(document.getElementById('layer3-case-select').value)" class="px-3.5 py-1.5 rounded-xl bg-blue-900 hover:bg-blue-800 text-white text-xs font-bold shadow">
+          📄 預覽 / 列印本案完整 G8D 鑑識報告
+        </button>
+      </div>
+
+      <div id="layer3-audit-workspace"></div>
+    </section>
+
+    <!-- =======================================================================
+         VIEW 5: 學術理論、GitHub 開源生態與八大 Notebook 基準庫 (reference)
+         ======================================================================= -->
+    <section id="view-reference" class="hidden space-y-6">
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
+        <h2 class="text-lg font-black text-slate-900">1. 光伏運維 D0–D8 各階段核心工程任務、分析工具與品質審核退件閘門總表</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-900 text-white">
+                <th class="p-3 rounded-tl-xl">8D 階段 (Discipline)</th>
+                <th class="p-3">光伏運維 (PV O&M) 核心工程任務</th>
+                <th class="p-3">關鍵數據與分析工具</th>
+                <th class="p-3 rounded-tr-xl">品質審核閘門 (Validation Gate) 與常見退件缺失</th>
+              </tr>
+            </thead>
+            <tbody id="ref-table-disciplines"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
+        <h2 class="text-lg font-black text-slate-900">2. 國際學術論文之 8D 理論演進、根因分析方法論與工業 4.0 架構對照表</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left border-collapse">
+            <thead>
+              <tr class="bg-indigo-950 text-white">
+                <th class="p-3 rounded-tl-xl">學術研究領域與代表文獻</th>
+                <th class="p-3">核心理論、演算法與模型架構</th>
+                <th class="p-3">對應 8D 階段</th>
+                <th class="p-3 rounded-tr-xl">關鍵量化指標與工程實證結論</th>
+              </tr>
+            </thead>
+            <tbody id="ref-table-papers"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
+        <h2 class="text-lg font-black text-slate-900">3. GitHub 專門針對 8D 報告與品質知識庫之核心 Skill 與 Agent 專案對照表</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-900 text-white">
+                <th class="p-3 rounded-tl-xl">GitHub 開源專案 / Skill 名稱</th>
+                <th class="p-3">核心模組與檔案結構</th>
+                <th class="p-3">遵循標準與技術框架</th>
+                <th class="p-3 rounded-tr-xl">在光伏運維 8D 知識庫中的核心功能定位</th>
+              </tr>
+            </thead>
+            <tbody id="ref-table-skills"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
+        <h2 class="text-lg font-black text-slate-900">4. 構建 8D 報告知識庫與光伏根因分析之八大核心 Jupyter Notebook (.ipynb) 來源</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left border-collapse">
+            <thead>
+              <tr class="bg-emerald-950 text-white">
+                <th class="p-3 rounded-tl-xl text-center">編號</th>
+                <th class="p-3">GitHub 倉庫與核心 Notebook (.ipynb) 路徑</th>
+                <th class="p-3">核心演算法與數據技術棧</th>
+                <th class="p-3 rounded-tr-xl">對應光伏 8D 報告與知識庫之工程角色</th>
+              </tr>
+            </thead>
+            <tbody id="ref-table-notebooks"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =========================================================================
+       MODAL 1: D0–D8 完整報告檢視與列印模態框
+       ========================================================================= -->
+  <div id="case-detail-modal" class="hidden fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm overflow-y-auto p-4 sm:p-6 flex items-start justify-center">
+    <div id="case-detail-modal-card" class="bg-white rounded-2xl max-w-5xl w-full p-6 shadow-2xl border border-slate-200 my-4">
+      <div id="case-detail-modal-body"></div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 2: 新增 8D 立案模態框 (內建治理鐵律防呆)
+       ========================================================================= -->
+  <div id="new-case-modal" class="hidden fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm overflow-y-auto p-4 flex items-center justify-center no-print">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200">
+      <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-200">
+        <h3 class="text-base font-extrabold text-slate-900">+ 啟動新光伏電站中高嚴重度 8D 立項（含 /8d-coach 雙根因防呆）</h3>
+        <button onclick="closeNewCaseModal()" class="text-slate-400 hover:text-slate-700 font-bold text-sm">✕</button>
+      </div>
+      <form onsubmit="submitNew8DCase(event)" class="space-y-3 text-xs">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">8D 案號代碼</label>
+            <input id="nc-case-no" type="text" placeholder="如 8D-2026-TY05" required class="w-full px-3 py-2 rounded-lg border border-slate-300" />
+          </div>
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">電站名稱</label>
+            <input id="nc-site-name" type="text" placeholder="如 桃園長榮大園物流中心光電廠" required class="w-full px-3 py-2 rounded-lg border border-slate-300" />
+          </div>
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">裝置容量 (kWp)</label>
+            <input id="nc-capacity" type="number" step="0.1" value="1850.0" required class="w-full px-3 py-2 rounded-lg border border-slate-300" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">光伏 FMEA 嚴重度 (S_PV 觸發門檻 ≥ 3)</label>
+            <select id="nc-spv" class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white font-bold">
+              <option value="5">S_PV = 5 (嚴重危害級：DC電弧/熱失控/絕緣崩潰，強制 LOTO)</option>
+              <option value="4" selected>S_PV = 4 (高度風險：PR持續低於同儕/IGBT過溫降額/MPPT截割)</option>
+              <option value="3">S_PV = 3 (中度風險：局部熱斑/週期性異常衰減)</option>
+            </select>
+          </div>
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">單線圖 (SLD) 拓撲節點位置</label>
+            <input id="nc-sld" type="text" placeholder="如 Sub-Array A → INV-04 → MPPT-01 → String-02" required class="w-full px-3 py-2 rounded-lg border border-slate-300" />
+          </div>
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">D2 可觀測電氣/熱力學故障特徵 (FCA-B-FSA Fault Signature)</label>
+          <input id="nc-fs" type="text" placeholder="如 晴空下 V_mp 正常但 I_mp 下挫 33%，伴隨直流箱端子溫升 ΔT=+24°C" required class="w-full px-3 py-2 rounded-lg border border-slate-300" />
+        </div>
+
+        <div>
+          <label class="font-bold text-rose-800 block mb-1">D4 物理與技術發生根因 (Occurrence Root Cause) — 嚴禁填寫「人員疏忽/自然老化」</label>
+          <textarea id="nc-occ-rc" rows="2" placeholder="請描述物理失效機制與制度失守原因..." required class="w-full px-3 py-2 rounded-lg border border-rose-300"></textarea>
+        </div>
+
+        <div>
+          <label class="font-bold text-amber-800 block mb-1">D4 SCADA 與巡檢流出/逃逸根因 (Escape Root Cause) — 強制雙根因維度</label>
+          <textarea id="nc-esc-rc" rows="2" placeholder="請說明為何現有 SCADA 預警閾值或日常巡檢 SOP 未能提前捕捉..." required class="w-full px-3 py-2 rounded-lg border border-amber-300"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-200">
+          <button type="button" onclick="closeNewCaseModal()" class="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold">取消</button>
+          <button type="submit" class="px-4 py-2 rounded-lg bg-blue-900 hover:bg-blue-800 text-white font-bold shadow">驗證雙根因並建立 8D 工單</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 3: Supabase BaaS 雲端連線設定模態框
+       ========================================================================= -->
+  <div id="supabase-config-modal" class="hidden fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm overflow-y-auto p-4 flex items-center justify-center no-print">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200">
+      <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-200">
+        <h3 class="text-base font-extrabold text-slate-900">⚙️ Supabase BaaS 雲端知識庫連線設定 (遵循零私鑰安全規範)</h3>
+        <button onclick="closeSupabaseModal()" class="text-slate-400 hover:text-slate-700 font-bold text-sm">✕</button>
+      </div>
+      <form onsubmit="saveSupabaseConfigForm(event)" class="space-y-3 text-xs">
+        <p class="text-slate-600 leading-relaxed">
+          本平台支援 GitHub Pages 純前端部署與 Supabase PostgreSQL + Storage 雲端同步。請僅填入公開之 <code>Anon Public Key</code>（嚴禁填入 <code>service_role</code> 私鑰）。未設定時自動採用本地雙模態展示快取。
+        </p>
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Supabase Project URL</label>
+          <input id="sb-cfg-url" type="url" placeholder="https://your-project.supabase.co" class="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono" />
+        </div>
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Supabase Anon Public Key</label>
+          <input id="sb-cfg-key" type="password" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." class="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono" />
+        </div>
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-200">
+          <button type="button" onclick="closeSupabaseModal()" class="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold">關閉</button>
+          <button type="submit" class="px-4 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-bold shadow">儲存並測試連線</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 載入種子資料與應用程式邏輯 -->
+  <script src="seed-data.js"></script>
+  <script src="supabase-client.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
