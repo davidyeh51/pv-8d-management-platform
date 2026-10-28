@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>8D 知識卡簡報</title>
+  <meta name="description" content="由知識庫資料自動產生之麥肯錫風格 8D 簡報。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/kb.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="index.html">← 8D 知識庫<small id="deck-id"></small></a>
+      <nav class="topnav" id="deck-tabs"></nav>
+    </div>
+  </header>
+  <main class="deck" id="deck"></main>
+  <div class="deck-nav" id="deck-nav">
+    <button type="button" class="btn ghost" id="prev">← 上一頁</button>
+    <span class="count" id="count"></span>
+    <button type="button" class="btn ghost" id="next">下一頁 →</button>
+    <button type="button" class="btn ghost" id="mode">📄 完整報告模式</button>
+    <a class="btn accent" id="full-deck" style="display:none">完整互動簡報 →</a>
+  </div>
+  <div style="height:40px"></div>
+  <script src="data/kb-data.js"></script>
+  <script src="assets/search.js"></script>
+  <script src="assets/deck.js"></script>
+</body>
+</html>
