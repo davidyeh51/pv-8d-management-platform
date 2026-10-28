@@ -1,0 +1,17 @@
+# 光伏維運案場 8D 報告知識庫
+
+> 把每一次故障變成全公司的肌肉記憶：以 8D 記錄事實、以麥肯錫結構萃取知識，讓下一位維運工程師在 5 分鐘內找到根因與解法。
+
+結構化資料：
+- [kb.json](https://davidyeh51.github.io/pv-8d-management-platform/kb.json)
+
+案例 Markdown：
+- [PV-2026-SKP01 自發自用案場防逆流 (Zero-Export) 壓抑棄光 55.7%](https://davidyeh51.github.io/pv-8d-management-platform/rag/PV-2026-SKP01.md)
+- [KB-TPL-B01 電位誘發衰減 (PID) 造成陣列負極端組件功率衰退](https://davidyeh51.github.io/pv-8d-management-platform/rag/KB-TPL-B01.md)
+- [KB-TPL-B02 熱斑 (Hot Spot) 與旁路二極體失效導致組串失配](https://davidyeh51.github.io/pv-8d-management-platform/rag/KB-TPL-B02.md)
+- [KB-TPL-C01 直流連接器（MC4）混插與壓接不良導致燒熔](https://davidyeh51.github.io/pv-8d-management-platform/rag/KB-TPL-C01.md)
+- [KB-TPL-C02 雨後與清晨絕緣阻抗低（Riso）導致逆變器無法併網](https://davidyeh51.github.io/pv-8d-management-platform/rag/KB-TPL-C02.md)
+- [KB-TPL-A01 積塵與鳥糞污染造成全場發電量緩降：清洗週期最佳化](https://davidyeh51.github.io/pv-8d-management-platform/rag/KB-TPL-A01.md)
+- [KB-TPL-D01 逆變器過溫降額：散熱風扇與濾網堵塞](https://davidyeh51.github.io/pv-8d-management-platform/rag/KB-TPL-D01.md)
+- [KB-TPL-F01 監控通訊中斷與資料缺漏導致誤判與漏報](https://davidyeh51.github.io/pv-8d-management-platform/rag/KB-TPL-F01.md)
+- [KB-TPL-G01 颱風後支架螺栓鬆脫與組件位移：災後快速盤點](https://davidyeh51.github.io/pv-8d-management-platform/rag/KB-TPL-G01.md)

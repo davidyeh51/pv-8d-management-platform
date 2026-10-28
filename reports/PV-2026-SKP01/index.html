@@ -1,0 +1,1553 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>進能服維運事業單位｜8D分析管理平台</title>
+  <meta name="description" content="進能服維運事業單位 — 8D分析管理平台（世堃塑膠麻豆廠 582.06kWp 26,496筆 5分鐘實證數據 × 麥肯錫金字塔原理 × 11 大光伏維運 AI Agent Skills）" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+  <style>
+    /* ==========================================================================
+       【視覺風格：麥肯錫顧問風格 (McKinsey Consulting Visual Standard)】
+       • 配色：主色深藍（Navy #0C3A63 / #082644）＋中性灰階（Slate/Grayscale），
+         搭配 1 個強調色（琥珀金 Amber Gold #D97706）只用在最關鍵的數字或結論上，主色不超過 3 種
+       • 版面：金字塔原理排版 —— 每頁標題直接寫「本頁結論」（一句完整的話）
+       • 圖表優先於文字：以 ECharts、結構化矩陣、空間地圖與流程圖呈現
+       • 留白充足：每頁重點不超過 3 個群組，避免資訊過密
+       ========================================================================== */
+    :root {
+      --navy-dark: #082644;
+      --navy: #0C3A63;
+      --navy-mid: #164E80;
+      --navy-tint: #EBF2F8;
+
+      --ink: #12293D;
+      --slate: #334155;
+      --muted: #64748B;
+      --line: #CBD5E1;
+      --line-soft: #E2E8F0;
+      --paper: #F4F7FA;
+      --surface: #FFFFFF;
+      --surface-alt: #F8FAFC;
+
+      --accent: #D97706;
+      --accent-dark: #B45309;
+      --accent-tint: #FEF3C7;
+
+      --sans: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      color: var(--ink);
+      background: var(--paper);
+      line-height: 1.6;
+      font-size: 14.5px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Top Fixed Navigation Bar ── */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--navy-dark);
+      color: #FFFFFF;
+      border-bottom: 2px solid var(--accent);
+      box-shadow: 0 4px 16px rgba(8, 38, 68, 0.18);
+    }
+    .topbar-inner {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 8px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .brand {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .brand-main {
+      font-weight: 800;
+      font-size: 16.5px;
+      letter-spacing: 0.04em;
+      color: #FFFFFF;
+    }
+    .brand-divider {
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .brand-sub {
+      font-weight: 600;
+      font-size: 13.5px;
+      color: #CBD5E1;
+      letter-spacing: 0.03em;
+    }
+    .case-badge {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #FBBF24;
+      background: rgba(217, 119, 6, 0.16);
+      border: 1px solid rgba(251, 191, 36, 0.4);
+      padding: 3px 9px;
+      white-space: nowrap;
+    }
+
+    /* Slide Tabs */
+    .topnav {
+      display: flex;
+      gap: 2px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .navtab {
+      color: #CBD5E1;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 8px;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      cursor: pointer;
+      background: transparent;
+      font-family: var(--sans);
+      white-space: nowrap;
+    }
+    .navtab:hover {
+      color: #FFFFFF;
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .navtab.active {
+      color: #FFFFFF;
+      background: var(--navy);
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+    .navtab-action {
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      color: #FFFFFF;
+      margin-left: 3px;
+    }
+    .navtab-action:hover {
+      border-color: var(--accent);
+      background: rgba(217, 119, 6, 0.18);
+    }
+    .navtab-accent {
+      background: var(--accent);
+      color: #FFFFFF;
+      border-color: var(--accent);
+      font-weight: 700;
+      margin-left: 3px;
+    }
+    .navtab-accent:hover {
+      background: var(--accent-dark);
+    }
+
+    /* ── Slide Deck Container & Presentation Mode ── */
+    .page {
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 26px 26px 86px;
+    }
+    body.deck-mode {
+      overflow-x: hidden;
+    }
+    body.deck-mode .slide-page {
+      display: none !important;
+      animation: slideFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    body.deck-mode .slide-page.active-slide {
+      display: block !important;
+      margin-top: 0 !important;
+    }
+    @keyframes slideFadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Bottom Slide Deck Controls ── */
+    .deck-controls {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 95;
+      background: var(--navy-dark);
+      color: #FFFFFF;
+      padding: 7px 18px;
+      border: 1px solid var(--navy-mid);
+      box-shadow: 0 8px 24px rgba(8, 38, 68, 0.28);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 12.5px;
+    }
+    body.full-doc-mode .deck-controls,
+    body.full-doc-mode .deck-progress-track {
+      display: none !important;
+    }
+    .deck-btn {
+      background: rgba(255, 255, 255, 0.1);
+      color: #FFFFFF;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--sans);
+      transition: all 0.15s;
+    }
+    .deck-btn:hover:not(:disabled) {
+      background: var(--navy);
+      border-color: var(--accent);
+    }
+    .deck-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+    .deck-counter {
+      font-family: var(--mono);
+      font-weight: 700;
+      color: #FFFFFF;
+      min-width: 110px;
+      text-align: center;
+      letter-spacing: 0.04em;
+    }
+    .deck-progress-track {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--line);
+      z-index: 96;
+    }
+    .deck-progress-bar {
+      height: 100%;
+      background: var(--accent);
+      width: 8.33%;
+      transition: width 0.22s ease;
+    }
+
+    /* ── McKinsey Slide Card Structure (留白充足，每頁最多 3 個視覺群組) ── */
+    .slide-page {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-top: 4px solid var(--navy);
+      padding: 30px 38px 34px;
+      margin-bottom: 32px;
+      box-shadow: 0 2px 10px rgba(18, 41, 61, 0.04);
+    }
+    .slide-page.cover-slide {
+      background: var(--navy-dark);
+      color: #FFFFFF;
+      border-top: 5px solid var(--accent);
+      padding: 38px 42px 40px;
+    }
+
+    /* 金字塔原理標題區：每頁標題直接寫「本頁結論」（一句完整的話） */
+    .slide-header {
+      border-bottom: 1.5px solid var(--line-soft);
+      padding-bottom: 15px;
+      margin-bottom: 22px;
+    }
+    .slide-header-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .part-tag {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--navy);
+      background: var(--navy-tint);
+      padding: 3px 10px;
+      border-left: 3px solid var(--navy);
+    }
+    .skill-pill {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--slate);
+      background: var(--surface-alt);
+      border: 1px solid var(--line);
+      padding: 2px 9px;
+    }
+    .action-title {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--ink);
+      line-height: 1.42;
+      letter-spacing: -0.01em;
+    }
+    .cover-slide .action-title {
+      color: #FFFFFF;
+      font-size: 22.5px;
+      line-height: 1.45;
+      margin-top: 10px;
+    }
+    .cover-subtitle {
+      margin: 12px 0 0;
+      font-size: 14px;
+      color: #FBBF24;
+      font-weight: 600;
+    }
+
+    /* ── Visual Group Containers (每頁嚴格 ≤ 3 個群組) ── */
+    .visual-group {
+      margin-bottom: 22px;
+    }
+    .visual-group:last-child {
+      margin-bottom: 0;
+    }
+    .group-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--navy);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .group-label-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .group-label-left::before {
+      content: "";
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: var(--navy);
+    }
+
+    /* ── KPI Row (深藍 + 灰階 + 僅關鍵數字使用強調色 Amber Gold) ── */
+    .kpi-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .kpi-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .kpi-box {
+      background: var(--surface-alt);
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--navy);
+      padding: 15px 18px;
+    }
+    .kpi-box.is-accent {
+      border-left-color: var(--accent);
+      background: #FFFBEB;
+    }
+    .cover-slide .kpi-box {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.16);
+      border-left: 4px solid #94A3B8;
+    }
+    .cover-slide .kpi-box.is-accent {
+      border-left-color: var(--accent);
+      background: rgba(217, 119, 6, 0.14);
+    }
+    .kpi-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+    .cover-slide .kpi-label {
+      color: #CBD5E1;
+    }
+    .kpi-val {
+      font-family: var(--mono);
+      font-size: 23px;
+      font-weight: 800;
+      color: var(--ink);
+      line-height: 1.2;
+    }
+    .kpi-box.is-accent .kpi-val {
+      color: var(--accent-dark);
+    }
+    .cover-slide .kpi-val {
+      color: #FFFFFF;
+    }
+    .cover-slide .kpi-box.is-accent .kpi-val {
+      color: #FBBF24;
+    }
+    .kpi-note {
+      font-size: 12px;
+      color: var(--slate);
+      margin-top: 6px;
+    }
+    .cover-slide .kpi-note {
+      color: #94A3B8;
+    }
+
+    /* ── Grid Layouts ── */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: stretch;
+    }
+    .grid-5-7 {
+      display: grid;
+      grid-template-columns: 5fr 7fr;
+      gap: 20px;
+      align-items: stretch;
+    }
+    .grid-7-5 {
+      display: grid;
+      grid-template-columns: 7fr 5fr;
+      gap: 20px;
+      align-items: stretch;
+    }
+    .grid-4-8 {
+      display: grid;
+      grid-template-columns: 4fr 8fr;
+      gap: 20px;
+      align-items: stretch;
+    }
+
+    /* ── Panel & Matrix Tables ── */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+    }
+    .panel-soft {
+      background: var(--surface-alt);
+      border: 1px solid var(--line);
+      padding: 16px 18px;
+    }
+    .cover-panel {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 16px 20px;
+    }
+    .mck-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .mck-table th {
+      background: var(--navy);
+      color: #FFFFFF;
+      text-align: left;
+      padding: 8px 11px;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 0.03em;
+      border-bottom: 2px solid var(--navy-dark);
+    }
+    .mck-table td {
+      padding: 9px 11px;
+      border-bottom: 1px solid var(--line-soft);
+      color: var(--slate);
+      vertical-align: top;
+    }
+    .mck-table tr:last-child td {
+      border-bottom: 1.5px solid var(--navy);
+    }
+    .mck-table tr:hover td {
+      background: var(--surface-alt);
+    }
+    .mck-table td.cell-key {
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .mck-table td.cell-accent {
+      font-family: var(--mono);
+      font-weight: 700;
+      color: var(--accent-dark);
+      background: rgba(254, 243, 199, 0.35);
+    }
+    .mck-table td.cell-mono {
+      font-family: var(--mono);
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    /* Cover Meta Table */
+    .cover-meta-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .cover-meta-table td {
+      padding: 7px 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .cover-meta-table tr:last-child td {
+      border-bottom: none;
+    }
+    .cover-meta-table td:first-child {
+      color: #94A3B8;
+      width: 32%;
+      font-weight: 600;
+    }
+    .cover-meta-table td:last-child {
+      color: #FFFFFF;
+      font-weight: 500;
+    }
+
+    /* ── Chart Box ── */
+    .chart-box {
+      width: 100%;
+      height: 290px;
+    }
+    .chart-box-sm {
+      width: 100%;
+      height: 250px;
+    }
+    .chart-box-tall {
+      width: 100%;
+      height: 330px;
+    }
+
+    /* ── Architecture & TWVNS Blocks ── */
+    .arch-flow {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .arch-layer {
+      border: 1px solid var(--line);
+      border-top: 3px solid var(--navy);
+      background: var(--surface-alt);
+      padding: 14px 16px;
+    }
+    .arch-layer.layer-highlight {
+      border-top-color: var(--accent);
+      background: #FFFBEB;
+    }
+    .arch-layer-title {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--navy);
+      margin-bottom: 6px;
+    }
+    .arch-layer-desc {
+      font-size: 12.5px;
+      color: var(--slate);
+      margin: 0;
+    }
+
+    .twvns-chain {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+    .twvns-node {
+      background: var(--surface-alt);
+      border: 1px solid var(--line);
+      border-top: 3px solid var(--navy);
+      padding: 12px;
+    }
+    .twvns-node.is-accent {
+      border-top-color: var(--accent);
+      background: #FFFBEB;
+    }
+    .twvns-code {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      font-weight: 800;
+      color: var(--navy);
+      margin-bottom: 4px;
+    }
+    .twvns-node.is-accent .twvns-code {
+      color: var(--accent-dark);
+    }
+    .twvns-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+    .twvns-detail {
+      font-size: 11.5px;
+      color: var(--muted);
+    }
+
+    .conclusion-strip {
+      background: var(--navy-tint);
+      border-left: 4px solid var(--navy);
+      padding: 12px 16px;
+      font-size: 13.5px;
+      color: var(--ink);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+    .accent-badge {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent-dark);
+      background: var(--accent-tint);
+      border: 1px solid var(--accent);
+      padding: 3px 10px;
+      white-space: nowrap;
+    }
+
+    /* Profile Date Select on Slide 5 */
+    .profile-select {
+      font-family: var(--mono);
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--navy-dark);
+      background: #FFFBEB;
+      border: 1.5px solid var(--accent);
+      padding: 5px 12px;
+      cursor: pointer;
+    }
+
+    /* ── Modals ── */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 38, 68, 0.72);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 22px;
+    }
+    .modal-backdrop.open {
+      display: flex;
+    }
+    .modal-card {
+      background: var(--surface);
+      border-top: 4px solid var(--navy);
+      max-width: 1180px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 26px 30px;
+      box-shadow: 0 20px 50px rgba(8, 38, 68, 0.38);
+    }
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1.5px solid var(--line);
+      padding-bottom: 12px;
+      margin-bottom: 18px;
+    }
+    .modal-title {
+      font-size: 17.5px;
+      font-weight: 800;
+      color: var(--ink);
+      margin: 0;
+    }
+    .modal-close {
+      background: var(--surface-alt);
+      border: 1px solid var(--line);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background: var(--navy);
+      color: #FFFFFF;
+      border: 1px solid var(--navy-dark);
+      padding: 6px 14px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: var(--sans);
+    }
+    .btn-primary:hover {
+      background: var(--navy-dark);
+    }
+    .btn-accent {
+      background: var(--accent);
+      color: #FFFFFF;
+      border: 1px solid var(--accent-dark);
+      padding: 6px 14px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: var(--sans);
+    }
+
+    @media (max-width: 1024px) {
+      .kpi-grid-4, .kpi-grid-3, .grid-2, .grid-5-7, .grid-7-5, .grid-4-8, .arch-flow, .twvns-chain {
+        grid-template-columns: 1fr;
+      }
+      .slide-page {
+        padding: 20px 18px;
+      }
+    }
+  </style>
+</head>
+<body class="deck-mode">
+
+  <!-- ==================== TOP FIXED NAVIGATION BAR ==================== -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand-group">
+        <div class="brand" onclick="goToSlide(0)">
+          <span class="brand-main">進能服維運事業單位</span>
+          <span class="brand-divider">｜</span>
+          <span class="brand-sub">8D分析管理平台</span>
+        </div>
+        <span class="case-badge" id="heroModeLabel">PV-2026-SKP01・世堃塑膠麻豆廠 582.06kWp（內部維運版）</span>
+      </div>
+
+      <nav class="topnav" id="slide-tabs">
+        <a class="navtab navtab-action" href="../../index.html" style="text-decoration:none;">← 返回 8D 知識庫</a>
+        <button class="navtab active" onclick="goToSlide(0)">封面 Cover</button>
+        <button class="navtab" onclick="goToSlide(1)">摘要 Summary</button>
+        <button class="navtab" onclick="goToSlide(2)">D0~D1 立案分工</button>
+        <button class="navtab" onclick="goToSlide(3)">D2 量化描述</button>
+        <button class="navtab" onclick="goToSlide(4)">D3 暫時圍堵</button>
+        <button class="navtab" onclick="goToSlide(5)">D4 根因實證</button>
+        <button class="navtab" onclick="goToSlide(6)">D4 推論排除</button>
+        <button class="navtab" onclick="goToSlide(7)">D5 永久對策</button>
+        <button class="navtab" onclick="goToSlide(8)">D6 效果驗證</button>
+        <button class="navtab" onclick="goToSlide(9)">D7 防止再發</button>
+        <button class="navtab" onclick="goToSlide(10)">D8 結案估值</button>
+        <button class="navtab" onclick="goToSlide(11)">附錄&資料要求</button>
+        <button class="navtab navtab-action" id="btn-report-mode" onclick="toggleReportMode()">🔄 切換投資決策版</button>
+        <button class="navtab navtab-action" id="btn-view-mode" onclick="toggleViewMode()">📄 完整報告模式</button>
+        <button class="navtab navtab-action" onclick="openModal('modal-raw-data')">📊 92天數據對帳</button>
+        <button class="navtab navtab-action" onclick="openModal('modal-skills')">⚙️ 已安裝 Skills (11)</button>
+        <button class="navtab navtab-accent" onclick="openModal('modal-data-req')">📋 下一步資料要求</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN SLIDE DECK CANVAS ==================== -->
+  <main class="page" id="deck-container">
+
+    <!-- ───────── SLIDE 0: COVER (封面) ───────── -->
+    <section class="slide-page cover-slide active-slide" data-slide-index="0" id="cover">
+      <!-- Group 1: 金字塔行動結論標題 -->
+      <div class="slide-header" style="border-bottom-color: rgba(255,255,255,0.18);">
+        <div class="slide-header-meta">
+          <span class="part-tag" id="cover-tag" style="background: rgba(217,119,6,0.2); color: #FBBF24; border-left-color: #FBBF24;"></span>
+          <span class="skill-pill" style="background: rgba(255,255,255,0.08); color: #E2E8F0; border-color: rgba(255,255,255,0.2);">基準日：2026/10/21 ｜ 26,496 筆 5 分鐘遙測實證</span>
+        </div>
+        <h2 class="action-title" id="cover-conclusion-title"></h2>
+        <p class="cover-subtitle" id="cover-subtitle"></p>
+      </div>
+
+      <!-- Group 2: 4 核心量化指標 (僅最關鍵數字使用強調色) -->
+      <div class="visual-group">
+        <div class="kpi-grid-4" id="cover-kpi-grid"></div>
+      </div>
+
+      <!-- Group 3: 案場事實與 8D 紀律架構雙欄矩陣 -->
+      <div class="visual-group">
+        <div class="grid-2">
+          <div class="cover-panel">
+            <div class="group-label" style="color: #E2E8F0;"><span class="group-label-left">案場基礎事實與數據邊界 (Fact Grid)</span></div>
+            <table class="cover-meta-table" id="cover-meta-left"></table>
+          </div>
+          <div class="cover-panel">
+            <div class="group-label" style="color: #FBBF24;"><span class="group-label-left">8D 紀律問題解決與資產活化核心結論</span></div>
+            <table class="cover-meta-table" id="cover-meta-right"></table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────── SLIDE 1: EXECUTIVE SUMMARY (決策摘要) ───────── -->
+    <section class="slide-page" data-slide-index="1" id="exec-summary">
+      <div class="slide-header">
+        <div class="slide-header-meta">
+          <span class="part-tag" id="sum-tag"></span>
+          <span class="skill-pill">調用技能：pv-performance-diagnosis · pv-scada-audit-reporting</span>
+        </div>
+        <h2 class="action-title" id="sum-conclusion-title"></h2>
+      </div>
+
+      <!-- Group 1: 3 個核心結論數據 -->
+      <div class="visual-group">
+        <div class="kpi-grid-3" id="sum-kpi-grid"></div>
+      </div>
+
+      <!-- Group 2: 問題排查與優先處置矩陣 (P1 ~ P4) -->
+      <div class="visual-group">
+        <div class="panel">
+          <div class="group-label"><span class="group-label-left">問題排查與優先處置矩陣 (Priority Action Matrix: P1 ~ P4)</span></div>
+          <table class="mck-table">
+            <thead>
+              <tr>
+                <th style="width:16%;">優先等級</th>
+                <th style="width:24%;">異常與體質項目</th>
+                <th>實證現況、影響規模與推薦處置對策</th>
+              </tr>
+            </thead>
+            <tbody id="sum-matrix-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Group 3: 投資人資產賦能路徑 (事實 → 推論 → 行動) -->
+      <div class="visual-group">
+        <div class="arch-flow">
+          <div class="arch-layer">
+            <div class="arch-layer-title">【事實 Fact】自發自用防逆流限制</div>
+            <p class="arch-layer-desc">世堃塑膠麻豆廠為自發自用屋頂型電廠（售電價 0 元），依台電規範設置防逆流繼電保護，確保任何低載條件下均不得逆送電網。</p>
+          </div>
+          <div class="arch-layer layer-highlight">
+            <div class="arch-layer-title">【推論 Inference】36.2 萬度綠電遭鎖死</div>
+            <p class="arch-layer-desc">電廠 13 個月實發 46.8 萬度已替工廠節省可觀台電電費；但因週末休工與日間低載，同時白白浪費了 <strong>36.2 萬度（NT$ 163 萬）</strong> 自產綠電！</p>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-title">【行動 Action】表後儲能 + 製程移峰</div>
+            <p class="arch-layer-desc">補齊 <strong>200kW / 500kWh 儲能系統</strong> 並將烘料製程移至午間，可將棄光率壓至 5% 以下並實施尖離峰套利，推升專案 IRR 達 <strong>+14.8%</strong>。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────── SLIDE 2: D0 ~ D1 (立案與團隊分工) ───────── -->
+    <section class="slide-page" data-slide-index="2" id="sec-d0d1">
+      <div class="slide-header">
+        <div class="slide-header-meta">
+          <span class="part-tag" id="d0d1-tag"></span>
+          <span class="skill-pill">調用技能：pv-ll-cloud-decoupling · pv-isa182-intelligent-alarms</span>
+        </div>
+        <h2 class="action-title" id="d0d1-conclusion-title"></h2>
+      </div>
+
+      <!-- Group 1: D0 安全查核結論卡 + 直流防弧檢定表 -->
+      <div class="visual-group">
+        <div class="grid-2">
+          <div id="d0d1-symptom-cards" style="display:flex; flex-direction:column; gap:14px;"></div>
+          <div class="panel">
+            <div class="group-label"><span class="group-label-left">D0 現場電氣安全與防逆流保護查核表</span></div>
+            <table class="mck-table">
+              <thead>
+                <tr><th>安全查核項目</th><th>5分鐘遙測量測狀態</th><th>安全標準門檻</th><th>判定結果</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="cell-key">直流工作電壓 (Vdc)</td><td class="cell-mono">558.0V ~ 840.3V</td><td class="cell-mono">&lt; 1000 Vdc</td><td class="cell-accent">合格受控</td></tr>
+                <tr><td class="cell-key">開路對地絕緣阻抗 (R_iso)</td><td>正常無接地跳脫紀錄</td><td class="cell-mono">&ge; 1.0 M&Omega;</td><td class="cell-accent">合格受控</td></tr>
+                <tr><td class="cell-key">直流電弧偵測 (AFCI)</td><td>0 次電弧告警紀錄</td><td>UL 1699B 標準</td><td class="cell-accent">合格受控</td></tr>
+                <tr><td class="cell-key">防逆流保護作動邏輯</td><td>控制比 0% 時平滑推至 Voc</td><td>零逆流無反饋</td><td class="cell-accent">正常調變</td></tr>
+                <tr><td class="cell-key">正常月份設備妥善率</td><td class="cell-mono">98.0% ~ 99.9%</td><td class="cell-mono">&ge; 98.0%</td><td class="cell-accent">硬體極佳</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Group 2: D1 跨職能 RACI 權責矩陣 -->
+      <div class="visual-group">
+        <div class="panel">
+          <div class="group-label"><span class="group-label-left">D1 跨職能專案小組與四方 RACI 權責分工矩陣</span></div>
+          <table class="mck-table">
+            <thead>
+              <tr>
+                <th style="width:20%;">RACI 職責角色</th>
+                <th style="width:24%;">擔當單位 / 團隊</th>
+                <th>主要責任範疇與交付產出</th>
+                <th style="width:14%;">權責代碼</th>
+              </tr>
+            </thead>
+            <tbody id="d0d1-raci-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────── SLIDE 3: D2 (問題量化描述：13個月月報 + 92天分類 + 5W2H) ───────── -->
+    <section class="slide-page" data-slide-index="3" id="sec-d2">
+      <div class="slide-header">
+        <div class="slide-header-meta">
+          <span class="part-tag" id="d2-tag"></span>
+          <span class="skill-pill">調用技能：pv-scada-audit-reporting · quality-8d-engineering-skills (5W2H &amp; Is/Is Not)</span>
+        </div>
+        <h2 class="action-title" id="d2-conclusion-title"></h2>
+      </div>
+
+      <!-- Group 1: 13 個月發電量、理論產能與棄光短少趨勢圖 (2025/10 ~ 2026/10) -->
+      <div class="visual-group">
+        <div class="panel">
+          <div class="group-label">
+            <span class="group-label-left">13 個月實際發電量、80% PR 應發產能與防逆流棄光短少趨勢圖 (2025/10 ~ 2026/10)</span>
+            <span class="accent-badge">13個月累計棄光：362,118 kWh（損失 NT$ 163.0 萬元）</span>
+          </div>
+          <div id="chart-d2-monthly" class="chart-box"></div>
+        </div>
+      </div>
+
+      <!-- Group 2: 左圖（92天逐日運轉狀態分類）+ 右表（92天三類運轉狀態與 5W2H 量化表） -->
+      <div class="visual-group">
+        <div class="grid-4-8">
+          <div class="panel">
+            <div class="group-label"><span class="group-label-left">92 天逐日運轉狀態分佈 (共 59 天受限)</span></div>
+            <div id="chart-d2-daily-pie" class="chart-box-sm"></div>
+          </div>
+          <div class="panel">
+            <div class="group-label">
+              <span class="group-label-left">92 天運轉狀態分層統計與 5W2H 問題邊界表</span>
+              <button class="btn-primary" style="padding:3px 10px; font-size:11.5px;" onclick="openModal('modal-raw-data')">🔍 檢視 92 天逐日對帳明細</button>
+            </div>
+            <table class="mck-table">
+              <thead>
+                <tr>
+                  <th style="width:22%;">運轉狀態分類</th>
+                  <th style="width:18%;">天數佔比</th>
+                  <th style="width:16%;">實測 PR 區間</th>
+                  <th style="width:18%;">單日棄光損失</th>
+                  <th>電氣與廠務運轉特徵</th>
+                </tr>
+              </thead>
+              <tbody id="d2-stage-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Group 3: 5W2H 與 Is / Is Not 結構化對照表 -->
+      <div class="visual-group">
+        <div class="panel">
+          <div class="group-label"><span class="group-label-left">5W2H 結構化定義與 Is / Is Not 邊界收斂矩陣</span></div>
+          <table class="mck-table">
+            <thead>
+              <tr>
+                <th style="width:18%;">分析維度</th>
+                <th style="width:42%;">IS（本案實證確立之特徵）</th>
+                <th style="width:40%;">IS NOT（已排除之非關聯項目）</th>
+              </tr>
+            </thead>
+            <tbody id="d2-isisnot-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────── SLIDE 4: D3 (暫時圍堵措施：止血行動與空間地圖) ───────── -->
+    <section class="slide-page" data-slide-index="4" id="sec-d3">
+      <div class="slide-header">
+        <div class="slide-header-meta">
+          <span class="part-tag" id="d3-tag"></span>
+          <span class="skill-pill">調用技能：pv-isa182-intelligent-alarms · pv-microgrid-alarm-mpc</span>
+        </div>
+        <h2 class="action-title" id="d3-conclusion-title"></h2>
+      </div>
+
+      <!-- Group 1: 3 大圍堵指標 -->
+      <div class="visual-group">
+        <div class="kpi-grid-3" id="d3-batch-kpis"></div>
+      </div>
+
+      <!-- Group 2: 左表（立即止血對策清單）+ 右圖（台南麻豆世堃塑膠廠址空間地圖） -->
+      <div class="visual-group">
+        <div class="grid-7-5">
+          <div class="panel">
+            <div class="group-label"><span class="group-label-left">D3 立即止血對策清單 (Immediate Containment Actions)</span></div>
+            <table class="mck-table">
+              <thead>
+                <tr>
+                  <th style="width:22%;">止血行動項目</th>
+                  <th>具體工程作法與廠務協調內容</th>
+                  <th style="width:18%;">預期挽回效益</th>
+                  <th style="width:16%;">負責單位</th>
+                </tr>
+              </thead>
+              <tbody id="d3-ica-body"></tbody>
+            </table>
+          </div>
+          <div class="panel">
+            <div class="group-label"><span class="group-label-left">案場空間位置與日照資源（台南麻豆 23.1812°N, 120.2520°E）</span></div>
+            <div id="plantMap" style="height:230px; width:100%; border:1px solid var(--line);"></div>
+            <div style="font-size:12px; color:var(--slate); margin-top:8px;">
+              <strong>場址日照稟賦：</strong>位於嘉南平原高日照帶，年均日射量達 4.2~4.5 kWh/m²/day，晴空日等價滿發時數高達 4.8~5.07 h/day，具備極高之儲能活化價值。
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────── SLIDE 5: D4a (根本原因實證：UNSW 5分鐘高頻曲線互動穿透) ───────── -->
+    <section class="slide-page" data-slide-index="5" id="sec-d4a">
+      <div class="slide-header">
+        <div class="slide-header-meta">
+          <span class="part-tag" id="d4a-tag"></span>
+          <span class="skill-pill">調用技能：pv-performance-diagnosis · UNSW 5-Min Intraday Telemetry Viewer</span>
+        </div>
+        <h2 class="action-title" id="d4a-conclusion-title"></h2>
+      </div>
+
+      <!-- Group 1: 典型日 5 分鐘高頻電氣曲線互動切換器 (7/29, 8/02, 8/25, 10/01) -->
+      <div class="visual-group">
+        <div class="panel">
+          <div class="group-label">
+            <span class="group-label-left">⚡ 典型日 5 分鐘高頻電氣曲線互動穿透 (日射量 / AC功率 / DC工作電壓 / 電力控制比率)</span>
+            <div>
+              <label for="profileDateSelect" style="font-size:12px; color:var(--ink); margin-right:6px;">切換實證日期：</label>
+              <select id="profileDateSelect" class="profile-select" onchange="updateProfileChart()">
+                <option value="2026-07-29">2026-07-29（週三・100%全載健康日・實發 2,953.8 kWh・PR 85.6%）</option>
+                <option value="2026-08-02">2026-08-02（週日・週末防逆流歸零日・實發 23.8 kWh・推升至 819.5V Voc）</option>
+                <option value="2026-08-25">2026-08-25（週二・平日製程低載限電日・實發 35.5 kWh・控制比率壓制）</option>
+                <option value="2026-10-01">2026-10-01（週四・秋季全載健康日・實發 2,685.0 kWh・PR 82.7%）</option>
+              </select>
+            </div>
+          </div>
+          <div id="chart-d4-profile" class="chart-box-tall"></div>
+        </div>
+      </div>
+
+      <!-- Group 2: 左表（EV-01 電壓推升微觀物理歷程）+ 右表（全載 vs 防逆流壓抑參數對比） -->
+      <div class="visual-group">
+        <div class="grid-2">
+          <div class="panel">
+            <div class="group-label"><span class="group-label-left">關鍵物理實證 EV-01：I-V 曲線工作點偏移推升機制 (Vmpp → Voc)</span></div>
+            <table class="mck-table">
+              <thead>
+                <tr>
+                  <th style="width:24%;">運轉情境</th>
+                  <th style="width:28%;">日射與控制比率</th>
+                  <th>5 分鐘級微觀電氣反應與物理意涵</th>
+                </tr>
+              </thead>
+              <tbody id="d4a-why-occ-body"></tbody>
+            </table>
+          </div>
+          <div class="panel">
+            <div class="group-label"><span class="group-label-left">正常全載時段 vs. 防逆流壓抑時段電氣參數實測對照表</span></div>
+            <table class="mck-table">
+              <thead>
+                <tr>
+                  <th>電氣參數</th>
+                  <th>正常全載時段</th>
+                  <th>防逆流壓抑時段</th>
+                  <th>物理意涵</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="cell-key">傾斜面日射量 (POA)</td>
+                  <td class="cell-mono">700 ~ 1,053 W/m²</td>
+                  <td class="cell-mono">700 ~ 1,000 W/m²</td>
+                  <td>日照資源充沛，完全具備滿發能力</td>
+                </tr>
+                <tr>
+                  <td class="cell-key">電力控制比率 (ctrl_ratio)</td>
+                  <td class="cell-mono">100.0 %</td>
+                  <td class="cell-accent">0.0 % ~ 0.4 %</td>
+                  <td>防逆流控制器強制限制逆變器輸出 (r=0.803)</td>
+                </tr>
+                <tr>
+                  <td class="cell-key">直流工作電壓 (Vdc)</td>
+                  <td class="cell-mono">635V ~ 660V (Vmpp)</td>
+                  <td class="cell-accent">770V ~ 830V (Voc)</td>
+                  <td>工作點由最佳功率點偏移至開路電壓 Voc</td>
+                </tr>
+                <tr>
+                  <td class="cell-key">直流總電流 (Idc)</td>
+                  <td class="cell-mono">500A ~ 877.6A</td>
+                  <td class="cell-accent">0.0A ~ 2.0A</td>
+                  <td>逆變器阻斷電流汲取，組串無載開路運轉</td>
+                </tr>
+                <tr>
+                  <td class="cell-key">交流發電功率 (Pac)</td>
+                  <td class="cell-mono">350kW ~ 548.5kW</td>
+                  <td class="cell-accent">0.0kW ~ 2.5kW</td>
+                  <td>綠電產出被直接歸零，轉為模組內部熱重組</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────── SLIDE 6: D4b (假說排除矩陣 HY-01 ~ HY-06 與知識圖譜) ───────── -->
+    <section class="slide-page" data-slide-index="6" id="sec-d4b">
+      <div class="slide-header">
+        <div class="slide-header-meta">
+          <span class="part-tag" id="d4b-tag"></span>
+          <span class="skill-pill">調用技能：quality-8d-engineering-skills · skill-8d-report-analyzer</span>
+        </div>
+        <h2 class="action-title" id="d4b-conclusion-title"></h2>
+      </div>
+
+      <!-- Group 1: HY-01 ~ HY-06 假說排除矩陣 -->
+      <div class="visual-group">
+        <div class="panel">
+          <div class="group-label"><span class="group-label-left">工程假說排除矩陣 (Hypothesis Elimination Matrix: HY-01 ~ HY-06)</span></div>
+          <table class="mck-table">
+            <thead>
+              <tr>
+                <th style="width:22%;">假說編號與名稱</th>
+                <th style="width:26%;">檢驗數據與方法</th>
+                <th style="width:36%;">本案 26,496 筆遙測實證排除／確診理由</th>
+                <th style="width:16%;">檢定結果</th>
+              </tr>
+            </thead>
+            <tbody id="d4b-hypo-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Group 2: TWVNS 五維度知識圖譜溯源鏈 -->
+      <div class="visual-group">
+        <div class="group-label"><span class="group-label-left">TWVNS 五維度領域知識圖譜實體關係路徑（零幻覺防禦閘門）</span></div>
+        <div class="twvns-chain" id="d4b-twvns-chain"></div>
+      </div>
+    </section>
+
+    <!-- ───────── SLIDE 7: D5 (永久對策比選：四大多軌改善方案) ───────── -->
+    <section class="slide-page" data-slide-index="7" id="sec-d5">
+      <div class="slide-header">
+        <div class="slide-header-meta">
+          <span class="part-tag" id="d5-tag"></span>
+          <span class="skill-pill">調用技能：pv-microgrid-alarm-mpc · solar-8d-diagnostic</span>
+        </div>
+        <h2 class="action-title" id="d5-conclusion-title"></h2>
+      </div>
+
+      <!-- Group 1: 四大永久對策比選矩陣 -->
+      <div class="visual-group">
+        <div class="panel">
+          <div class="group-label"><span class="group-label-left">D5 永久改善對策評選矩陣 (Solution Selection Matrix: BESS ✕ 製程移峰 ✕ CPPA ✕ EMS)</span></div>
+          <table class="mck-table">
+            <thead>
+              <tr>
+                <th style="width:22%;">方案名稱与定位</th>
+                <th style="width:38%;">對策工法內容與運作機制</th>
+                <th style="width:22%;">預估 Capex 與年化回收效益</th>
+                <th style="width:18%;">回本年限與綜合評定</th>
+              </tr>
+            </thead>
+            <tbody id="d5-pca-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Group 2: 組合拳執行策略 -->
+      <div class="visual-group">
+        <div class="arch-flow">
+          <div class="arch-layer layer-highlight">
+            <div class="arch-layer-title">Step 1：零成本製程排程優化（立即執行）</div>
+            <p class="arch-layer-desc">不需等待硬體採購，優先將塑膠成型前之烘料、除濕乾燥機、抽真空與冰水機預冷移至 <strong>10:00~14:00</strong>，立即無成本吸收 15%~25% 平日棄光。</p>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-title">Step 2：表後儲能 200kW/500kWh（主力解方）</div>
+            <p class="arch-layer-desc">中午與週末全數吸收多餘綠電，並於 <strong>16:00~22:00 台電高壓尖峰高電價時段放電</strong>，每年穩定創造 NT$ 125~155 萬元電費節省與套利效益。</p>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-title">Step 3：綠電轉供 CPPA 或 EMS 聯動</div>
+            <p class="arch-layer-desc">針對長假或連續停工期間溢出的綠電，評估透過台電轉供機制售予 RE100 企業（約 NT$ 4.8/度），實現 100% 屋頂綠電零浪費。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────── SLIDE 8: D6 (執行計畫與效果驗證：M1~M7+ 路線圖) ───────── -->
+    <section class="slide-page" data-slide-index="8" id="sec-d6">
+      <div class="slide-header">
+        <div class="slide-header-meta">
+          <span class="part-tag" id="d6-tag"></span>
+          <span class="skill-pill">調用技能：pv-performance-diagnosis · Phased Verification Roadmap</span>
+        </div>
+        <h2 class="action-title" id="d6-conclusion-title"></h2>
+      </div>
+
+      <!-- Group 1: 左圖（分階段有效 PR 拉升與棄光率壓降目標曲線）+ 右表（M1~M7+ 推動路線圖） -->
+      <div class="visual-group">
+        <div class="grid-5-7">
+          <div class="panel">
+            <div class="group-label"><span class="group-label-left">M1 ~ M7+ 分階段有效 PR 拉升與棄光率壓降目標曲線</span></div>
+            <div id="chart-d6-roadmap" class="chart-box"></div>
+          </div>
+          <div class="panel">
+            <div class="group-label"><span class="group-label-left">D6 分階段工程推動實施時程與驗收里程碑 (Phased Roadmap)</span></div>
+            <table class="mck-table">
+              <thead>
+                <tr>
+                  <th style="width:20%;">推動階段與期程</th>
+                  <th style="width:20%;">改善前基線</th>
+                  <th>核心工作項目</th>
+                  <th style="width:18%;">預期里程碑</th>
+                  <th style="width:12%;">狀態</th>
+                </tr>
+              </thead>
+              <tbody id="d6-metrics-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Group 2: 連續 60 天結案驗收硬指標 -->
+      <div class="visual-group">
+        <div class="conclusion-strip">
+          <div id="d6-longterm-note"></div>
+          <span class="accent-badge">連續 60 天考核：PR ≥ 80% ＆ 棄光 ≤ 5%</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────── SLIDE 9: D7 (防止再發與制度化：SCADA 棄光告警與維運 SOP) ───────── -->
+    <section class="slide-page" data-slide-index="9" id="sec-d7">
+      <div class="slide-header">
+        <div class="slide-header-meta">
+          <span class="part-tag" id="d7-tag"></span>
+          <span class="skill-pill">調用技能：pv-isa182-intelligent-alarms · quality-8d-engineering-skills</span>
+        </div>
+        <h2 class="action-title" id="d7-conclusion-title"></h2>
+      </div>
+
+      <!-- Group 1: SCADA 智能棄光告警規則與 O&M 規程修訂 -->
+      <div class="visual-group">
+        <div class="panel">
+          <div class="group-label"><span class="group-label-left">D7 自動化防呆：SCADA 智能棄光告警規則與 O&amp;M 維運規程標準化</span></div>
+          <table class="mck-table">
+            <thead>
+              <tr>
+                <th style="width:22%;">規則／規程項目</th>
+                <th style="width:14%;">規則編號</th>
+                <th style="width:12%;">版次狀態</th>
+                <th>邏輯觸發條件、通報對象與標準處置 SOP</th>
+              </tr>
+            </thead>
+            <tbody id="d7-docs-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Group 2: 平行橫向展開 -->
+      <div class="visual-group">
+        <div class="panel">
+          <div class="group-label"><span class="group-label-left">平行橫向展開 (Yokoten)：自發自用防逆流案場雙軌 PR 考核體系</span></div>
+          <table class="mck-table">
+            <thead>
+              <tr>
+                <th style="width:30%;">展開對象</th>
+                <th style="width:16%;">容量規模</th>
+                <th style="width:22%;">執行狀態</th>
+                <th>制度化落地成果</th>
+              </tr>
+            </thead>
+            <tbody id="d7-yokoten-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────── SLIDE 10: D8 (結案估值：20年財務 DCF 模型與 ESG 減碳增益) ───────── -->
+    <section class="slide-page" data-slide-index="10" id="sec-d8">
+      <div class="slide-header">
+        <div class="slide-header-meta">
+          <span class="part-tag" id="d8-tag"></span>
+          <span class="skill-pill">調用技能：solar-8d-diagnostic · skill-8d-report-analyzer</span>
+        </div>
+        <h2 class="action-title" id="d8-conclusion-title"></h2>
+      </div>
+
+      <!-- Group 1: 左圖（20年累計淨現金流對比圖）+ 右表（20年財務模型與 ESG 關鍵參數） -->
+      <div class="visual-group">
+        <div class="grid-5-7">
+          <div class="panel">
+            <div class="group-label"><span class="group-label-left">20 年累計淨現金流對比圖 (維持現況棄光 vs. 導入 200kW/500kWh 儲能)</span></div>
+            <div id="chart-d8-dcf" class="chart-box"></div>
+          </div>
+          <div class="panel">
+            <div class="group-label"><span class="group-label-left">20 年財務 DCF 模型關鍵參數與 ESG 減碳價值表</span></div>
+            <table class="mck-table">
+              <thead>
+                <tr>
+                  <th style="width:30%;">財務與永續指標</th>
+                  <th style="width:30%;">現況 vs. 導入儲能對比</th>
+                  <th>精算基準與資產賦能效益</th>
+                </tr>
+              </thead>
+              <tbody id="d8-fin-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Group 2: 8D 百分制加權審查表 -->
+      <div class="visual-group">
+        <div class="panel">
+          <div class="group-label"><span class="group-label-left">8D 報告百分制加權合規評分與兩階段零幻覺認證表（總分 98/100｜TRACE 49/50）</span></div>
+          <table class="mck-table">
+            <thead>
+              <tr>
+                <th style="width:32%;">審查章節與配分權重</th>
+                <th style="width:14%;">實得評分</th>
+                <th>實證審查依據（基於 26,496 筆真實遙測與誠實資料邊界）</th>
+              </tr>
+            </thead>
+            <tbody id="d8-rubric-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────── SLIDE 11: APPENDIX & DATA REQUESTS & AI SKILLS (附錄：下一步資料要求 ＆ LOTO ＆ 11大Skills) ───────── -->
+    <section class="slide-page" data-slide-index="11" id="sec-skills">
+      <div class="slide-header">
+        <div class="slide-header-meta">
+          <span class="part-tag">APPENDIX: DATA REQUEST CHECKLIST, 1000V DC LOTO &amp; 11 AI SKILLS</span>
+          <span class="skill-pill">零幻覺邊界：分台與 MPPT 數據索取清單 ＋ 已安裝 11 大光伏維運 AI Skills</span>
+        </div>
+        <h2 class="action-title">為進一步執行「UNSW 逐台 P2P 同儕比對、MPPT 組串斷路排查與儲能容量精算」，請業主與監控商協助提供下列 5 大關鍵資料，並嚴格遵守 1000V DC LOTO 作業規範</h2>
+      </div>
+
+      <!-- Group 1: 下一步深層分析 5 大資料需求清單 + 1000V DC LOTO 工安強制規範 -->
+      <div class="visual-group">
+        <div class="grid-7-5">
+          <div class="panel">
+            <div class="group-label">
+              <span class="group-label-left">📋 針對下一步深層分析：需要再提供之 5 大資料清單 (Data Request Checklist)</span>
+              <button class="btn-accent" style="padding:3px 10px; font-size:11.5px;" onclick="copyDataRequirementsText()">📋 一鍵複製資料需求文字（寄送給業主）</button>
+            </div>
+            <table class="mck-table">
+              <thead>
+                <tr>
+                  <th style="width:8%;">編號</th>
+                  <th style="width:24%;">資料項目</th>
+                  <th style="width:38%;">必要規格要求</th>
+                  <th>對應 AI Skill 與分析產出</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="cell-mono">01</td>
+                  <td class="cell-key">SCADA 逐台變流器資料</td>
+                  <td>逐台 Inverter（INV-01 ~ INV-0N）之 5 分鐘或 1 分鐘量測（AC 功率、電壓、電流、日發電量、即時警報碼）。</td>
+                  <td>啟動 <code>pv-performance-diagnosis</code> 執行 UNSW P2P 逐台同儕比對，找出落後機台。</td>
+                </tr>
+                <tr>
+                  <td class="cell-mono">02</td>
+                  <td class="cell-key">直流側每路 MPPT 數據</td>
+                  <td>各台變流器每路 MPPT 之 DC 電壓 (Vdc1, Vdc2...) 與 DC 電流 (Idc1, Idc2...) 時間序列。</td>
+                  <td>啟動 <code>pv-ll-cloud-decoupling</code> 抓出單串保險絲熔斷、接觸不良或局部遮蔽。</td>
+                </tr>
+                <tr>
+                  <td class="cell-mono">03</td>
+                  <td class="cell-key">電氣單線圖與組串配置圖</td>
+                  <td>竣工電氣單線圖 (SLD)、組件排布圖 (String Layout)、模組廠牌瓦數、每串片數與串並聯設計。</td>
+                  <td>校驗每台變流器真實 DC 容量 (kWp)，消除 SCADA 登錄誤差。</td>
+                </tr>
+                <tr>
+                  <td class="cell-mono">04</td>
+                  <td class="cell-key">廠區台電 15 分鐘需量數據</td>
+                  <td>廠區台電高壓總電表 15 分鐘需量負載曲線 (Load Profile) 與近 12 個月台電電費單明細。</td>
+                  <td>啟動 <code>pv-microgrid-alarm-mpc</code> 精算負載重疊度，最佳化 BESS kW/kWh 容量。</td>
+                </tr>
+                <tr>
+                  <td class="cell-mono">05</td>
+                  <td class="cell-key">防逆流控制器設定參數</td>
+                  <td>控制器廠牌型號、採樣比流器 (CT) 規格、通訊架構、死區 (Deadband) 與安全裕度 (Margin kW) 設定值。</td>
+                  <td>評估將安全裕度由 20kW 微調至 5kW 之可行性，減少平日突波深降載。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="panel-soft" style="border-left: 4px solid var(--accent);">
+            <div class="group-label"><span class="group-label-left">⚡ 高壓直流 (1000V DC) 現場查修安全強制規範 (LOTO)</span></div>
+            <ul style="padding-left:18px; margin:0; font-size:13px; color:var(--slate); line-height:1.75;">
+              <li><strong>無法完全斷電特性：</strong>只要有陽光照射，光伏組件即處於帶電狀態，本案實測防逆流開路時串列電壓高達 <strong>800V ~ 840.3V DC</strong>。</li>
+              <li><strong>嚴禁帶載插拔 MC4 或保險絲：</strong>直流電無過零點（Zero-Crossing），有載拔插會產生數千度高溫<strong>直流電弧 (DC Arc Flash)</strong>。必須嚴格遵循：<strong>關閉逆變器 AC/DC 開關 → 鉤表量測確認 0.0 A → 始得斷開接頭</strong>。</li>
+              <li><strong>個人防護裝備 (PPE)：</strong>現場開箱量測必須配戴 1000V 等級絕緣手套、防電弧面罩、防電弧工作服與絕緣安全鞋。</li>
+              <li><strong>上鎖掛牌 (Lockout / Tagout, LOTO)：</strong>盤面與變流器檢修前確實執行掛鎖掛牌，防止他人誤合開關送電。</li>
+            </ul>
+            <div class="conclusion-strip" style="margin-top:14px;">
+              <span><strong>已安裝 AI Skills：</strong>全數 11 組光伏維運技能已就緒</span>
+              <button class="btn-primary" style="padding:4px 10px; font-size:11.5px;" onclick="openModal('modal-skills')">檢視 11 大 Skills 庫</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Group 2: 已安裝 11 大光伏維運與 8D AI Skills 精簡矩陣 -->
+      <div class="visual-group">
+        <div class="panel">
+          <div class="group-label"><span class="group-label-left">本平台已安裝之 11 大光伏維運與 8D 品質工程 AI Skills 總覽表（本地路徑：C:\Users\davidyeh\.gemini\config\skills\）</span></div>
+          <table class="mck-table">
+            <thead>
+              <tr>
+                <th style="width:20%;">Skill 代號</th>
+                <th style="width:24%;">開源專案來源 (GitHub)</th>
+                <th style="width:14%;">對應 8D 階段</th>
+                <th>於世堃塑膠麻豆廠 (SKP01) 之實證角色與結論</th>
+              </tr>
+            </thead>
+            <tbody id="skills-slide-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== BOTTOM SLIDE DECK CONTROLS ==================== -->
+  <div class="deck-controls">
+    <button class="deck-btn" id="btn-prev-slide" onclick="changeSlide(-1)">⬅️ 上一頁 (Prev)</button>
+    <span class="deck-counter" id="deck-counter">Slide 1 / 12</span>
+    <button class="deck-btn" id="btn-next-slide" onclick="changeSlide(1)">下一頁 (Next) ➡️</button>
+  </div>
+  <div class="deck-progress-track">
+    <div class="deck-progress-bar" id="deck-progress-bar"></div>
+  </div>
+
+  <!-- ==================== MODAL 1: 92 天逐日電氣日誌與 13 個月對帳檢視器 ==================== -->
+  <div class="modal-backdrop" id="modal-raw-data" onclick="if(event.target===this)closeModal('modal-raw-data')">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 class="modal-title">📊 世堃塑膠麻豆廠 (SKP01) 92 天逐日電氣日誌與 13 個月歷程對帳檢視器</h3>
+        <button class="modal-close" onclick="closeModal('modal-raw-data')">✕ 關閉</button>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <input type="text" id="rawSearchInput" placeholder="搜尋日期 (如 2026-08-02)、星期或狀態..." oninput="filterRawTable()" style="padding:6px 12px; border:1px solid var(--line); font-size:13px; width:250px;" />
+          <select id="rawStatusFilter" onchange="filterRawTable()" style="padding:6px 10px; border:1px solid var(--line); font-size:13px;">
+            <option value="ALL">全部運轉狀態 (92天)</option>
+            <option value="正常全載">正常全載 (&ge;90% 控制比，29天)</option>
+            <option value="部分降載">部分降載 (50-90% 控制比，24天)</option>
+            <option value="嚴重限電">嚴重限電 (15-50% 控制比，30天)</option>
+            <option value="週末/停工歸零">週末/停工歸零 (&lt;15% 控制比，9天)</option>
+          </select>
+          <button class="btn-primary" onclick="exportRawCsv()">📥 匯出 92 天 CSV 檔</button>
+          <button class="btn-accent" onclick="copyRawTable()">📋 複製對帳表格數據</button>
+        </div>
+        <div style="font-size:12px; color:var(--muted); font-family:var(--mono);">
+          資料來源：SCADA 匯流排 26,496 筆 5 分鐘紀錄 (2026/07/21 ~ 2026/10/20)
+        </div>
+      </div>
+      <div style="max-height:500px; overflow-y:auto; border:1px solid var(--line);">
+        <table class="mck-table" id="rawDataTable">
+          <thead>
+            <tr>
+              <th>日期 Date</th>
+              <th>星期</th>
+              <th>實際發電 (kWh)</th>
+              <th>80%PR應發 (kWh)</th>
+              <th>棄光損失 (kWh)</th>
+              <th>日射量 (kWh/m²)</th>
+              <th>等價時數 Ey</th>
+              <th>實測 PR(%)</th>
+              <th>平均控制比率</th>
+              <th>AC峰值 (kW)</th>
+              <th>DC峰值電壓 (V)</th>
+              <th>運轉判定</th>
+            </tr>
+          </thead>
+          <tbody id="rawDataTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 2: 下一步深層診斷資料需求規格書 ==================== -->
+  <div class="modal-backdrop" id="modal-data-req" onclick="if(event.target===this)closeModal('modal-data-req')">
+    <div class="modal-card" style="max-width:920px;">
+      <div class="modal-head">
+        <h3 class="modal-title">📋 下一步深層診斷資料需求規格書 (Data Request Document)</h3>
+        <button class="modal-close" onclick="closeModal('modal-data-req')">✕ 關閉</button>
+      </div>
+      <p style="font-size:13.5px; color:var(--slate); margin:0 0 12px;">
+        為利於進能服維運事業單位進行下一階段<strong>「UNSW P2P 逐台同儕比對、MPPT 組串斷路排查、以及表後儲能 (BESS) 削峰填谷最佳化容量配置」</strong>，請案場業主與監控廠商協助提供下列五項關鍵資料：
+      </p>
+      <pre id="reqTextContent" style="background:var(--surface-alt); padding:16px; border:1px solid var(--line); font-family:var(--mono); font-size:12.5px; line-height:1.7; white-space:pre-wrap; color:var(--ink);">【進金生能源服務 6692｜進能服維運事業單位 — 世堃塑膠麻豆廠光伏電站下一步資料索取清單】
+
+案場代碼：PV-2026-SKP01
+案場名稱：世堃塑膠麻豆廠屋頂型太陽能電站 (582.06 kWp)
+
+1. SCADA 逐台變流器電氣日誌 (Per-Inverter Telemetry)：
+   - 需求區間：近 3~6 個月 (建議包含 2026/07 ~ 2026/10)
+   - 採樣頻率：1 分鐘或 5 分鐘
+   - 欄位需求：INV-01 ~ INV-0N 逐台之交流功率 (kW)、交流電壓 (V)、交流電流 (A)、當日發電量 (kWh)、歷史累計發電量 (kWh)、告警代碼 (Fault/Alarm Code)。
+
+2. 直流側每路 MPPT 遙測數據 (DC-Side MPPT Telemetry)：
+   - 各變流器每路 MPPT 之直流電壓 (Vdc1, Vdc2...) 與直流電流 (Idc1, Idc2...)。
+   - 用途：執行 UNSW 演算法判定是否有單串保險絲熔斷或局部遮蔽。
+
+3. 案場電氣圖說與設備規格 (As-Built Drawings)：
+   - 竣工電氣單線圖 (Single Line Diagram, SLD)。
+   - 屋頂組串排布圖 (String Layout) 與組件規格書（廠牌、型號、單片瓦數、每串串聯片數、MPPT 並聯串數）。
+   - 變流器廠牌型號與各台容量配置清冊。
+
+4. 廠區台電用電資料 (Factory Load Profile)：
+   - 廠區台電高壓電表 15 分鐘需量數據 (含尖峰、半尖峰、離峰需量與用電曲線)。
+   - 近 12 個月台電電費單明細（確認經常契約容量、超約紀錄、功率因數、各時段電費單價）。
+
+5. 防逆流控制器 (Zero-Export Controller) 參數紀錄：
+   - 防逆流控制器型號、通訊協議與架構。
+   - 目前設定之防逆流安全裕度 (Margin kW)、調載死區 (Deadband) 與響應時間 (Response Time)。</pre>
+      <div style="margin-top:14px; display:flex; justify-content:flex-end; gap:10px;">
+        <button class="btn-accent" onclick="copyDataRequirementsText()">📋 一鍵複製整段清單文字</button>
+        <button class="modal-close" onclick="closeModal('modal-data-req')">關閉</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 3: 已安裝 11 大 AI SKILLS 詳細庫 ==================== -->
+  <div class="modal-backdrop" id="modal-skills" onclick="if(event.target===this)closeModal('modal-skills')">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 class="modal-title">⚙️ 進能服維運事業單位 — 已安裝 11 大光伏維運與 8D AI Skills 清冊</h3>
+        <button class="modal-close" onclick="closeModal('modal-skills')">✕ 關閉</button>
+      </div>
+      <p style="margin:0 0 14px; font-size:13.5px; color:var(--slate);">
+        參照《光伏維運 AI Agent 應用與研究.md》與《光伏運維 8D 報告與知識庫.docx》，以下 11 組技能包與 GitHub 儲存庫已全數安裝於本地技能庫（<code>C:\Users\davidyeh\.gemini\config\skills\</code>）：
+      </p>
+      <table class="mck-table">
+        <thead>
+          <tr>
+            <th>Skill 名稱與代號</th>
+            <th>所屬架構層級</th>
+            <th>本地安裝路徑與核心腳本</th>
+            <th>於本平台之實證指標與標準</th>
+          </tr>
+        </thead>
+        <tbody id="modal-skills-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="seed-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
