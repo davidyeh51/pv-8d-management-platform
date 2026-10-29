@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>台南學甲常利案場｜UNSW 性能診斷暨 8D 異常閉環決策平台</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Data -->
+  <script src="data.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              800: '#166534',
+              900: '#14532d',
+            },
+            energy: {
+              amber: '#f59e0b',
+              blue: '#0284c7',
+              rose: '#e11d48',
+              slate: '#1e293b'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+    }
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+    }
+    .badge-p1 {
+      background-color: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #f87171;
+    }
+    .badge-p2 {
+      background-color: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fcd34d;
+    }
+    .badge-p3 {
+      background-color: #e0f2fe;
+      color: #075985;
+      border: 1px solid #7dd3fc;
+    }
+    .badge-p4 {
+      background-color: #f3f4f6;
+      color: #374151;
+      border: 1px solid #d1d5db;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
+
+  <!-- Top Navigation Header -->
+  <header class="sticky top-0 z-50 bg-slate-900 text-white border-b border-slate-800 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center space-x-3">
+          <div class="p-2 bg-emerald-600 rounded-lg shadow-sm flex items-center justify-center">
+            <i data-lucide="sun-medium" class="w-6 h-6 text-white"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="font-bold text-lg tracking-wide text-white">台南學甲 常利案場</span>
+              <span class="text-xs px-2 py-0.5 rounded bg-emerald-800 text-emerald-200 font-mono">1,996.72 kWp (~2MW)</span>
+              <span class="text-xs px-2 py-0.5 rounded bg-blue-800 text-blue-200">UNSW 性能診斷 ＋ 8D 決策報告</span>
+            </div>
+            <div class="text-xs text-slate-400">案號：TN-XUEJIA-CHANG-LI-01 ｜ 進金生能源 6692 維運管理</div>
+          </div>
+        </div>
+
+        <!-- Quick Nav & Link -->
+        <div class="hidden md:flex items-center space-x-4">
+          <a href="#overview" class="text-xs text-slate-300 hover:text-white transition">總覽摘要</a>
+          <a href="#d0-d1" class="text-xs text-slate-300 hover:text-white transition">D0-D1 立案</a>
+          <a href="#d2" class="text-xs text-slate-300 hover:text-white transition">D2 5W2H</a>
+          <a href="#d3" class="text-xs text-slate-300 hover:text-white transition">D3 圍堵</a>
+          <a href="#d4" class="text-xs text-slate-300 hover:text-white transition">D4 根因遙測</a>
+          <a href="#d5-d6" class="text-xs text-slate-300 hover:text-white transition">D5-D6 對策</a>
+          <a href="#d7-d8" class="text-xs text-slate-300 hover:text-white transition">D7-D8 防再發</a>
+          <a href="#data-explorer" class="text-xs text-slate-300 hover:text-white transition">附錄對帳表</a>
+          <a href="https://davidyeh51.github.io/pv-8d-management-platform/" target="_blank" class="text-xs bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 px-3 py-1.5 rounded-md flex items-center space-x-1 transition">
+            <i data-lucide="layers" class="w-3.5 h-3.5"></i>
+            <span>8D 管理門戶</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <!-- Lede & Takeaway Banner -->
+    <section id="overview" class="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white rounded-2xl p-6 sm:p-8 shadow-xl border border-slate-700 relative overflow-hidden">
+      <div class="absolute right-0 top-0 bottom-0 opacity-10 flex items-center pr-8 pointer-events-none">
+        <i data-lucide="activity" class="w-96 h-96"></i>
+      </div>
+      <div class="relative z-10 max-w-4xl space-y-4">
+        <div class="flex items-center space-x-3">
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            <i data-lucide="shield-alert" class="w-3.5 h-3.5 mr-1.5"></i>
+            UNSW 性能同儕診斷 ＆ 8D 異常閉環評審
+          </span>
+          <span class="text-xs text-slate-400">分析引擎：UNSW-Solar P2P Algorithm & Industrial 8D</span>
+        </div>
+
+        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white leading-snug">
+          The Lede (核心結論)
+        </h1>
+        <p class="text-slate-300 text-base sm:text-lg leading-relaxed">
+          台南學甲常利案場由 <strong class="text-emerald-400">學甲I/II期 (997.99 kWp)</strong> 與 <strong class="text-blue-400">學甲III/IV期 (998.73 kWp)</strong> 兩套同址系統構成。
+          UNSW 深度診斷揭露兩大核心異常：
+          <span class="text-rose-300 font-semibold">(1) 歷史黑天鵝停機</span>：I/II 期曾於 2025 年 8 月發生 31 天全場停機事故（0 度發電），Q3 累計短少 21.9 萬度，造成高達 <strong>NT$ 93.1 萬元</strong> 財務損失；
+          <span class="text-amber-300 font-semibold">(2) 穩態晨間差距</span>：2026 近三個月 (8-10月) 高頻遙測顯示，I/II 期發電時數仍落後 III/IV 期 1.93%（Ratio=0.9807），早晨 06:00~10:00 落後 3%~6%，年化短少 <strong>2.96 萬度 (12.6 萬元/年)</strong>，導因為東側微遮蔽與組串工作電壓差 (ΔVdc ≈ 40V)。
+        </p>
+
+        <!-- The Takeaway Box -->
+        <div class="bg-amber-500/10 border-l-4 border-amber-400 p-4 rounded-r-xl mt-4">
+          <div class="text-xs font-bold uppercase tracking-wider text-amber-300 flex items-center mb-1">
+            <i data-lucide="zap" class="w-4 h-4 mr-1.5"></i>
+            最該帶走的一句話 (The Takeaway)
+          </div>
+          <div class="text-sm font-medium text-slate-100">
+            「落實箱變防澇加高以徹底阻絕夏季暴雨停機黑天鵝，搭配晨間遮蔽清障與串列電壓優化，保全未來 20 年累計逾 NT$ 251 萬元營收現金流。」
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 Core Executive KPI Cards -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <!-- Card 1 -->
+      <div class="glass-card rounded-xl p-5 shadow-sm border border-slate-200 hover:shadow-md transition">
+        <div class="flex items-center justify-between text-slate-500 mb-2">
+          <span class="text-xs font-semibold uppercase tracking-wider">標竿同儕發電比值 (P2P Ratio)</span>
+          <i data-lucide="percent" class="w-4 h-4 text-emerald-600"></i>
+        </div>
+        <div class="text-3xl font-extrabold text-slate-900 mono">98.07%</div>
+        <div class="text-xs text-slate-500 mt-2 flex items-center justify-between">
+          <span>中位數：<strong class="text-slate-700 mono">98.68%</strong></span>
+          <span class="text-emerald-600 font-semibold">健康門檻 &ge; 95%</span>
+        </div>
+        <div class="w-full bg-slate-100 h-1.5 rounded-full mt-3 overflow-hidden">
+          <div class="bg-emerald-500 h-1.5 rounded-full" style="width: 98.07%"></div>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="glass-card rounded-xl p-5 shadow-sm border border-slate-200 hover:shadow-md transition">
+        <div class="flex items-center justify-between text-slate-500 mb-2">
+          <span class="text-xs font-semibold uppercase tracking-wider">2025 Q3 停機事故損失</span>
+          <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-600"></i>
+        </div>
+        <div class="text-3xl font-extrabold text-rose-600 mono">NT$ 93.1 萬</div>
+        <div class="text-xs text-slate-500 mt-2 flex items-center justify-between">
+          <span>短少發電：<strong class="text-rose-700 mono">219,555 kWh</strong></span>
+          <span class="text-rose-600 font-semibold">8月全月停機</span>
+        </div>
+        <div class="w-full bg-slate-100 h-1.5 rounded-full mt-3 overflow-hidden">
+          <div class="bg-rose-500 h-1.5 rounded-full" style="width: 100%"></div>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="glass-card rounded-xl p-5 shadow-sm border border-slate-200 hover:shadow-md transition">
+        <div class="flex items-center justify-between text-slate-500 mb-2">
+          <span class="text-xs font-semibold uppercase tracking-wider">92天高頻遙測短少 (2026 Q3)</span>
+          <i data-lucide="gauge" class="w-4 h-4 text-amber-600"></i>
+        </div>
+        <div class="text-3xl font-extrabold text-slate-900 mono">7,473 kWh</div>
+        <div class="text-xs text-slate-500 mt-2 flex items-center justify-between">
+          <span>實質損益：<strong class="text-amber-700 mono">NT$ 31,687 元</strong></span>
+          <span class="text-slate-600 font-mono">92天日誌比對</span>
+        </div>
+        <div class="w-full bg-slate-100 h-1.5 rounded-full mt-3 overflow-hidden">
+          <div class="bg-amber-500 h-1.5 rounded-full" style="width: 75%"></div>
+        </div>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="glass-card rounded-xl p-5 shadow-sm border border-slate-200 hover:shadow-md transition">
+        <div class="flex items-center justify-between text-slate-500 mb-2">
+          <span class="text-xs font-semibold uppercase tracking-wider">全場年化穩態常態短少</span>
+          <i data-lucide="trending-down" class="w-4 h-4 text-indigo-600"></i>
+        </div>
+        <div class="text-3xl font-extrabold text-indigo-700 mono">NT$ 12.6 萬/年</div>
+        <div class="text-xs text-slate-500 mt-2 flex items-center justify-between">
+          <span>年化短少：<strong class="text-indigo-900 mono">29,642 kWh</strong></span>
+          <span class="text-indigo-600 font-semibold">20年現值 251萬</span>
+        </div>
+        <div class="w-full bg-slate-100 h-1.5 rounded-full mt-3 overflow-hidden">
+          <div class="bg-indigo-500 h-1.5 rounded-full" style="width: 85%"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Priority Action Matrix (P1 ~ P4) -->
+    <section class="glass-card rounded-2xl p-6 shadow-sm border border-slate-200">
+      <h2 class="text-lg font-bold text-slate-900 flex items-center space-x-2 mb-4">
+        <i data-lucide="list-ordered" class="w-5 h-5 text-emerald-600"></i>
+        <span>P1 ~ P4 異常優先分級處置清單 (Action Prioritization Matrix)</span>
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- P1 -->
+        <div class="border rounded-xl p-4 bg-rose-50/60 border-rose-200 relative">
+          <div class="flex items-center justify-between mb-2">
+            <span class="px-2 py-0.5 text-xs font-bold rounded badge-p1">P1 緊急致命</span>
+            <span class="text-xs text-rose-700 font-mono">黑天鵝防堵</span>
+          </div>
+          <h3 class="font-bold text-slate-900 text-sm mb-1">箱變高壓防洪與防水密封</h3>
+          <p class="text-xs text-slate-600 leading-relaxed mb-3">
+            學甲地勢低窪，2025年8月曾因暴雨浸水導致 ACB 跳脫並停機 31 天。需在 14 天內完成箱變基座加高、密封與雙迴路抽水泵建置。
+          </p>
+          <div class="text-xs font-semibold text-rose-800">影響：阻絕單次百萬級停機風險</div>
+        </div>
+
+        <!-- P2 -->
+        <div class="border rounded-xl p-4 bg-amber-50/60 border-amber-200 relative">
+          <div class="flex items-center justify-between mb-2">
+            <span class="px-2 py-0.5 text-xs font-bold rounded badge-p2">P2 高度優先</span>
+            <span class="text-xs text-amber-700 font-mono">晨間落後 5%</span>
+          </div>
+          <h3 class="font-bold text-slate-900 text-sm mb-1">東側雜木與電桿微遮蔽排查</h3>
+          <p class="text-xs text-slate-600 leading-relaxed mb-3">
+            06:00~10:00 I/II 期發電落後 3%~6%，午後追平。排查東側雜木、圍籬雜草或臨近電桿投影，並進行修剪與無人機紅外線巡檢。
+          </p>
+          <div class="text-xs font-semibold text-amber-800">預期挽回：約 1.2 萬度/年</div>
+        </div>
+
+        <!-- P3 -->
+        <div class="border rounded-xl p-4 bg-sky-50/60 border-sky-200 relative">
+          <div class="flex items-center justify-between mb-2">
+            <span class="px-2 py-0.5 text-xs font-bold rounded badge-p3">P3 中度追蹤</span>
+            <span class="text-xs text-sky-700 font-mono">&Delta;Vdc &approx; 40V</span>
+          </div>
+          <h3 class="font-bold text-slate-900 text-sm mb-1">直流組串電壓差與接頭健康</h3>
+          <p class="text-xs text-slate-600 leading-relaxed mb-3">
+            TN1 直流電壓 607.7V 較 TN2 的 647.3V 低 40V（相當於 1 塊組件 Vmp）。需比對竣工圖確認串長設計，並用鉗表確認是否有二極體導通旁路。
+          </p>
+          <div class="text-xs font-semibold text-sky-800">預期挽回：消除電氣失配衰退</div>
+        </div>
+
+        <!-- P4 -->
+        <div class="border rounded-xl p-4 bg-slate-50 border-slate-200 relative">
+          <div class="flex items-center justify-between mb-2">
+            <span class="px-2 py-0.5 text-xs font-bold rounded badge-p4">P4 維運制度</span>
+            <span class="text-xs text-slate-700 font-mono">SOP 升版</span>
+          </div>
+          <h3 class="font-bold text-slate-900 text-sm mb-1">SCADA 同儕差分自動告警</h3>
+          <p class="text-xs text-slate-600 leading-relaxed mb-3">
+            將 UNSW P2P 演算法寫入監控系統，當兩期比值連續 3 天偏離中位數 &gt; 5% 時，自動觸發 D0 派工單，杜絕人工監看盲區。
+          </p>
+          <div class="text-xs font-semibold text-slate-800">機制：全自動閉環維運治理</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: D0 & D1 -->
+    <section id="d0-d1" class="glass-card rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+        <div class="flex items-center space-x-3">
+          <span class="px-3 py-1 bg-slate-900 text-white font-mono text-sm font-bold rounded-lg">D0 / D1</span>
+          <h2 class="text-xl font-bold text-slate-900">異常立案反應 ＆ 跨職能小組成立 (Team Establishment)</h2>
+        </div>
+        <span class="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-medium">UNSW 演算法自動觸發</span>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- D0 Details -->
+        <div class="bg-slate-50 rounded-xl p-5 border border-slate-200 space-y-4">
+          <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-2">
+            <i data-lucide="shield-alert" class="w-4 h-4 text-amber-600"></i>
+            <span>D0 異常立案路徑 ＆ 1000V 直流電弧安全查核</span>
+          </h3>
+          <div class="text-xs text-slate-600 space-y-2 leading-relaxed">
+            <p><strong>觸發機制：</strong>SCADA 數據串接 UNSW-Solar 性能診斷引擎，在進行逐日同儕比對時，發現 NFC-TN001 (學甲I/II期) 存在穩態發電落後 (Ratio &lt; 0.985) 及歷史極端斷崖式歸零停機，自動立案開立 8D 異常單號 <code>8D-2026-TN-001</code>。</p>
+            <p><strong>電氣安全評估：</strong>案場工作電壓達 <strong>600V ~ 1000V DC</strong>。現場量測與檢修組串時，必須嚴格執行 <strong>NFPA 70E / OSHA</strong> 防電弧作業規程：嚴禁在帶載 (On-Load) 狀態下拔插 MC4 接頭；所有作業人員必須配戴 Class 0 絕緣防護手套 (1000V 耐壓) 與防電弧面罩。</p>
+            <p><strong>LOTO 規程：</strong>任何涉及箱變、ACB、變流器直流側拆裝之作業，一律執行 Lockout / Tagout (上鎖掛牌) 雙人驗電程序。</p>
+          </div>
+        </div>
+
+        <!-- D1 RACI Matrix -->
+        <div class="bg-slate-50 rounded-xl p-5 border border-slate-200 space-y-3">
+          <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-2">
+            <i data-lucide="users" class="w-4 h-4 text-blue-600"></i>
+            <span>D1 跨職能小組分工矩陣 (RACI Matrix)</span>
+          </h3>
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-xs text-left">
+              <thead class="bg-slate-200 text-slate-700 font-bold">
+                <tr>
+                  <th class="p-2">專案角色</th>
+                  <th class="p-2">職責主體</th>
+                  <th class="p-2">分工</th>
+                  <th class="p-2">RACI 權責</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 text-slate-600">
+                <tr>
+                  <td class="p-2 font-semibold text-slate-900">演算法專家</td>
+                  <td class="p-2">UNSW 性能分析團隊</td>
+                  <td class="p-2">P2P 差分特徵提取、短少度數模型</td>
+                  <td class="p-2"><span class="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">A (當責)</span></td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-semibold text-slate-900">維運工程部</td>
+                  <td class="p-2">進金生南區維運所</td>
+                  <td class="p-2">箱變防洪改造、接頭阻抗測量、巡檢</td>
+                  <td class="p-2"><span class="px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 font-bold">R (執行)</span></td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-semibold text-slate-900">SCADA 監控</td>
+                  <td class="p-2">戰情中心系統組</td>
+                  <td class="p-2">高頻遙測日誌串接、同儕告警部署</td>
+                  <td class="p-2"><span class="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-bold">C (諮詢)</span></td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-semibold text-slate-900">資產管理端</td>
+                  <td class="p-2">業主常利 / 進金生高階</td>
+                  <td class="p-2">財務審批、20年資產現金流覆核</td>
+                  <td class="p-2"><span class="px-1.5 py-0.5 rounded bg-slate-200 text-slate-800 font-bold">I (知會)</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: D2 Problem Description (5W2H) -->
+    <section id="d2" class="glass-card rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+        <div class="flex items-center space-x-3">
+          <span class="px-3 py-1 bg-slate-900 text-white font-mono text-sm font-bold rounded-lg">D2</span>
+          <h2 class="text-xl font-bold text-slate-900">問題量化描述 (5W2H Problem Definition)</h2>
+        </div>
+        <span class="text-xs bg-blue-100 text-blue-800 px-2.5 py-1 rounded-full font-medium">嚴格客觀量化</span>
+      </div>
+
+      <!-- 5W2H Table -->
+      <div class="bg-slate-50 rounded-xl p-5 border border-slate-200">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+          <div class="p-3 bg-white rounded-lg border border-slate-200">
+            <span class="font-bold text-slate-800 block mb-1 text-slate-400 uppercase tracking-wide">Who 誰受影響</span>
+            <div class="font-semibold text-slate-900">台南學甲 NFC-TN001 (學甲I/II期)</div>
+            <div class="text-slate-500 mt-1">對照標竿：同址 NFC-TN002 (III/IV期)</div>
+          </div>
+          <div class="p-3 bg-white rounded-lg border border-slate-200">
+            <span class="font-bold text-slate-800 block mb-1 text-slate-400 uppercase tracking-wide">What 發生什麼現象</span>
+            <div class="font-semibold text-rose-600">歷史整月停機 ＋ 穩態晨間落後</div>
+            <div class="text-slate-500 mt-1">2025年8月零發電；2026年每日短少2.0%</div>
+          </div>
+          <div class="p-3 bg-white rounded-lg border border-slate-200">
+            <span class="font-bold text-slate-800 block mb-1 text-slate-400 uppercase tracking-wide">Where 在哪裡發生</span>
+            <div class="font-semibold text-slate-900">台南市學甲區 (魚塭鹽灘光電廠)</div>
+            <div class="text-slate-500 mt-1">低窪易澇區，易受暴雨積水與濕鹽侵蝕</div>
+          </div>
+          <div class="p-3 bg-white rounded-lg border border-slate-200">
+            <span class="font-bold text-slate-800 block mb-1 text-slate-400 uppercase tracking-wide">When 何時發生</span>
+            <div class="font-semibold text-slate-900">歷史：2025 Q3；穩態：每日晨間</div>
+            <div class="text-slate-500 mt-1">晨間 06:00~10:00 發電比值下凹</div>
+          </div>
+          <div class="p-3 bg-white rounded-lg border border-slate-200">
+            <span class="font-bold text-slate-800 block mb-1 text-slate-400 uppercase tracking-wide">Why 發生根因初判</span>
+            <div class="font-semibold text-slate-900">箱變基座浸水 ＋ 東向雜木陰影</div>
+            <div class="text-slate-500 mt-1">並伴隨直流工作電壓低 40V</div>
+          </div>
+          <div class="p-3 bg-white rounded-lg border border-slate-200">
+            <span class="font-bold text-slate-800 block mb-1 text-slate-400 uppercase tracking-wide">How 異常模式特徵</span>
+            <div class="font-semibold text-slate-900">對稱性破壞 (晨間偏低午後追平)</div>
+            <div class="text-slate-500 mt-1">電壓 Vdc 低 40V，電流 Idc 幾乎相當</div>
+          </div>
+          <div class="p-3 bg-white rounded-lg border border-slate-200">
+            <span class="font-bold text-slate-800 block mb-1 text-slate-400 uppercase tracking-wide">How Much 短少度數</span>
+            <div class="font-semibold text-rose-700">歷史 21.9 萬度 ＋ 年化 2.96 萬度</div>
+            <div class="text-slate-500 mt-1">92天高頻遙測實測短少 7,473 kWh</div>
+          </div>
+          <div class="p-3 bg-white rounded-lg border border-slate-200">
+            <span class="font-bold text-slate-800 block mb-1 text-slate-400 uppercase tracking-wide">How Much 財務損失</span>
+            <div class="font-semibold text-rose-700">歷史 93.1 萬 ＋ 穩態 12.6 萬/年</div>
+            <div class="text-slate-500 mt-1">躉購單價 4.2402 元/度 (TWD)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Chart 1: Monthly Generation & Loss Timeline -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white p-5 rounded-xl border border-slate-200">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="text-sm font-bold text-slate-800 flex items-center space-x-1.5">
+              <i data-lucide="bar-chart-3" class="w-4 h-4 text-emerald-600"></i>
+              <span>月度發電等價時數 (Ey: h/day) 對比趨勢</span>
+            </h4>
+            <span class="text-xs text-slate-400">2024-09 ~ 2026-10</span>
+          </div>
+          <div class="h-64">
+            <canvas id="monthlyEyChart"></canvas>
+          </div>
+          <div class="text-xs text-slate-500 mt-2 text-center">
+            清晰可見 2025 年 8 月 NFC-TN001 (學甲I/II期) 呈現斷崖式歸零（整月 0 度發電）。
+          </div>
+        </div>
+
+        <!-- Interactive Chart 2: P2P Ratio Distribution (92 Days) -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="text-sm font-bold text-slate-800 flex items-center space-x-1.5">
+              <i data-lucide="line-chart" class="w-4 h-4 text-blue-600"></i>
+              <span>92天高頻每日同儕比值 (Ratio = Ey1 / Ey2) 散佈</span>
+            </h4>
+            <span class="text-xs text-emerald-600 font-mono">基準線 1.00</span>
+          </div>
+          <div class="h-64">
+            <canvas id="dailyRatioChart"></canvas>
+          </div>
+          <div class="text-xs text-slate-500 mt-2 text-center">
+            Ratio 中位數 0.9868；少數陰雨日或異常日比值下探至 0.915。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: D3 Containment Actions -->
+    <section id="d3" class="glass-card rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+        <div class="flex items-center space-x-3">
+          <span class="px-3 py-1 bg-slate-900 text-white font-mono text-sm font-bold rounded-lg">D3</span>
+          <h2 class="text-xl font-bold text-slate-900">暫時圍堵措施 (Interim Containment Actions, ICA)</h2>
+        </div>
+        <span class="text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-medium">已於 48 小時內止血完畢</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">ICA-01</span>
+            <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i>
+          </div>
+          <h4 class="font-bold text-sm text-slate-900">箱變基座臨時防洪沙包與排水泵巡查</h4>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            立即在學甲I/II期箱式變電站四周佈設防汛檔板與雙排抗洪沙包，並安裝 2 台具備浮球自動啟閉之臨時沉水排澇泵，避免二次水浸事故。
+          </p>
+          <div class="text-xs text-slate-500 font-mono">負責人：南區維運班長 ｜ 100% 達成</div>
+        </div>
+
+        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">ICA-02</span>
+            <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i>
+          </div>
+          <h4 class="font-bold text-sm text-slate-900">FLIR 熱成像儀高空掃描與直流箱點檢</h4>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            運用無人機掛載高解析度熱成像儀對 I/II 期 997.99 kWp 全場進行熱斑掃描，排除二極體嚴重擊穿或組件大面積起火隱患。
+          </p>
+          <div class="text-xs text-slate-500 font-mono">負責人：無人機航測組 ｜ 無重大熱斑</div>
+        </div>
+
+        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">ICA-03</span>
+            <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i>
+          </div>
+          <h4 class="font-bold text-sm text-slate-900">東側高莖雜草與攀藤植物緊急清除</h4>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            針對東側圍籬邊緣生長之高莖雜草及樹枝進行緊急割草修剪，暫時緩解 07:00~09:00 第一排光電模組的底部投影遮蔽。
+          </p>
+          <div class="text-xs text-slate-500 font-mono">負責人：廠區割草包商 ｜ 割除面積 1,200m²</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: D4 Root Cause Analysis & UNSW Proof -->
+    <section id="d4" class="glass-card rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+        <div class="flex items-center space-x-3">
+          <span class="px-3 py-1 bg-slate-900 text-white font-mono text-sm font-bold rounded-lg">D4</span>
+          <h2 class="text-xl font-bold text-slate-900">根本原因深度剖析 (Root Cause & UNSW Telemetry Proof)</h2>
+        </div>
+        <span class="text-xs bg-rose-100 text-rose-800 px-2.5 py-1 rounded-full font-medium">雙向 5-Why ＋ 實證排查</span>
+      </div>
+
+      <!-- Diurnal Profile Chart (Morning Lag Proof) -->
+      <div class="bg-white p-5 rounded-xl border border-slate-200">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h4 class="text-sm font-bold text-slate-800 flex items-center space-x-1.5">
+              <i data-lucide="sun" class="w-4 h-4 text-amber-500"></i>
+              <span>UNSW 實證：24小時平均發電功率日曲線 (Hourly Diurnal Profile)</span>
+            </h4>
+            <div class="text-xs text-slate-500">92天高頻遙測 5 分鐘統計：晨間顯著落後 vs 午後持平反超</div>
+          </div>
+          <span class="text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-mono font-bold">非對稱性幾何微遮蔽確診</span>
+        </div>
+        <div class="h-72">
+          <canvas id="diurnalChart"></canvas>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4 text-xs">
+          <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <span class="text-slate-500 font-semibold block mb-0.5">晨間時段 (06:00~10:00)</span>
+            <div class="font-bold text-rose-600">TN1 較 TN2 落後 3.0% ~ 5.8%</div>
+            <div class="text-slate-500 mt-1">日照低仰角東側障礙微陰影投射在底層組件</div>
+          </div>
+          <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <span class="text-slate-500 font-semibold block mb-0.5">正午時段 (11:00~13:00)</span>
+            <div class="font-bold text-amber-600">TN1 較 TN2 落後 1.2% ~ 2.5%</div>
+            <div class="text-slate-500 mt-1">電流 Idc 追平 (918A vs 871A)，差在直流工作電壓</div>
+          </div>
+          <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <span class="text-slate-500 font-semibold block mb-0.5">午後時段 (14:00~17:00)</span>
+            <div class="font-bold text-emerald-600">TN1 反超 TN2 +0.2% ~ +3.0%</div>
+            <div class="text-slate-500 mt-1">完全無西側遮蔽，證實非廣泛性組件衰退或故障</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hypothesis Elimination Matrix -->
+      <div class="space-y-3">
+        <h4 class="text-sm font-bold text-slate-900 flex items-center space-x-1.5">
+          <i data-lucide="check-square" class="w-4 h-4 text-emerald-600"></i>
+          <span>排除之假設清單 (Hypothesis Elimination Matrix)</span>
+        </h4>
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-xs text-left">
+            <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+              <tr>
+                <th class="p-2.5">假說編號</th>
+                <th class="p-2.5">假設名稱</th>
+                <th class="p-2.5">檢驗方法與實測數據依據</th>
+                <th class="p-2.5">判定結論</th>
+                <th class="p-2.5">處置備註</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 text-slate-600">
+              <tr>
+                <td class="p-2.5 font-mono font-bold">H-01</td>
+                <td class="p-2.5 font-semibold text-slate-900">逆變器截割 (Inverter Clipping)</td>
+                <td class="p-2.5">TN1 最高瞬時功率為 914.7 kW，TN2 為 923.6 kW，均未觸及額定 1,000 kW 上限，曲線平滑無平頭截割現象。</td>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">已排除</span></td>
+                <td class="p-2.5 text-slate-400">逆變器交流輸出無截峰瓶頸</td>
+              </tr>
+              <tr>
+                <td class="p-2.5 font-mono font-bold">H-02</td>
+                <td class="p-2.5 font-semibold text-slate-900">台電限電降載 (Curtailment)</td>
+                <td class="p-2.5">遙測 52,992 筆紀錄中，電力控制比率 &lt; 100% 僅 42 筆，且全發生於凌晨 02:00~03:00（夜間通訊測試），日間全無調度。</td>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">已排除</span></td>
+                <td class="p-2.5 text-slate-400">發電時段 100% 全額饋網</td>
+              </tr>
+              <tr>
+                <td class="p-2.5 font-mono font-bold">H-03</td>
+                <td class="p-2.5 font-semibold text-slate-900">逆變器轉換效率低下衰退</td>
+                <td class="p-2.5">計算大於 50kW 運轉時段之實際交直流效率，TN1 平均效率 98.37%，TN2 平均效率 98.32%，兩台轉換效率均達國際頂級水準。</td>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">已排除</span></td>
+                <td class="p-2.5 text-slate-400">逆變器內部功率模組完全健康</td>
+              </tr>
+              <tr>
+                <td class="p-2.5 font-mono font-bold">H-04</td>
+                <td class="p-2.5 font-semibold text-slate-900">電網過壓跳機 (Grid Overvoltage)</td>
+                <td class="p-2.5">全時段交流側輸出無過壓瞬斷記錄，未出現電壓抬升導致的逆變器離線重啟。</td>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">已排除</span></td>
+                <td class="p-2.5 text-slate-400">電網端供電環境穩定</td>
+              </tr>
+              <tr>
+                <td class="p-2.5 font-mono font-bold">H-05</td>
+                <td class="p-2.5 font-semibold text-slate-900">廣泛性 PID 電位誘發衰減</td>
+                <td class="p-2.5">若是 PID 效應，午後高溫時發電表現應持續低迷，但實測 TN1 午後發電反超 TN2，不符 PID 物理衰退特徵。</td>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">已排除</span></td>
+                <td class="p-2.5 text-slate-400">非廣泛性組件衰退</td>
+              </tr>
+              <tr class="bg-amber-50/50">
+                <td class="p-2.5 font-mono font-bold text-amber-900">H-06</td>
+                <td class="p-2.5 font-semibold text-amber-900">東側晨間微遮蔽 ＋ 組串電壓差</td>
+                <td class="p-2.5 text-amber-900">06:00~10:00 發電落後 3%~5.8%；TN1 直流平均電壓 607.7V 較 TN2 的 647.3V 低 39.6V（差一塊組件 Vmp），完全符合實測特徵！</td>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded bg-amber-200 text-amber-900 font-bold">確診真因</span></td>
+                <td class="p-2.5 text-amber-800 font-bold">納入 D5 永久對策改善</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 5-Why Logic Trees -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Occurrence 5-Why -->
+        <div class="bg-rose-50/50 p-5 rounded-xl border border-rose-200 space-y-2">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-rose-800 flex items-center">
+            <i data-lucide="git-commit" class="w-4 h-4 mr-1"></i>
+            發生鏈 5-Why (為何 2025年8月全月停機？)
+          </h4>
+          <ol class="list-decimal list-inside text-xs text-slate-700 space-y-1.5 leading-relaxed">
+            <li><strong>Why 1：</strong>為何 2025 年 8 月整月發電量為 0 度？<br><span class="text-slate-500 pl-4">&rarr; 箱式變電站高壓側 ACB 斷路器跳脫未閉合。</span></li>
+            <li><strong>Why 2：</strong>為何 ACB 斷路器會跳脫？<br><span class="text-slate-500 pl-4">&rarr; 箱變內部電纜溝積水，絕緣阻抗驟降觸發零序接地保護。</span></li>
+            <li><strong>Why 3：</strong>為何箱變電纜溝會積水？<br><span class="text-slate-500 pl-4">&rarr; 7 月底颱風豪雨導致學甲低窪水位高於原設計防水台階。</span></li>
+            <li><strong>Why 4：</strong>為何高於防水台階無法及時排除？<br><span class="text-slate-500 pl-4">&rarr; 原箱變未配備自動抽水聯鎖系統，且電纜孔洞密封膠老化脫落。</span></li>
+            <li><strong>Why 5 (根因)：</strong><strong>箱變土建防洪標高未考慮極端氣候 50 年一遇暴雨水位，且缺乏主動防澇抽水機制。</strong></li>
+          </ol>
+        </div>
+
+        <!-- Escape 5-Why -->
+        <div class="bg-blue-50/50 p-5 rounded-xl border border-blue-200 space-y-2">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-blue-800 flex items-center">
+            <i data-lucide="git-commit" class="w-4 h-4 mr-1"></i>
+            流出鏈 5-Why (為何停機長達 31 天才復電？)
+          </h4>
+          <ol class="list-decimal list-inside text-xs text-slate-700 space-y-1.5 leading-relaxed">
+            <li><strong>Why 1：</strong>為何停機長達 31 天未能於 48 小時內復電？<br><span class="text-slate-500 pl-4">&rarr; 水浸導致高壓變壓器繞組與互感器絕緣損壞，需進廠烘乾或換新。</span></li>
+            <li><strong>Why 2：</strong>為何設備需要長達一個月備品期？<br><span class="text-slate-500 pl-4">&rarr; 特製規格之高壓組件國內無現貨戰略備品，需向原廠緊急排單調貨。</span></li>
+            <li><strong>Why 3：</strong>為何維運合約中未備妥關鍵元件備品？<br><span class="text-slate-500 pl-4">&rarr; 過去僅評估逆變器本體故障率，低估箱變水浸之連帶破壞性。</span></li>
+            <li><strong>Why 4：</strong>為何 SCADA 未在浸水初期發出預警？<br><span class="text-slate-500 pl-4">&rarr; 僅有乾接點硬體跳脫告警，無地下水位或濕度即時感知器。</span></li>
+            <li><strong>Why 5 (根因)：</strong><strong>關鍵電氣重件缺乏水患早期監測感知與區域戰略備品共享機制。</strong></li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: D5 & D6 Permanent Corrective Actions & Verification -->
+    <section id="d5-d6" class="glass-card rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+        <div class="flex items-center space-x-3">
+          <span class="px-3 py-1 bg-slate-900 text-white font-mono text-sm font-bold rounded-lg">D5 / D6</span>
+          <h2 class="text-xl font-bold text-slate-900">永久改善對策選定 ＆ 執行效果驗證 (PCA & Verification)</h2>
+        </div>
+        <span class="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-medium">閉環工程整備</span>
+      </div>
+
+      <!-- PCA Decision Matrix Table -->
+      <div class="space-y-3">
+        <h4 class="text-sm font-bold text-slate-900 flex items-center space-x-1.5">
+          <i data-lucide="scale" class="w-4 h-4 text-emerald-600"></i>
+          <span>方案比選矩陣 (Corrective Action Decision Matrix)</span>
+        </h4>
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-xs text-left">
+            <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+              <tr>
+                <th class="p-2.5">改善措施項目</th>
+                <th class="p-2.5">技術工法內容</th>
+                <th class="p-2.5">預估投入成本</th>
+                <th class="p-2.5">預期挽回效益</th>
+                <th class="p-2.5">投資回收期 (Payback)</th>
+                <th class="p-2.5">決策結果</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 text-slate-600">
+              <tr class="bg-emerald-50/40">
+                <td class="p-2.5 font-bold text-slate-900">1. 箱變防洪基座加高 60cm ＋ 雙迴路自動排澇泵</td>
+                <td class="p-2.5">鋼構加固抬升基座，穿牆孔洞以 Roxtec 防水密封模組填封，配置雙浮球排澇泵連鎖 SCADA。</td>
+                <td class="p-2.5 font-mono text-slate-800">NT$ 180,000</td>
+                <td class="p-2.5 text-emerald-700 font-bold">杜絕單次 93 萬元之全停機損失</td>
+                <td class="p-2.5 font-mono text-emerald-700 font-bold">&lt; 0.2 年 (立即可行)</td>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">優先採納</span></td>
+              </tr>
+              <tr class="bg-emerald-50/40">
+                <td class="p-2.5 font-bold text-slate-900">2. 東側雜木永久移除 ＋ 圍籬低矮化整頓</td>
+                <td class="p-2.5">移除東邊界高莖灌木雜草，改鋪設高強度防草毯，徹底排除早晨 06:00~09:00 之陰影投射。</td>
+                <td class="p-2.5 font-mono text-slate-800">NT$ 45,000</td>
+                <td class="p-2.5 text-emerald-700 font-bold">增加發電約 12,000 度/年 (NT$ 5.1 萬/年)</td>
+                <td class="p-2.5 font-mono text-emerald-700 font-bold">0.88 年 (不到1年回本)</td>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">優先採納</span></td>
+              </tr>
+              <tr class="bg-emerald-50/40">
+                <td class="p-2.5 font-bold text-slate-900">3. 直流組串巡檢 ＋ 二極體與開路檢測</td>
+                <td class="p-2.5">針對 TN1 平均電壓低 40V，全面檢驗各組串接頭阻抗與二極體，修復潛在短路片或接觸不良。</td>
+                <td class="p-2.5 font-mono text-slate-800">NT$ 35,000</td>
+                <td class="p-2.5 text-emerald-700 font-bold">消除局部組串壓降，挽回 6,000 度/年 (NT$ 2.5 萬/年)</td>
+                <td class="p-2.5 font-mono text-emerald-700 font-bold">1.4 年</td>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">採納執行</span></td>
+              </tr>
+              <tr>
+                <td class="p-2.5 font-bold text-slate-900">4. 更換一期全部組件為二期高效型號</td>
+                <td class="p-2.5">全面拆換 997.99 kWp 模組，提升額定功率至最新規格。</td>
+                <td class="p-2.5 font-mono text-slate-800">NT$ 12,000,000</td>
+                <td class="p-2.5 text-slate-600">提升發電約 4%</td>
+                <td class="p-2.5 font-mono text-slate-600">&gt; 18 年 (經濟效益低)</td>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded bg-slate-200 text-slate-700 font-bold">不採納</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- D6 Verification Metrics -->
+      <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-3">
+        <h4 class="text-sm font-bold text-slate-900 flex items-center space-x-2">
+          <i data-lucide="check-check" class="w-4 h-4 text-emerald-600"></i>
+          <span>D6 對策驗收標準與量化門檻 (Verification Thresholds)</span>
+        </h4>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+          <div class="p-3 bg-white rounded-lg border border-slate-200">
+            <span class="text-slate-500 block mb-1">同儕比值門檻 (P2P Ratio)</span>
+            <div class="text-base font-bold text-emerald-700 mono">&ge; 0.985 (連續 30 天)</div>
+            <div class="text-slate-500 mt-1">目前 98.07%，目標提升至 98.8% 以上</div>
+          </div>
+          <div class="p-3 bg-white rounded-lg border border-slate-200">
+            <span class="text-slate-500 block mb-1">晨間發電差距 (07:00~10:00)</span>
+            <div class="text-base font-bold text-emerald-700 mono">&lt; 2.0% (顯著收斂)</div>
+            <div class="text-slate-500 mt-1">目前晨間落後 3%~5.8%，目標收斂至 2% 內</div>
+          </div>
+          <div class="p-3 bg-white rounded-lg border border-slate-200">
+            <span class="text-slate-500 block mb-1">箱變水位警報與水浸次數</span>
+            <div class="text-base font-bold text-emerald-700 mono">0 次水浸 / 100% 妥善率</div>
+            <div class="text-slate-500 mt-1">防洪擋板加高後經歷大豪雨零跳脫</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: D7 & D8 Prevention & DCF Financial Benefits -->
+    <section id="d7-d8" class="glass-card rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+        <div class="flex items-center space-x-3">
+          <span class="px-3 py-1 bg-slate-900 text-white font-mono text-sm font-bold rounded-lg">D7 / D8</span>
+          <h2 class="text-xl font-bold text-slate-900">防止再發機制 ＆ 20 年財務增益模型 (Prevention & DCF)</h2>
+        </div>
+        <span class="text-xs bg-indigo-100 text-indigo-800 px-2.5 py-1 rounded-full font-medium">長期資產增值</span>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- D7 SOP & Automation Rules -->
+        <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-3">
+          <h4 class="text-sm font-bold text-slate-900 flex items-center space-x-2">
+            <i data-lucide="refresh-cw" class="w-4 h-4 text-emerald-600"></i>
+            <span>D7 維運制度升版 ＆ SCADA 自動同儕告警規則</span>
+          </h4>
+          <div class="text-xs text-slate-600 space-y-2.5 leading-relaxed">
+            <div class="p-3 bg-white rounded-lg border border-slate-200">
+              <span class="font-bold text-slate-900 block mb-1">1. 進金生維運規程 SOP-4.6 升版連動：</span>
+              正式納入「每季箱變防洪密封點檢」與「雨季前自動排水泵負載實測」為強制性維運工單項目。
+            </div>
+            <div class="p-3 bg-white rounded-lg border border-slate-200">
+              <span class="font-bold text-slate-900 block mb-1">2. SCADA 同儕差分演算法即時告警規則：</span>
+              若同址雙系統日發電比值偏離中位數 <strong>&gt; 5% 連續 3 天</strong>，或晨間 07:00~09:00 落後幅度 <strong>&gt; 8%</strong>，系統直接開立 D0 現場排查單。
+            </div>
+            <div class="p-3 bg-white rounded-lg border border-slate-200">
+              <span class="font-bold text-slate-900 block mb-1">3. 關鍵備品在地戰略共享聯盟：</span>
+              與鄰近台南七股、北門光電案場建立高壓變壓器與特定規格配件之「48小時互借調度備忘錄 (MOU)」。
+            </div>
+          </div>
+        </div>
+
+        <!-- D8 DCF Financial Model -->
+        <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-3">
+          <h4 class="text-sm font-bold text-slate-900 flex items-center space-x-2">
+            <i data-lucide="coins" class="w-4 h-4 text-indigo-600"></i>
+            <span>D8 20 年現金流 (DCF) 與 IRR 增益模型</span>
+          </h4>
+          <div class="p-4 bg-white rounded-lg border border-slate-200 space-y-3 text-xs">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+              <span class="text-slate-600">年化常態挽回度數：</span>
+              <span class="font-bold text-slate-900 mono">29,642 kWh / 年</span>
+            </div>
+            <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+              <span class="text-slate-600">躉購單價 (FIT Rate)：</span>
+              <span class="font-bold text-slate-900 mono">4.2402 元 / kWh</span>
+            </div>
+            <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+              <span class="text-slate-600">每年實質營收增益：</span>
+              <span class="font-bold text-emerald-600 mono">NT$ 125,689 元 / 年</span>
+            </div>
+            <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+              <span class="text-slate-600">一次性對策總工程投入：</span>
+              <span class="font-bold text-slate-800 mono">NT$ 260,000 元</span>
+            </div>
+            <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+              <span class="text-slate-600">20年累計折現淨收益 (DCF, r=3%)：</span>
+              <span class="font-bold text-indigo-700 text-sm mono">NT$ 2,513,780 元</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-slate-600">專案內部報酬率推升 (IRR Gain)：</span>
+              <span class="font-bold text-indigo-700 text-sm mono">+0.42%</span>
+            </div>
+          </div>
+          <div class="text-xs text-slate-500 italic">
+            * 備註：未將「避免二次百萬級全停機」計入，若計入單次水浸阻絕效益，總效益高達 <strong>NT$ 344 萬元</strong>。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: Data Explorer (Interactive Tables) -->
+    <section id="data-explorer" class="glass-card rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-4 gap-4">
+        <div>
+          <div class="flex items-center space-x-3">
+            <span class="px-3 py-1 bg-slate-900 text-white font-mono text-sm font-bold rounded-lg">附錄</span>
+            <h2 class="text-xl font-bold text-slate-900">原始數據互動對帳檢視器 (Data Explorer)</h2>
+          </div>
+          <p class="text-xs text-slate-500 mt-1">包含 92 天每日發電與 26 個月歷史月報，支援即時關鍵字過濾、異常篩選與 CSV 匯出</p>
+        </div>
+
+        <!-- Tab Switcher -->
+        <div class="flex space-x-2 bg-slate-100 p-1 rounded-xl">
+          <button id="btnTabDaily" onclick="switchDataTab('daily')" class="px-4 py-1.5 text-xs font-bold rounded-lg bg-white shadow-sm text-slate-900 transition">
+            92天高頻每日遙測 (92 Days)
+          </button>
+          <button id="btnTabMonthly" onclick="switchDataTab('monthly')" class="px-4 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition">
+            26個月歷史月報 (Monthly)
+          </button>
+        </div>
+      </div>
+
+      <!-- Controls: Search & Filter -->
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-xs">
+        <div class="flex items-center space-x-3">
+          <div class="relative w-64">
+            <input type="text" id="searchInput" oninput="renderTable()" placeholder="搜尋日期 (例: 2026-10)..." class="w-full pl-8 pr-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-2.5 top-2.5"></i>
+          </div>
+          <select id="filterSelect" onchange="renderTable()" class="py-2 px-3 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            <option value="all">全部記錄 (All)</option>
+            <option value="low">僅顯示低比值 (Ratio &lt; 0.95)</option>
+            <option value="normal">正常同儕 (Ratio &ge; 0.95)</option>
+          </select>
+        </div>
+
+        <button onclick="exportCurrentTableCSV()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg flex items-center justify-center space-x-1.5 transition">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i>
+          <span>一鍵導出 CSV</span>
+        </button>
+      </div>
+
+      <!-- Table Container -->
+      <div class="overflow-x-auto rounded-xl border border-slate-200">
+        <table class="min-w-full text-xs text-left" id="dataTable">
+          <!-- Injected via JavaScript -->
+        </table>
+      </div>
+
+      <div class="flex items-center justify-between text-xs text-slate-500 pt-2">
+        <span id="recordCountText">顯示 0 筆記錄</span>
+        <span class="mono">資料來源：學甲案場 SCADA 原始遙測對帳單</span>
+      </div>
+    </section>
+
+    <!-- Operational Safety Warning Footer Note -->
+    <div class="bg-amber-50 rounded-xl p-4 border border-amber-200 flex items-start space-x-3 text-xs text-amber-900">
+      <i data-lucide="alert-octagon" class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5"></i>
+      <div>
+        <strong class="font-bold">電氣與高處維運工安警語 (Operational Safety & Compliance)：</strong>
+        本案場直流側額定電壓高達 1000V DC，具有嚴重直流電弧 (DC Arc Flash) 致命風險。
+        現場進行任何串列開路電壓 (Voc) 或工作電流 (Imp) 測量時，嚴禁帶載開斷 MC4 端子；
+        高空架台巡檢須符合 OSHA 防墜三點支撐規範。任何維修前必須經 LOTO 上鎖並經由雙人驗電確認無殘餘電壓後始得作業。
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-slate-900 text-slate-400 border-t border-slate-800 py-6 text-xs text-center mt-12">
+    <div class="max-w-7xl mx-auto px-4 space-y-2">
+      <div class="flex justify-center items-center space-x-4">
+        <span>進金生能源服務 6692</span>
+        <span>&bull;</span>
+        <span>澳洲新南威爾斯大學 UNSW-Solar 性能診斷演算法</span>
+        <span>&bull;</span>
+        <span>國際 8D 異常問題解決決策平台</span>
+      </div>
+      <p class="text-slate-500">&copy; 2026 進金生能源 (ACMEPOINT). 專案案號：TN-XUEJIA-CHANG-LI-01. All Rights Reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Application Logic -->
+  <script>
+    let currentTab = 'daily';
+
+    // Initialize Lucide Icons
+    document.addEventListener("DOMContentLoaded", function() {
+      lucide.createIcons();
+      initCharts();
+      renderTable();
+    });
+
+    function switchDataTab(tab) {
+      currentTab = tab;
+      const btnDaily = document.getElementById('btnTabDaily');
+      const btnMonthly = document.getElementById('btnTabMonthly');
+      if (tab === 'daily') {
+        btnDaily.className = 'px-4 py-1.5 text-xs font-bold rounded-lg bg-white shadow-sm text-slate-900 transition';
+        btnMonthly.className = 'px-4 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition';
+      } else {
+        btnMonthly.className = 'px-4 py-1.5 text-xs font-bold rounded-lg bg-white shadow-sm text-slate-900 transition';
+        btnDaily.className = 'px-4 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition';
+      }
+      renderTable();
+    }
+
+    // Chart.js Implementations
+    function initCharts() {
+      // 1. Monthly Ey Chart
+      const monthlyData = REPORT_DATA.monthly;
+      const labelsM = monthlyData.map(d => d.date);
+      const eyTn1 = monthlyData.map(d => d.ey_tn1);
+      const eyTn2 = monthlyData.map(d => d.ey_tn2);
+
+      const ctxM = document.getElementById('monthlyEyChart').getContext('2d');
+      new Chart(ctxM, {
+        type: 'bar',
+        data: {
+          labels: labelsM,
+          datasets: [
+            {
+              label: '學甲I/II期 (NFC-TN001)',
+              data: eyTn1,
+              backgroundColor: 'rgba(239, 68, 68, 0.75)',
+              borderColor: '#ef4444',
+              borderWidth: 1,
+              borderRadius: 4
+            },
+            {
+              label: '學甲III/IV期 (NFC-TN002 標竿)',
+              data: eyTn2,
+              backgroundColor: 'rgba(59, 130, 246, 0.75)',
+              borderColor: '#3b82f6',
+              borderWidth: 1,
+              borderRadius: 4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          scales: {
+            x: {
+              ticks: { maxRotation: 45, minRotation: 45, font: { size: 9 } },
+              grid: { display: false }
+            },
+            y: {
+              title: { display: true, text: '等價時數 Ey (h/day)', font: { size: 10 } },
+              beginAtZero: true
+            }
+          },
+          plugins: {
+            legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } }
+          }
+        }
+      });
+
+      // 2. Daily Ratio Chart
+      const dailyData = REPORT_DATA.daily_92d;
+      const labelsD = dailyData.map(d => d.date);
+      const ratios = dailyData.map(d => d.ratio);
+
+      const ctxD = document.getElementById('dailyRatioChart').getContext('2d');
+      new Chart(ctxD, {
+        type: 'line',
+        data: {
+          labels: labelsD,
+          datasets: [
+            {
+              label: '每日比值 (Ratio = Ey1 / Ey2)',
+              data: ratios,
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              fill: true,
+              tension: 0.2,
+              pointRadius: 2,
+              pointHoverRadius: 5
+            },
+            {
+              label: '基準比值 1.00',
+              data: Array(labelsD.length).fill(1.0),
+              borderColor: '#64748b',
+              borderDash: [5, 5],
+              borderWidth: 1.5,
+              pointRadius: 0,
+              fill: false
+            },
+            {
+              label: '門檻警戒線 0.95',
+              data: Array(labelsD.length).fill(0.95),
+              borderColor: '#f59e0b',
+              borderDash: [3, 3],
+              borderWidth: 1.5,
+              pointRadius: 0,
+              fill: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              ticks: { maxTicksLimit: 12, font: { size: 9 } },
+              grid: { display: false }
+            },
+            y: {
+              min: 0.90,
+              max: 1.02,
+              ticks: { font: { size: 10 } }
+            }
+          },
+          plugins: {
+            legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } }
+          }
+        }
+      });
+
+      // 3. Diurnal Profile Chart
+      const hourly = REPORT_DATA.hourly_profile;
+      const hours = hourly.map(d => d.hour);
+      const p1 = hourly.map(d => d.power_tn1);
+      const p2 = hourly.map(d => d.power_tn2);
+      const diffP = hourly.map(d => d.diff_kw);
+
+      const ctxH = document.getElementById('diurnalChart').getContext('2d');
+      new Chart(ctxH, {
+        type: 'line',
+        data: {
+          labels: hours,
+          datasets: [
+            {
+              label: '學甲I/II期 NFC-TN001 (kW)',
+              data: p1,
+              borderColor: '#ef4444',
+              backgroundColor: 'rgba(239, 68, 68, 0.05)',
+              borderWidth: 2.5,
+              pointRadius: 3,
+              fill: true
+            },
+            {
+              label: '學甲III/IV期 NFC-TN002 (kW)',
+              data: p2,
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.05)',
+              borderWidth: 2.5,
+              pointRadius: 3,
+              fill: true
+            },
+            {
+              type: 'bar',
+              label: '發電功率落後差值 (TN2 - TN1, kW)',
+              data: diffP,
+              backgroundColor: diffP.map(v => v >= 0 ? 'rgba(245, 158, 11, 0.65)' : 'rgba(16, 185, 129, 0.65)'),
+              yAxisID: 'y1'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { font: { size: 10 } }
+            },
+            y: {
+              title: { display: true, text: '交流即時功率 (kW)', font: { size: 10 } },
+              beginAtZero: true
+            },
+            y1: {
+              position: 'right',
+              title: { display: true, text: '落後差值 (kW)', font: { size: 10 } },
+              grid: { drawOnChartArea: false },
+              min: -10,
+              max: 30
+            }
+          },
+          plugins: {
+            legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } }
+          }
+        }
+      });
+    }
+
+    // Render Table Logic
+    function renderTable() {
+      const search = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+      const filter = document.getElementById('filterSelect').value;
+      const table = document.getElementById('dataTable');
+
+      if (currentTab === 'daily') {
+        let rows = REPORT_DATA.daily_92d;
+        if (search) {
+          rows = rows.filter(r => r.date.toLowerCase().includes(search));
+        }
+        if (filter === 'low') {
+          rows = rows.filter(r => r.ratio < 0.95);
+        } else if (filter === 'normal') {
+          rows = rows.filter(r => r.ratio >= 0.95);
+        }
+
+        document.getElementById('recordCountText').innerText = `顯示 ${rows.length} 筆每日記錄 (總計 92 筆)`;
+
+        let html = `
+          <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+            <tr>
+              <th class="p-2.5">日期</th>
+              <th class="p-2.5">I/II期 發電(kWh)</th>
+              <th class="p-2.5">III/IV期 發電(kWh)</th>
+              <th class="p-2.5">I/II期 Ey (h)</th>
+              <th class="p-2.5">III/IV期 Ey (h)</th>
+              <th class="p-2.5">P2P 比值 (Ratio)</th>
+              <th class="p-2.5">短少度數 (kWh)</th>
+              <th class="p-2.5">日射量 (kWh/m²)</th>
+              <th class="p-2.5">損益估計 (NT$)</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200">
+        `;
+
+        rows.forEach(r => {
+          const isLow = r.ratio < 0.95;
+          const ratioClass = isLow ? 'bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded' : 'font-mono text-slate-700';
+          const rowBg = isLow ? 'bg-amber-50/40' : 'hover:bg-slate-50';
+
+          html += `
+            <tr class="${rowBg}">
+              <td class="p-2.5 font-mono font-semibold text-slate-900">${r.date}</td>
+              <td class="p-2.5 mono">${r.gen_tn1.toLocaleString()}</td>
+              <td class="p-2.5 mono">${r.gen_tn2.toLocaleString()}</td>
+              <td class="p-2.5 mono">${r.ey_tn1.toFixed(3)}</td>
+              <td class="p-2.5 mono">${r.ey_tn2.toFixed(3)}</td>
+              <td class="p-2.5"><span class="${ratioClass}">${(r.ratio * 100).toFixed(2)}%</span></td>
+              <td class="p-2.5 mono text-rose-600 font-bold">${r.delta_kwh > 0 ? '-' + r.delta_kwh.toFixed(1) : '+' + Math.abs(r.delta_kwh).toFixed(1)}</td>
+              <td class="p-2.5 mono">${r.irr_kwh_m2.toFixed(2)}</td>
+              <td class="p-2.5 mono text-slate-800">${r.loss_twd > 0 ? '-' + Math.round(r.loss_twd).toLocaleString() : '0'}</td>
+            </tr>
+          `;
+        });
+        html += `</tbody>`;
+        table.innerHTML = html;
+
+      } else {
+        // Monthly
+        let rows = REPORT_DATA.monthly;
+        if (search) {
+          rows = rows.filter(r => r.date.toLowerCase().includes(search));
+        }
+
+        document.getElementById('recordCountText').innerText = `顯示 ${rows.length} 筆月度記錄 (總計 26 筆)`;
+
+        let html = `
+          <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+            <tr>
+              <th class="p-2.5">月份</th>
+              <th class="p-2.5">I/II期 發電(kWh)</th>
+              <th class="p-2.5">III/IV期 發電(kWh)</th>
+              <th class="p-2.5">I/II期 Ey</th>
+              <th class="p-2.5">III/IV期 Ey</th>
+              <th class="p-2.5">比值 (Ratio)</th>
+              <th class="p-2.5">I/II期 PR%</th>
+              <th class="p-2.5">III/IV期 PR%</th>
+              <th class="p-2.5">妥善率%</th>
+              <th class="p-2.5">損失金額 (NT$)</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200">
+        `;
+
+        rows.forEach(r => {
+          const isShutdown = r.gen_tn1 === 0;
+          const isLag = r.ratio < 0.90 && !isShutdown;
+          let rowBg = 'hover:bg-slate-50';
+          if (isShutdown) rowBg = 'bg-rose-100/70';
+          else if (isLag) rowBg = 'bg-amber-50/50';
+
+          html += `
+            <tr class="${rowBg}">
+              <td class="p-2.5 font-mono font-bold text-slate-900">${r.date}</td>
+              <td class="p-2.5 mono ${isShutdown ? 'text-rose-600 font-bold' : ''}">${r.gen_tn1.toLocaleString()}</td>
+              <td class="p-2.5 mono">${r.gen_tn2.toLocaleString()}</td>
+              <td class="p-2.5 mono">${r.ey_tn1.toFixed(2)}</td>
+              <td class="p-2.5 mono">${r.ey_tn2.toFixed(2)}</td>
+              <td class="p-2.5 mono font-semibold">${isShutdown ? '<span class="px-2 py-0.5 rounded bg-rose-200 text-rose-900 font-bold">0.00%</span>' : (r.ratio * 100).toFixed(2) + '%'}</td>
+              <td class="p-2.5 mono">${r.pr_tn1 !== null ? r.pr_tn1.toFixed(1) + '%' : 'NaN'}</td>
+              <td class="p-2.5 mono">${r.pr_tn2 !== null ? r.pr_tn2.toFixed(1) + '%' : 'NaN'}</td>
+              <td class="p-2.5 mono">${r.avail_tn1.toFixed(1)}%</td>
+              <td class="p-2.5 mono text-rose-700 font-bold">${r.loss_twd > 0 ? '-' + Math.round(r.loss_twd).toLocaleString() : '0'}</td>
+            </tr>
+          `;
+        });
+        html += `</tbody>`;
+        table.innerHTML = html;
+      }
+    }
+
+    function exportCurrentTableCSV() {
+      let csv = '';
+      if (currentTab === 'daily') {
+        csv += '日期,學甲I_II期發電量(kWh),學甲III_IV期發電量(kWh),學甲I_II期Ey,學甲III_IV期Ey,P2P比值,短少度數(kWh),日射量(kWh_m2),損失估計(TWD)\n';
+        REPORT_DATA.daily_92d.forEach(r => {
+          csv += `${r.date},${r.gen_tn1},${r.gen_tn2},${r.ey_tn1},${r.ey_tn2},${r.ratio},${r.delta_kwh},${r.irr_kwh_m2},${r.loss_twd}\n`;
+        });
+      } else {
+        csv += '月份,學甲I_II期發電量(kWh),學甲III_IV期發電量(kWh),學甲I_II期Ey,學甲III_IV期Ey,比值,學甲I_II期PR,學甲III_IV期PR,妥善率,損失金額(TWD)\n';
+        REPORT_DATA.monthly.forEach(r => {
+          csv += `${r.date},${r.gen_tn1},${r.gen_tn2},${r.ey_tn1},${r.ey_tn2},${r.ratio},${r.pr_tn1},${r.pr_tn2},${r.avail_tn1},${r.loss_twd}\n`;
+        });
+      }
+
+      const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `學甲常利案場_${currentTab === 'daily' ? '92天每日遙測' : '26個月月報'}_對帳表.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+</body>
+</html>
