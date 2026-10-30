@@ -7,6 +7,8 @@
 
 案例 Markdown：
 - [PV-2026-SKP01 自發自用案場防逆流 (Zero-Export) 壓抑棄光 55.7%](https://davidyeh51.github.io/pv-8d-management-platform/rag/PV-2026-SKP01.md)
+- [PV-2026-TN01 學甲常利案場箱變暴雨浸水停機暨同儕晨間微遮蔽診斷](https://davidyeh51.github.io/pv-8d-management-platform/rag/PV-2026-TN01.md)
+- [8D-2026-YD04 高雄遠東鋼鐵一~三期 1,481.8kWp 45台變流器陰影落塵斷路修繕](https://davidyeh51.github.io/pv-8d-management-platform/rag/8D-2026-YD04.md)
 - [KB-TPL-B01 電位誘發衰減 (PID) 造成陣列負極端組件功率衰退](https://davidyeh51.github.io/pv-8d-management-platform/rag/KB-TPL-B01.md)
 - [KB-TPL-B02 熱斑 (Hot Spot) 與旁路二極體失效導致組串失配](https://davidyeh51.github.io/pv-8d-management-platform/rag/KB-TPL-B02.md)
 - [KB-TPL-C01 直流連接器（MC4）混插與壓接不良導致燒熔](https://davidyeh51.github.io/pv-8d-management-platform/rag/KB-TPL-C01.md)
