@@ -36,7 +36,8 @@ function caseMd(c) {
   L.push(`- 風險：${c.severity}｜損失型態：${c.lossType}`);
   L.push(`- 現象關鍵字：${c.symptoms.join("、")}`);
   L.push(`- 標籤：${c.tags.join("、")}`);
-  L.push(`- 簡報：${SITE}deck.html?id=${encodeURIComponent(c.id)}${c.deck ? `；完整互動簡報：${SITE}${c.deck.url}` : ""}`, "");
+  const deckFullUrl = c.deck ? (/^https?:\/\//.test(c.deck.url) ? c.deck.url : `${SITE}${c.deck.url}`) : "";
+  L.push(`- 簡報：${SITE}deck.html?id=${encodeURIComponent(c.id)}${c.deck ? `；完整互動簡報：${deckFullUrl}` : ""}`, "");
   L.push("## 一句話結論", "", c.governingThought, "");
   L.push("## SCQA", "", `- **S 情境**：${c.scqa.s}`, `- **C 衝突**：${c.scqa.c}`, `- **Q 問題**：${c.scqa.q}`, `- **A 答案**：${c.scqa.a}`, "");
   L.push("## 關鍵數據", "", ...c.keyFacts.map(k => `- ${k.label}：${k.value}（${k.note}）`), "");
